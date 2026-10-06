@@ -1,18 +1,29 @@
 # syntax = docker/dockerfile:1
 
-# A placeholder, and yours to replace: it serves one page, plus README.md
-# verbatim at /readme/, which is enough to prove the deploy path end to end.
-# Whatever your app is built with, the image that replaces this one must serve
-# HTTP on 0.0.0.0:$PORT (fly.toml sets PORT) and publish README.md at /readme/
-# (spec/README.md says what's checked).
+# Two stages. The builder installs dependencies — including better-sqlite3, which
+# compiles a native binding — then the slim runtime carries only what runs. The
+# app is TypeScript executed directly by Node 24 (type stripping), so there's no
+# separate build/bundle step. It serves HTTP on 0.0.0.0:$PORT and publishes
+# README.md at /readme/; SQLite lives on the /data volume (see fly.toml).
 
-FROM docker.io/library/busybox:1.38.0
-COPY placeholder/ /src/
-COPY README.md /src/
-# README.md goes into the page as-is, HTML-escaped, in place of @README@;
-# rendering it properly is your app's job
-RUN mkdir -p /site/readme \
-    && cp /src/index.html /site/ \
-    && sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' /src/README.md > /src/body \
-    && sed -e '/@README@/{r /src/body' -e 'd}' /src/readme.html > /site/readme/index.html
-CMD ["sh", "-c", "exec httpd -f -p 0.0.0.0:${PORT:-8080} -h /site"]
+FROM node:24-slim AS build
+WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 make g++ ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile --prod
+COPY . .
+
+FROM node:24-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+# The app reads/writes its SQLite database here; Fly mounts the volume at /data.
+ENV DATA_DIR=/data
+COPY --from=build /app/node_modules ./node_modules
+COPY src ./src
+COPY public ./public
+COPY package.json README.md ./
+EXPOSE 8080
+CMD ["node", "src/server.ts"]

@@ -1,3 +1,5 @@
 # esbuild (used by Vitest) needs its postinstall to set up its native binary.
+# better-sqlite3 compiles a native binding on install (our SQLite driver).
 allowBuilds:
+  better-sqlite3: true
   esbuild: true
