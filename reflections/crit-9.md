@@ -1,19 +1,19 @@
 # Crit 9 — All at once
 
-<!-- SCAFFOLD: write this in your own voice (150–300 words), answering the two
-     standing prompts. Delete this comment when you do. -->
-
 ## What was the breakthrough that moved the work forward?
 
-[The decision that unlocked crit 9: realising "real-time" didn't have to fight the
-diary's slow, next-day reveal — that the live surface could be the *relationship*
-(friend requests, presence) while the reflections stay sealed. Once that was clear
-the WebSocket layer became small and obvious. Write what it actually felt like to
-land on that, and point at the ADR (`docs/adr-001-realtime-scope.md`).]
+Honestly, there wasn't a single technical breakthrough this week. What moved the
+work forward was more personal: the drive home from work, and wanting to be more
+connected with my friends. I already keep a work journal — I started it to make
+sure that each week I feel like I've done something of significance — and this app
+came out of wanting that same small, grounding habit, but pointed at the people I
+care about instead of just my work. The idea was the engine; the build followed
+from it.
 
 ## What did this work change about who I want to be as a software developer?
 
-[What changed for you. Possible threads: deciding what *not* to make real-time was
-harder and more valuable than wiring the socket; catching the daily-matching bug
-by reading the database instead of trusting the happy path; writing the seal rule
-as one small pure function so a test could pin it. Keep it honest and specific.]
+It made me want to build things that are personal and that actually connect
+people, not just things that are technically interesting. This is something I want
+to keep exploring — I'd like to develop it into a mobile app one day — and it
+reminded me that the software I most want to make starts from my own life and the
+people in it.
