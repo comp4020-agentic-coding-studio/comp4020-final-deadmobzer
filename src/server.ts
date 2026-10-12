@@ -18,7 +18,7 @@ import { landing, page, aboutPage, appShell } from "./serverview.ts";
 import { audit } from "./audit.ts";
 import { today, TZ } from "./time.ts";
 import { FACTIONS, PLAYER_PALETTE, allUnitDefs } from "./game/data.ts";
-import { validateLoadout, saveLoadout, getLoadout, LoadoutError, type Mode } from "./loadouts.ts";
+import { validateLoadout, saveLoadout, getLoadout, maliceLevels, LoadoutError, type Mode } from "./loadouts.ts";
 import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
 import { gameView, act, recentOpponents, activeGames, GameError } from "./games.ts";
 import { postMessage, messagesFor, ChatError, type Channel } from "./chat.ts";
@@ -71,7 +71,9 @@ function resolveLoadout(userId: number, body: Record<string, unknown>) {
   const mode = (body.mode === "faithful" ? "faithful" : "fixed") as Mode;
   if (body.house) {
     const l = validateLoadout(mode, String(body.house), String(body.colour ?? ""),
-      Array.isArray(body.units) ? (body.units as { defId: string }[]) : []);
+      Array.isArray(body.units) ? (body.units as { defId: string }[]) : [],
+      body.malice ? String(body.malice) : undefined,
+      (body.upgrades && typeof body.upgrades === "object") ? (body.upgrades as Record<string, string>) : undefined);
     saveLoadout(userId, l);
     return l;
   }
@@ -148,6 +150,7 @@ const server = createServer(async (req, res) => {
     if (path === "/api/factions" && method === "GET") {
       return void json(res, {
         palette: PLAYER_PALETTE,
+        malice: maliceLevels(),
         factions: Object.values(FACTIONS).map((f) => ({
           id: f.id, name: f.name, blurb: f.blurb, playstyle: f.playstyle, accent: f.accent,
           necromancer: f.necromancer, units: f.units,
@@ -226,7 +229,9 @@ const server = createServer(async (req, res) => {
       const b = await readJsonBody(req);
       try {
         const l = validateLoadout((b.mode === "faithful" ? "faithful" : "fixed") as Mode,
-          String(b.house), String(b.colour ?? ""), Array.isArray(b.units) ? (b.units as { defId: string }[]) : []);
+          String(b.house), String(b.colour ?? ""), Array.isArray(b.units) ? (b.units as { defId: string }[]) : [],
+          b.malice ? String(b.malice) : undefined,
+          (b.upgrades && typeof b.upgrades === "object") ? (b.upgrades as Record<string, string>) : undefined);
         saveLoadout(user.id, l);
         return void json(res, { ok: true, loadout: l });
       } catch (e) { return void json(res, { error: e instanceof LoadoutError ? e.message : "bad loadout" }, 400); }

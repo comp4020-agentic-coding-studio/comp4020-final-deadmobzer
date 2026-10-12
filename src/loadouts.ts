@@ -12,13 +12,22 @@ export interface SavedLoadout {
   house: string;
   colour: string;
   units: { defId: string }[];
+  malice?: string;                       // Malice level name (faithful mode)
+  upgrades?: Record<string, string>;     // unit defId -> chosen upgrade name
 }
+
+interface MaliceLevel { name: string; darkPower: number }
+const MALICE: MaliceLevel[] = (RULES.malice.levels as MaliceLevel[]);
+export function maliceLevels(): MaliceLevel[] { return MALICE; }
 
 // Validate a chosen Black Mass against the rules: a known House, a palette
 // colour, and a legal roster. In 'fixed' mode the roster is the House's five
 // units. In 'faithful' mode the player fills unit slots (thralls are 2-per-slot,
 // tyrant max 1) within the slot budget.
-export function validateLoadout(mode: Mode, house: string, colour: string, units: { defId: string }[]): SavedLoadout {
+export function validateLoadout(
+  mode: Mode, house: string, colour: string, units: { defId: string }[],
+  malice?: string, upgrades?: Record<string, string>,
+): SavedLoadout {
   if (!FACTIONS[house]) throw new LoadoutError("Unknown House.");
   if (!PLAYER_PALETTE.includes(colour)) throw new LoadoutError("Pick a colour from the palette.");
   const f = faction(house);
@@ -46,24 +55,50 @@ export function validateLoadout(mode: Mode, house: string, colour: string, units
     if (limit != null && n > limit) throw new LoadoutError(`Too many ${def.name} (max ${limit}).`);
   }
   if (slots > UNIT_SLOTS) throw new LoadoutError(`Over the slot budget (${slots} > ${UNIT_SLOTS}).`);
-  return { mode, house, colour, units };
+
+  // Malice + dark-power upgrades (optional). Spend 1 dark power per upgrade; one
+  // upgrade per unit type, except Ultrahell which allows two.
+  let level = MALICE[0];
+  let cleanUpgrades: Record<string, string> | undefined;
+  if (malice) {
+    const lvl = MALICE.find((m) => m.name === malice);
+    if (!lvl) throw new LoadoutError("Unknown Malice level.");
+    level = lvl;
+  }
+  if (upgrades && Object.keys(upgrades).length) {
+    const spent = Object.keys(upgrades).length;
+    if (spent > level.darkPower) throw new LoadoutError(`Over the dark-power budget (${spent} > ${level.darkPower}).`);
+    cleanUpgrades = {};
+    for (const [defId, upName] of Object.entries(upgrades)) {
+      const def = roster.get(defId);
+      if (!def || !counts.has(defId)) throw new LoadoutError(`Upgrade for a unit not in your roster: ${defId}`);
+      if (!def.upgrades?.some((u) => u.name === upName)) throw new LoadoutError(`Unknown upgrade: ${upName}`);
+      cleanUpgrades[defId] = upName;
+    }
+  }
+  return { mode, house, colour, units, malice: level.name, upgrades: cleanUpgrades };
 }
 
 export function saveLoadout(userId: number, l: SavedLoadout): void {
+  // units_json holds the whole Black Mass (units + malice + upgrades).
+  const blob = JSON.stringify({ units: l.units, malice: l.malice, upgrades: l.upgrades });
   db.prepare(
     `INSERT INTO loadouts (user_id, mode, house, colour, units_json, updated_at)
        VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_id, mode) DO UPDATE SET
        house = excluded.house, colour = excluded.colour,
        units_json = excluded.units_json, updated_at = excluded.updated_at`,
-  ).run(userId, l.mode, l.house, l.colour, JSON.stringify(l.units), nowISO());
+  ).run(userId, l.mode, l.house, l.colour, blob, nowISO());
 }
 
 export function getLoadout(userId: number, mode: Mode): SavedLoadout | null {
   const row = db.prepare("SELECT mode, house, colour, units_json FROM loadouts WHERE user_id = ? AND mode = ?")
     .get(userId, mode) as { mode: Mode; house: string; colour: string; units_json: string } | undefined;
   if (!row) return null;
-  return { mode: row.mode, house: row.house, colour: row.colour, units: JSON.parse(row.units_json) };
+  const parsed = JSON.parse(row.units_json);
+  // back-compat: older rows stored a bare units array
+  const extra = Array.isArray(parsed) ? { units: parsed } : parsed;
+  return { mode: row.mode, house: row.house, colour: row.colour, units: extra.units ?? [], malice: extra.malice, upgrades: extra.upgrades };
 }
 
 // Turn a saved loadout into the engine Loadout for a given user.

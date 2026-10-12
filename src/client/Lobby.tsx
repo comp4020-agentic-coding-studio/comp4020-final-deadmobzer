@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { getJSON, postJSON } from "./api.ts";
 
-interface UnitDef { id: string; name: string; type: string }
+interface Upgrade { name: string; text: string }
+interface UnitDef { id: string; name: string; type: string; upgrades?: Upgrade[] }
 interface FactionDef { id: string; name: string; blurb: string; playstyle: string; accent: string; units: UnitDef[] }
-interface Factions { palette: string[]; factions: FactionDef[] }
+interface MaliceLevel { name: string; darkPower: number }
+interface Factions { palette: string[]; malice: MaliceLevel[]; factions: FactionDef[] }
 
 type Mode = "fixed" | "faithful";
 
@@ -13,6 +15,8 @@ export function Lobby() {
   const [house, setHouse] = useState("carcass");
   const [colour, setColour] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
+  const [malice, setMalice] = useState("Spite");
+  const [upgrades, setUpgrades] = useState<Record<string, string>>({});
   const [code, setCode] = useState("");
   const [created, setCreated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,11 +32,16 @@ export function Lobby() {
   const faction = data?.factions.find((f) => f.id === house);
 
   function loadoutBody() {
-    const units = mode === "fixed"
-      ? [] // server fills the fixed roster
-      : (picked.length ? picked : (faction?.units.map((u) => u.id) ?? [])).map((defId) => ({ defId }));
-    return { mode, house, colour, units };
+    if (mode === "fixed") return { mode, house, colour, units: [] };
+    const ids = picked.length ? picked : (faction?.units.map((u) => u.id) ?? []);
+    // only keep upgrades for units actually in the roster
+    const cleanUpgrades: Record<string, string> = {};
+    for (const [defId, up] of Object.entries(upgrades)) if (ids.includes(defId) && up) cleanUpgrades[defId] = up;
+    return { mode, house, colour, units: ids.map((defId) => ({ defId })), malice, upgrades: cleanUpgrades };
   }
+
+  const darkPower = data?.malice.find((m) => m.name === malice)?.darkPower ?? 0;
+  const spent = Object.values(upgrades).filter(Boolean).length;
 
   async function go(kind: "quickjoin" | "create" | "join") {
     setError(null);
@@ -102,21 +111,38 @@ export function Lobby() {
         </div>
       </div>
       {mode === "faithful" && faction && (
-        <div className="row">
-          <label>Units (slot budget 5)</label>
-          <div className="units">
-            {faction.units.map((u) => {
-              const n = picked.filter((p) => p === u.id).length;
-              return (
-                <div key={u.id} className="unitpick">
-                  <span>{u.name} <em>{u.type}</em> ×{n}</span>
-                  <button onClick={() => setPicked([...picked, u.id])}>+</button>
-                  <button onClick={() => { const i = picked.indexOf(u.id); if (i >= 0) setPicked(picked.filter((_, j) => j !== i)); }}>−</button>
-                </div>
-              );
-            })}
+        <>
+          <div className="row">
+            <label>Malice</label>
+            <select value={malice} onChange={(e) => { setMalice(e.target.value); setUpgrades({}); }}>
+              {data.malice.map((m) => <option key={m.name} value={m.name}>{m.name} ({m.darkPower} dark power)</option>)}
+            </select>
+            <span className="blurb">spent {spent}/{darkPower}</span>
           </div>
-        </div>
+          <div className="row">
+            <label>Units (slot budget 5)</label>
+            <div className="units">
+              {faction.units.map((u) => {
+                const n = picked.filter((p) => p === u.id).length;
+                const inRoster = n > 0;
+                return (
+                  <div key={u.id} className="unitpick">
+                    <span>{u.name} <em>{u.type}</em> ×{n}</span>
+                    <button onClick={() => setPicked([...picked, u.id])}>+</button>
+                    <button onClick={() => { const i = picked.indexOf(u.id); if (i >= 0) setPicked(picked.filter((_, j) => j !== i)); }}>−</button>
+                    {inRoster && darkPower > 0 && u.upgrades && (
+                      <select value={upgrades[u.id] ?? ""} title={u.upgrades.find((x) => x.name === upgrades[u.id])?.text}
+                        onChange={(e) => setUpgrades({ ...upgrades, [u.id]: e.target.value })}>
+                        <option value="">no upgrade</option>
+                        {u.upgrades.map((up) => <option key={up.name} value={up.name}>{up.name}</option>)}
+                      </select>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
       )}
       <div className="actions">
         <button onClick={() => go("quickjoin")}>Quick-join (ranked)</button>
