@@ -1,62 +1,58 @@
-# a small daily
+# Maleghast Online
 
-A quiet place to reflect on your day and to stay close to the people who matter.
-Each day you answer one prompt for yourself and one about a friend, and the next
-morning you read what a friend wrote about you.
+A real-time, two-player recreation of the tabletop skirmish wargame
+*MAGNAGOTHICA Maleghast* (by Tom Parkinson-Morgan). Two necromancers raise their
+Black Mass on an 8×8 grid and fight until one necromancer falls. Everything each
+side does — every die, every move, every curse — is resolved on the server and
+read back live by both players in their own browsers.
 
 ## Who it's for
 
-This is for close friends and family — the small circle of people you actually
-want to stay connected to, not an audience. It isn't built to grow, go viral, or
-collect strangers. It works best with the handful of people whose day you
-genuinely care about.
+Two people who want a real opponent across a shared board, not a bot and not a
+solo puzzle. It's built for a pod, a group chat, a pair of friends on a call:
+share a lobby code or quick-join, pick a House, and play a full match in a sitting.
+Anyone else can watch and heckle from the stands.
 
-## What good means here
+## What "good" means here
 
-Good, for this app, is about two feelings: gratitude and connection. It's good
-if, over time, it helps people feel noticed and gives them a small, honest moment
-of reflection in the day.
+Good, for this app, is **a fair, legible, live duel against a real person, true to
+the game it recreates.** Four things make it good, and each is something you can
+check at the table:
 
-That's deliberately hard to measure from a single visit. You can't really tell
-whether this app is good by clicking around for ten minutes — you'd have to live
-with it for a week or two and see whether the daily rhythm actually makes you feel
-more connected to your friends. So I treat most of "good" here as something judged
-over time, not something proven in one session.
-
-## What I chose not to build
-
-I deliberately left out instant notifications and the big, buzzing real-time
-features you'd expect from a social app. There are no likes, no counts, no feeds,
-and no streaks pushing you to come back.
-
-I did this on purpose, to protect the feeling of mindfulness and ritual. The app
-is meant to be a snapshot in time — something you sit with once a day — not
-another stream demanding your attention. The one thing that is immediate is
-connecting with people (friend requests); everything you write is sealed and
-revealed the next day, so there's a reason to come back tomorrow rather than
-refresh now.
-
-## What shaped it
-
-The main inspiration is my own work journal — a habit I started so that, each
-week, I feel like I've done something of significance. I wanted that same small,
-grounding ritual, but pointed at the people around me instead of just my work.
-
-The format also borrows from Snapchat and Instagram stories: the idea of a
-snapshot in time, a moment that belongs to a single day rather than living forever
-in a feed.
+- **Live.** A move one player makes appears in the other's browser within about a
+  second, with no reload — and spectators see it too. Co-presence is the point: the
+  app is only interesting because someone else is acting at the same time.
+- **Fair.** The server is the only authority. It rolls the dice, resolves combat,
+  and decides what's legal. A client can ask to do something; it can never decide
+  the outcome, move a piece that isn't its own, or act out of turn.
+- **Legible.** You can always tell *who did what and why.* The battle log shows
+  every roll and its result, and the server logs name the two players so an
+  observer can follow a whole match from the logs alone.
+- **Faithful.** The stats, dice math (hit vs graze on DF, take-highest pools),
+  damage types, armour, pierce, devil damage, tokens, SOUL and the six canonical
+  Houses are taken from the rulebook, not invented.
 
 ## What's enforced, and what's judged
 
-Some of "good" is checked by tests; some can only be felt.
+Some of "good" is checked by `spec/` (run by `pnpm check` against the running app);
+some can only be felt over a match.
 
-- **Enforced** (in `spec/`, run by `pnpm check` against the live app): privacy —
-  no one reads another person's reflection; the seal — a note stays hidden until
-  the next day; real-time — a friend request reaches an open session within about
-  a second.
-- **Judged** (the part that needs a week, not a click): whether the daily rhythm
-  feels calm rather than demanding, and whether being written about actually lands
-  as gratitude and connection.
+- **Enforced:** server-side access control (only a game's two players may act, only
+  on their own units, only on their turn; spectators are read-only); no script
+  injection (user text is escaped, a strict CSP is set); the combat rules
+  (`spec/rules.test.ts`); real-time delivery (`spec/realtime.test.ts`); persistence
+  across restarts; and fair ratings (`spec/elo.test.ts`).
+- **Judged:** whether a match *feels* tense and readable, whether the faithfulness
+  lands for someone who knows the tabletop game, and whether the table reads as the
+  rulebook's world rather than a generic grid.
 
-The decision about what travels live and what waits is written up in
-[`docs/adr-001-realtime-scope.md`](docs/adr-001-realtime-scope.md).
+## What shaped it
+
+The tabletop rulebook is the source of truth for rules and look. The online
+experience borrows from virtual tabletops: **Tabletop Simulator** (a 3D table and
+dice you roll), **Owlbear Rodeo** (share a link and play), **Roll20** (tokens on a
+grid and a visible roll log), **Foundry VTT** (data-driven stat blocks you can
+inspect), and **Fantasy Grounds** (the system, not the players, enforces the rules).
+
+The decision to keep all authority and logging on the server is written up in
+[`docs/adr-001-server-authoritative-state.md`](docs/adr-001-server-authoritative-state.md).

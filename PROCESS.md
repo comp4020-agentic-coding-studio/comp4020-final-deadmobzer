@@ -1,163 +1,101 @@
 # Process overview
 
-<!-- First draft from the author's own answers. The brief wants ~900–1100 words
-     at submission; the <!-- EXPAND --> notes mark where to go deeper. Cite
-     commits as links whose text is the short hash. -->
+> First full draft in my own voice; the brief wants ~900–1100 words at submission.
+> It describes the project **as it stands now**, after the pivot.
 
 ## From the brief to the idea
 
-The brief asked for a multi-user, real-time website that's good, and warned
-against the median answer — a chat room with the nouns swapped. I didn't want to
-build that. A chat room asks for a lot of your attention and gives you a stream
-you have to keep up with. I wanted the opposite: something that takes only a tiny
-bit of time out of your day, that's easy to fit into your life, and that leaves
-you feeling more connected rather than more online.
+The brief asks for a deployed, multi-user, real-time app that is *good* by a
+definition I make and defend, and it warns against the median answer — a chat room
+with the nouns swapped. My first project, a daily reflection diary, drifted toward
+exactly that failure from the other side: it was calm and personal, but it barely
+used the thing the brief is really testing. Two people almost never touched the same
+state at the same time; the only live event was a friend request. When I was honest
+about it, the multi-user, real-time requirement was bolted on, not load-bearing.
 
-So I landed on a daily reflection diary. Each person answers one prompt about
-their own day and one about a friend, and reads what a friend wrote about them the
-next morning. The idea came from my own work journal — a habit I keep so that each
-week I feel I've done something that matters — and from the "snapshot in time"
-format of Snapchat and Instagram stories. I wanted that ritual, aimed at the
-people I care about.
+So I made a complete shift. I handed the agent a harder, less familiar problem than
+another CRUD app: **read the ruleset of a tabletop wargame and recreate it online.**
+The game is *MAGNAGOTHICA Maleghast*, a 1v1 skirmish where two necromancers raise a
+warband on an 8×8 grid and fight until a necromancer falls. This is multi-user by
+construction — the whole point is a live opponent across a shared board — and it let
+me push on what the agent could do with an unusual, rules-dense task.
 
 ## What good means, and how it shaped the build
 
-I decided good here means gratitude and connection, which is hard to measure in a
-single sitting — you'd need a week or two of living with it. That pushed me away
-from features that chase engagement (notifications, feeds, counts, streaks) and
-toward a calm, once-a-day ritual.
+I define good here as **a fair, legible, live duel against a real person, faithful
+to the game it recreates.** Each word is something I can check at the table, and
+each pushed a concrete decision:
 
-## The stack
+- *Fair* → the server is the only authority. It rolls the dice, resolves combat, and
+  validates every move. A client can ask; it can never decide.
+- *Live* → one player's move reaches the other (and spectators) within about a
+  second over WebSockets, no reload.
+- *Legible* → a visible battle log of every roll, and server logs that name the two
+  players so a whole match is followable from the logs alone.
+- *Faithful* → stats, dice math, damage types, tokens and the six Houses come from
+  the rulebook, not from me.
 
-I built it on Node with WebSockets and SQLite. Node gave me straightforward
-package management and a simple way to add WebSockets for the real-time part. I
-wanted to avoid front-end JavaScript as much as possible, so the app is
-server-rendered — plain HTML from the server, with only a little client-side
-script for the live parts — rather than a single-page app or something built on
-jQuery. I used SQLite for storage because it suits a small, single-machine app
-with one volume and needs no separate database service.
+The README states this and says which claims are enforced by `spec/` and which are
+left to judgement; CLAUDE.md turns the enforced ones into invariants; `spec/` is the
+checks. The three agree on purpose.
 
-The trade-off I accepted is that this runs on one small machine (256 MB) with a
-single `/data` volume, no separate database, and no front-end build. That doesn't
-feel right for a real release — ideally each "circle", or net of people, would get
-its own container rather than everyone sharing one machine and one database — but
-it's good enough for a prototype I can stand up in a week and keep iterating on.
-For now, the simplicity is worth more than the headroom.
+## The stack, and why
 
-Part of the stack choice, honestly, was trusting the recommended default so I
-could get to a working MVP quickly and spend the week iterating on the idea rather
-than the plumbing.
+I kept the course platform — one 256 MB Fly machine, one SQLite volume, HTTP on
+`$PORT` — and a hand-rolled Node server with no web framework, because the app's
+logic is small and I wanted no magic between a request and the database. The game
+itself is a **pure engine over one serializable `GameState`** (`src/game/`): the
+server rolls from a seeded PRNG stored in the state, so dice are deterministic,
+persistable and replayable, and the exact same code the server runs is what the
+unit tests check. State serializes straight to SQLite, so persistence and authority
+fall out of one design rather than two.
 
-## Decisions I made
+The biggest stack decision was to **drop Material UI** and derive the look from the
+rulebook — its fonts and palette, extracted once into `data/style.json`. A generic
+component kit fought the source material's gothic, blood-and-bone identity, and
+removing it also shrank the dependency surface.
 
-Two decisions were mine to make and defend.
+## How I worked with the agent
 
-**Guaranteed reciprocity.** When the app matches people for the day's "friend"
-prompt, I chose a model where everyone is written about, rather than a purely
-random one where some people might get nothing. Everyone deserves to feel wanted
-and noticed, and an app about connection shouldn't leave someone unseen.
+I front-loaded the thinking into a plan and had the agent build in committed phases,
+reading each result before starting the next. The work grew in legible steps:
 
-**What's live and what waits.** Friendships happen in real time — a request
-reaches you right away — but the reflections are sealed until the next day. I
-wanted it to work like that: the daily reveal is what brings people back each
-morning. Real-time was part of the assignment spec rather than something the app
-needed everywhere, so I used it where it genuinely helps (connecting with people)
-and kept it away from the writing, which is meant to be unhurried. This is written
-up as an architecture decision record in
-[`docs/adr-001-realtime-scope.md`](docs/adr-001-realtime-scope.md).
+- **Extract before build** ([`a716ace`](../../commit/a716ace)): the stats live only
+  in a 58 MB, art-heavy PDF, so I had the agent sweep the whole rulebook to text
+  once and work from `data/raw/` afterward — never re-reading the PDF. The same step
+  pulled the fonts and palette into a reusable style file.
+- **Data as the source of truth** ([`1ad41a1`](../../commit/1ad41a1),
+  [`1b1d77e`](../../commit/1b1d77e)): all six Houses — 36 units — are encoded as JSON
+  with real MV/HP/DF/ARM, abilities and upgrades. Abilities carry an engine-readable
+  `effect[]` *and* the faithful rulebook text, so re-balancing is a data edit and the
+  exact wording is always available to the inspector.
+- **A tested engine** ([`d4ff663`](../../commit/d4ff663)): the combat core with
+  pure-function tests for the rules the UI can't see — armour by type, pierce,
+  devil/obliterate, token math, legal moves, acting out of turn, victory.
+- **The whole backend, playable via API** ([`9d48317`](../../commit/9d48317)):
+  lobbies (codes, quick-join, per-mode queues), games (validated actions,
+  persistence, roles), two-channel chat, ELO, profiles, real-time game rooms, and a
+  strict CSP.
 
-## Working with the agent
+## Corrections that landed in the harness
 
-This week, working with the agent felt like an act of trust. Because I came in with
-a plan and a clear idea of what I wanted — the concept, the feeling, and the
-decisions above — I didn't need to redirect it much. The thinking was front-loaded
-into the plan, so most of the week's work was the agent turning that plan into a
-working MVP while I steered its shape, rather than me catching it going the wrong
-way. My goal throughout was something I could prototype and then iterate on across
-the rest of the week.
-
-One concrete correction: a bug where the daily prompts were being stored keyed by
-the user's id instead of the date. We caught it by reading the database directly
-rather than trusting that the happy path worked, and fixed it. The privacy, seal,
-and real-time promises are now pinned by checks in `spec/` so they can't quietly
-break later.
-
-## The crit-10 redesign: Material UI
-
-<!-- DRAFT — factual record of the change, put it in your own voice before you
-     submit. Note it reverses the "avoid front-end JavaScript" stance in "The
-     stack" above; say why that trade felt worth it (or didn't). -->
-
-For crit 10 I reworked the whole look with Material UI: the top bar is gone,
-navigation moved to a floating bottom bar, the content fills the screen in plain
-white or black, and a corner button toggles dark mode. I went with Material UI to
-make it feel more modern and expressive — and, honestly, so it looks less
-AI-coded, by leaning on an established design framework instead of hand-rolled
-styles. That meant taking on a real front-end stack — React and MUI — which is the
-opposite of the "avoid front-end JavaScript" decision I made at the start.
-
-On steering: I kept the agent honest by making sure my tests covered the cases I
-cared about, so a redesign that broke a promise would show up red rather than slip
-through. Two things in particular kept it honest, and the second one bit me. First,
-the spec: my checks in `spec/` read the HTML the server sends, with no browser, so
-a client-only app would have quietly broken privacy and the published invariants —
-half the mark. Second, the 256 MB machine. My first attempt server-rendered the
-whole MUI tree and hydrated it in the browser ([`ab31b0c`](../../commit/ab31b0c)),
-and it worked locally — but on Fly it crash-looped and the live `pnpm check` went
-red. I measured it: just loading React + MUI on the server sat at ~202 MB resident
-before a single request, so under load it tipped over the 256 MB limit and kept
-restarting. That's a decision the hardware made for me.
-
-So I split it out in the next commit: the server sends **lightweight plain HTML**
-(`src/serverview.ts`) that carries exactly what the spec reads and works with
-JavaScript off, and the full Material UI app renders in the browser over it
-(`src/ui`, `src/client`). The server dropped back to ~75 MB, the crash-loop
-stopped, and the live check went green again. The trade is that the real UI paints
-a beat after load rather than arriving fully-formed from the server. The
-access-control check I added this week (`spec/access.test.ts`) I wrote against
-status codes and `/api/state` rather than scraping markup, so it survived both the
-redesign and this architecture change.
-
-## Logging who did what
-
-<!-- DRAFT — put in your own voice; add the commit hash once it's citable. -->
-
-The crit also asks the app to log, server-side, who did what — enough to tell two
-people apart from `flyctl logs` alone. Every sign-in and every state change
-(saving an entry, sending / accepting / declining a friend request) now emits one
-readable line like `audit user=alice action=entry.save kind=self` (`src/audit.ts`).
-It records the action and the people involved, never the reflection text — the
-seal holds in the logs too. `spec/audit.test.ts` pins that shape, including that a
-saved reflection's body never reaches a log line.
-
-## A complete shift: from diary to game recreation
-
-<!-- DRAFT — put in your own voice before submission. Fill in: how the new idea
-     satisfies multi-user/real-time, the stack decision, what (if anything) of
-     "a small daily" carries over, and cite the commit(s) once they exist. -->
-
-Going into the rest of the project I'm making a complete shift away from "a small
-daily". The diary idea never really earned the multi-user, real-time brief — the
-only live piece was a friend request notification, and the two people in it
-barely touched the same state at the same time. Rather than keep patching that
-mismatch, after some struggle with it I decided to give the agent a harder,
-different problem: read a ruleset for a game and recreate that game, given some
-visual assets. I wanted to push what Claude could do with a less familiar kind of
-task than another CRUD-shaped web app.
-
-[TODO: say how this new app is multi-user and real-time in practice, what stack
-it's built on, and whether anything from the old build — auth, logging, the
-access-control approach — carries across.]
+The course's rule is that a fix with no trace in the harness didn't really happen,
+and two moments shaped the build that way. First, the **256 MB limit**: the earlier
+app had already crash-looped once from a heavy server-rendered UI, and the new app
+adds a 3D table that is heavier still. Rather than trust myself to remember, I had
+the agent add a **build-time purity assertion** that fails if Three.js, React or
+friends ever leak into the server bundle. Second, **access control**: the easy
+version hides buttons in the UI; the brief wants it checked on the server. I wrote
+`spec/access.test.ts` first, so a spectator acting, the wrong side acting, or a
+player moving the opponent's unit all fail with 403, and the server — not the UI —
+is what the test talks to.
 
 ## What's next
 
-<!-- EXPAND for the final submission: what you'd change before the deadline. -->
-
-Before the deadline I want to put the README fully in my own voice, add crit 10's
-server-side logging, and act on whatever the crit surfaces. I also want to revisit
-the whole user flow and plan it out properly — in Figma or something similar — so
-the screens hang together as one cohesive experience rather than something that
-grew screen by screen. Longer term, I'd like to develop this into a mobile app.
-
-<!-- NOTE: this section still describes "a small daily". Revisit it for the new
-     game-recreation direction once that idea is further along. -->
+The server-side game is complete and green (34 tests). The remaining major piece is
+the **3D client**: a Three.js table with the faction art as standees, orbit camera,
+lighting and reflections, dice that roll on the board, and the battle-log and chat
+panels. It is deliberately the last thing, because it is pure presentation over a
+proven, authoritative core — the correctness of the game never depended on it. Before
+the deadline I also want to self-host the rulebook fonts and bring in open-licensed
+terrain for the board, and put every one of these documents fully in my own voice.

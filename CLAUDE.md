@@ -1,61 +1,64 @@
 # Harness — rules for working in this repo
 
 These are the standards the agent's work must meet. They come from what "good"
-means for this app (see `README.md`): a private, unhurried, reciprocal diary.
+means for this app (see `README.md`): a fair, legible, live, faithful 1v1 duel.
 When something here and the README disagree, the README wins and this file is
 wrong — fix it.
 
 ## Invariants the app must never break
 
-- **Privacy.** A person can only ever read their own self-reflections. A
-  friend-note can be read by its author and, once revealed, its target — no one
-  else, ever. There is no endpoint that returns another user's reflection.
-  (`spec/privacy.test.ts`.)
-- **The seal.** A note written on a day is invisible to its target until the
-  viewer's day has moved past it. The reveal rule lives in one place,
-  `src/reveal.ts`; never inline a date comparison that bypasses it.
-  (`spec/reveal.test.ts`.)
-- **Real-time scope.** Relationship/presence events are live; reflection content
-  is not. Don't push note contents over the WebSocket. See
-  `docs/adr-001-realtime-scope.md`.
-- **You write about the friend you were matched with.** Friend-note targets come
-  from the day's assignment (`src/daily.ts`), never from client input.
+- **The server is the only authority.** All game state lives in `GameState` and is
+  mutated only by the pure engine in `src/game/engine.ts`. Dice are rolled
+  server-side from a seeded PRNG stored in the state (`src/game/prng.ts`); the
+  client only ever *animates* results the server already decided. Never let a client
+  report an outcome. (`spec/rules.test.ts`.)
+- **Access is checked on the server.** Only a game's two participants may act, only
+  on **their own** units, and only **on their turn**. Everyone else is a read-only
+  spectator. This is enforced in `src/games.ts` (`act`/`roleOf`), not in the UI.
+  (`spec/access.test.ts` — the crit-10 contract.)
+- **Who-did-what is logged, server-side, by name.** Every sign-in and state change
+  emits one `audit …` line naming the actor (`src/audit.ts`); a whole match is
+  followable from `flyctl logs` alone. The logging outlives the crit.
+- **No script injection.** User text (chat, names) is only ever rendered as text —
+  escaped on output (`escapeHtml`), never `dangerouslySetInnerHTML`, with a strict
+  CSP on every response (scripts `'self'`, no inline). Store raw, escape on output.
+  (`spec/security.test.ts`.)
+- **It persists.** The full `GameState` is serialized to SQLite under `/data` on
+  every action (`src/games.ts`), so a game survives a restart/redeploy. Nothing else
+  survives; don't rely on in-memory state except live sockets. (`spec/persistence.test.ts`.)
+- **Faithful to the rulebook.** Stats and abilities come from `data/factions/*.json`
+  and the rules from `data/rules.json`, extracted from the rulebook corpus in
+  `data/raw/`. Don't invent numbers; change the data, not the engine, to re-balance.
 
 ## Fixed by the template — don't change
 
-- `fly.toml`, `Dockerfile` shape (one machine, one `/data` volume, HTTP on
+- `fly.toml`, the `Dockerfile` shape (one machine, one `/data` volume, HTTP on
   `$PORT`), and the two shipped checks in `spec/invariants.test.ts` (`/` answers
   200; `/readme/` publishes `README.md`'s headings). Keep `invariants.test.ts`.
-- `README.md` is published verbatim at `/readme/`; keep them in sync.
+- `README.md` is published in full at `/readme/`; keep them in sync.
+- Schema changes are additive and idempotent (`CREATE TABLE IF NOT EXISTS` /
+  guarded `ALTER` via `ensureColumn`), because the app boots from an empty volume.
+
+## Keep the server light (the lesson already paid for)
+
+Server-rendering a heavy UI graph crash-looped the 256 MB machine once already.
+So: Three.js, anime.js, cannon-es, React and fonts are **client-only**, bundled
+into `public/app.js`; the server emits a plain-HTML contract and never imports
+them. `scripts/build.mjs` has a purity assertion that fails the build if they leak
+into `dist/server.js`. Keep the client bundle lean.
+
+## Visual design follows the rulebook
+
+The look is derived from the rulebook, not a generic UI kit (MUI was removed). Type
+and colour tokens live in `data/style.json` (fonts via `pdffonts`, palette sampled
+from the PDF); the UI and the 3D scene read from there so the whole app shares one
+source of truth. See `docs/style-guide.md` and
+`docs/adr-004-rulebook-design-system.md`.
 
 ## How changes land
 
-- Every check must stay reachable through `pnpm check`, run against the running
-  app. Add new promises as `spec/*.test.ts` rather than asserting them in prose.
-- Persisted state lives only under `/data` (SQLite). Nothing else survives a
-  redeploy; don't rely on in-memory state across restarts except live sockets.
-- Schema changes are additive and idempotent (`CREATE TABLE IF NOT EXISTS` /
-  `ALTER` guards), because the app must boot from an empty volume (CI runs it
-  with a throwaway `/data`).
-- The UI is **React + Material UI, rendered in the browser** (`src/ui`, mounted
-  by `src/client` with `createRoot`). This is a deliberate reversal of the earlier
-  "no frontend framework" rule, made for crit 10's redesign (Material UI, a
-  floating bottom nav, full-screen light/dark). Two hard constraints shaped it and
-  must hold:
-  - **The server stays light and still emits the contract as plain HTML.** The
-    spec checks the raw HTML the server sends (it runs no JS), so `src/serverview.ts`
-    server-renders lightweight HTML carrying what the spec reads ("Sign in", the
-    reveal heading, `/day?d=…` links, the README headings) plus `window.__DATA__`;
-    the MUI app then replaces it client-side. Server-rendering MUI itself was tried
-    and abandoned: its module graph needs ~200 MB resident, which **does not fit
-    the 256 MB machine** (it crash-looped). Keep MUI off the server.
-  - It must still **compile in the `Dockerfile` and fit the 256 MB machine** (the
-    server now sits ~75–90 MB). No second service beside the app. The client
-    bundle is built by `scripts/build.mjs` into `public/app.js` (gitignored); keep
-    it lean (no `@mui/icons-material`).
-
-## When the agent gets it wrong
-
-Put the correction in the harness, not just a retry: a new `spec/` check, a rule
-here, or a thrown-away attempt recorded in `PROCESS.md`. A fix with no trace in
-the harness or the commits didn't really happen.
+- Every check stays reachable through `pnpm check`, run against the running app.
+  Add new promises as `spec/*.test.ts`, not prose.
+- When the agent gets it wrong, put the correction in the harness — a new `spec/`
+  check, a rule here, or a thrown-away attempt recorded in `PROCESS.md`. A fix with
+  no trace in the harness or the commits didn't really happen.
