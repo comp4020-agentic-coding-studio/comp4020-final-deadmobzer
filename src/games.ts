@@ -103,6 +103,17 @@ export function act(id: string, userId: number, action: Action): { ok: boolean; 
   return { ok: true, state: result.state };
 }
 
+// Active games for the spectator list (newest first), with both players' names.
+export function activeGames(limit = 30): { id: string; mode: string; players: string[] }[] {
+  const rows = db.prepare(
+    `SELECT g.id AS id, g.mode AS mode, a.display_name AS p0, b.display_name AS p1
+       FROM games g JOIN users a ON a.id = g.p0_id JOIN users b ON b.id = g.p1_id
+      WHERE g.status = 'active'
+      ORDER BY g.updated_at DESC LIMIT ?`,
+  ).all(limit) as { id: string; mode: string; p0: string; p1: string }[];
+  return rows.map((r) => ({ id: r.id, mode: r.mode, players: [r.p0, r.p1] }));
+}
+
 // Distinct recent opponents for a user, newest first — used by the Friends tab.
 export function recentOpponents(userId: number, limit = 10): { id: number; username: string; display_name: string }[] {
   return db.prepare(

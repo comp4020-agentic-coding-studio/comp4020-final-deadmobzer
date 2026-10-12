@@ -171,12 +171,16 @@ export function Game({ gameId }: { gameId: string }) {
             <div key={m.id} className="chatline"><strong>{m.displayName}:</strong> {m.body}</div>
           ))}
         </div>
-        {tab !== "log" && (
+        {tab !== "log" && !(tab === "player" && view.role === "spectator") && (
           <div className="compose">
             <input value={msg} onChange={(e) => setMsg(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Say something…" />
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder={view.role === "spectator" ? "Cheer from the stands…" : "Say something…"} />
             <button onClick={send}>Send</button>
           </div>
+        )}
+        {tab === "player" && view.role === "spectator" && (
+          <p className="blurb">Player chat is read-only for spectators — use Audience.</p>
         )}
       </aside>
     </div>

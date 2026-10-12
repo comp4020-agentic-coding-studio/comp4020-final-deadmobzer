@@ -17,8 +17,13 @@ export function Lobby() {
   const [created, setCreated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [waiting, setWaiting] = useState(false);
+  const [live, setLive] = useState<{ id: string; mode: string; players: string[] }[]>([]);
 
   useEffect(() => { getJSON<Factions>("/api/factions").then((d) => { setData(d); setColour(d.palette[0]); }); }, []);
+  useEffect(() => {
+    const load = () => getJSON<{ games: typeof live }>("/api/games/active").then((r) => setLive(r.games)).catch(() => {});
+    load(); const t = setInterval(load, 5000); return () => clearInterval(t);
+  }, []);
 
   const faction = data?.factions.find((f) => f.id === house);
 
@@ -122,6 +127,17 @@ export function Lobby() {
         </span>
       </div>
       {error && <p className="err">{error}</p>}
+
+      <h2 style={{ marginTop: 28 }}>Watch a live game</h2>
+      {live.length === 0 && <p className="blurb">No games in progress right now.</p>}
+      <div className="units">
+        {live.map((g) => (
+          <div key={g.id} className="unitpick">
+            <span>{g.players.join(" vs ")} <em>{g.mode}</em></span>
+            <button onClick={() => location.assign(`/g/${g.id}`)}>Watch</button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

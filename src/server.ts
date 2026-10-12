@@ -20,7 +20,7 @@ import { today, TZ } from "./time.ts";
 import { FACTIONS, PLAYER_PALETTE } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, LoadoutError, type Mode } from "./loadouts.ts";
 import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
-import { gameView, act, recentOpponents, GameError } from "./games.ts";
+import { gameView, act, recentOpponents, activeGames, GameError } from "./games.ts";
 import { postMessage, messagesFor, ChatError, type Channel } from "./chat.ts";
 import { getProfile, setAvatar, ProfileError } from "./profile.ts";
 import type { Action } from "./game/types.ts";
@@ -275,6 +275,9 @@ const server = createServer(async (req, res) => {
     }
     if (path === "/api/recent-opponents" && method === "GET") {
       return void json(res, { opponents: recentOpponents(user.id) });
+    }
+    if (path === "/api/games/active" && method === "GET") {
+      return void json(res, { games: activeGames() });
     }
 
     // games: /api/game/<id>, /api/game/<id>/action, /api/game/<id>/chat

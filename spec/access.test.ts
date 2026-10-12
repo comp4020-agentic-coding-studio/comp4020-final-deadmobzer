@@ -49,4 +49,13 @@ describe("game access control (server-side)", () => {
     const res = await get(baseUrl, `/api/game/${gameId}`);
     expect(res.status).toBe(401);
   });
+
+  it("a spectator may post to audience chat but not player chat", async () => {
+    const { gameId } = await startGame(baseUrl);
+    const spectator = await signup(baseUrl);
+    const aud = await api(baseUrl, spectator.sid, `/api/game/${gameId}/chat`, { channel: "audience", body: "go!" });
+    expect(aud.status).toBe(200);
+    const player = await api(baseUrl, spectator.sid, `/api/game/${gameId}/chat`, { channel: "player", body: "hi" });
+    expect(player.status).toBe(400);
+  });
 });
