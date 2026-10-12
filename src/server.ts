@@ -20,7 +20,7 @@ import { today, TZ } from "./time.ts";
 import { FACTIONS, PLAYER_PALETTE, allUnitDefs } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, maliceLevels, LoadoutError, type Mode } from "./loadouts.ts";
 import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
-import { gameView, act, movesFor, recentOpponents, activeGames, GameError } from "./games.ts";
+import { gameView, act, movesFor, targetsFor, recentOpponents, activeGames, GameError } from "./games.ts";
 import { postMessage, messagesFor, ChatError, type Channel } from "./chat.ts";
 import { getProfile, setAvatar, ProfileError } from "./profile.ts";
 import type { Action } from "./game/types.ts";
@@ -299,14 +299,19 @@ const server = createServer(async (req, res) => {
       return void json(res, { games: activeGames() });
     }
 
-    // games: /api/game/<id>, /action, /chat, /moves
-    const gameMatch = /^\/api\/game\/([A-Za-z0-9_-]+)(\/action|\/chat|\/moves)?$/.exec(path);
+    // games: /api/game/<id>, /action, /chat, /moves, /targets
+    const gameMatch = /^\/api\/game\/([A-Za-z0-9_-]+)(\/action|\/chat|\/moves|\/targets)?$/.exec(path);
     if (gameMatch) {
       const id = gameMatch[1];
       const sub = gameMatch[2];
       if (sub === "/moves" && method === "GET") {
         const iid = url.searchParams.get("iid") ?? "";
         return void json(res, { tiles: movesFor(id, user.id, iid) });
+      }
+      if (sub === "/targets" && method === "GET") {
+        const iid = url.searchParams.get("iid") ?? "";
+        const ability = url.searchParams.get("ability") ?? "";
+        return void json(res, { targets: targetsFor(id, user.id, iid, ability) });
       }
       if (!sub && method === "GET") {
         const v = gameView(id, user.id);

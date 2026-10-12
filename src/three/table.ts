@@ -186,12 +186,13 @@ export class Table {
   private makeStandee(u: TableUnit, colour: string): THREE.Group {
     const g = new THREE.Group();
     const col = new THREE.Color(colour);
-    const muted = col.clone().lerp(new THREE.Color(0x2a2a2a), 0.55); // base = muted team colour
+    // base: chess-style — side 0 bone-white, side 1 black (ownership also shown by
+    // the team-colour ring + the accent-shifted art).
+    const baseCol = u.owner === 0 ? new THREE.Color(0xe8e4da) : new THREE.Color(0x111114);
     const r = u.isNecromancer ? 0.42 : 0.34;
-    // base: muted-colour low-poly disc
     const base = new THREE.Mesh(
       new THREE.CylinderGeometry(r, r * 1.1, 0.16, 16),
-      new THREE.MeshStandardMaterial({ color: muted, roughness: 0.5, metalness: 0.4 }),
+      new THREE.MeshStandardMaterial({ color: baseCol, roughness: 0.5, metalness: 0.3 }),
     );
     base.position.y = 0.14; base.castShadow = true; base.receiveShadow = true;
     g.add(base);
@@ -233,13 +234,17 @@ export class Table {
     return g;
   }
 
-  highlightTiles(tiles: { x: number; y: number }[]): void {
+  // kind "move" (red) highlights reachable tiles; "target" (amber) highlights
+  // valid ability targets. Each call clears the previous highlights.
+  highlightTiles(tiles: { x: number; y: number }[], kind: "move" | "target" = "move"): void {
     for (const h of this.highlights) this.scene.remove(h);
     this.highlights = [];
-    const mat = new THREE.MeshStandardMaterial({ color: 0xf00000, transparent: true, opacity: 0.4, emissive: 0xf00000, emissiveIntensity: 0.4 });
+    const colour = kind === "target" ? 0xf0c030 : 0xf00000;
+    const mat = new THREE.MeshStandardMaterial({ color: colour, transparent: true, opacity: 0.45, emissive: colour, emissiveIntensity: 0.5 });
+    const h = kind === "target" ? 0.9 : 0.04;
     for (const t of tiles) {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(TILE * 0.9, 0.04, TILE * 0.9), mat);
-      m.position.set(t.x, 0.13, t.y);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(TILE * 0.9, h, TILE * 0.9), mat);
+      m.position.set(t.x, kind === "target" ? 0.5 : 0.13, t.y);
       this.scene.add(m);
       this.highlights.push(m);
     }

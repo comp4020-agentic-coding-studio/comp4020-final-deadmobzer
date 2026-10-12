@@ -207,6 +207,27 @@ export function legalMoves(s: GameState, iid: string): Pos[] {
   return reachable(s, u, moveBudget(u));
 }
 
+// The units an ability could legally target right now (for the client to
+// highlight on the board). Range/melee is enforced here; the server still
+// re-validates on use.
+export function legalTargets(s: GameState, iid: string, abilityName: string): { iid: string; pos: Pos }[] {
+  const u = unit(s, iid);
+  if (!u || !u.alive || u.activatedThisRound || s.phase !== "playing") return [];
+  const ab = u.acts.find((a) => a.name === abilityName);
+  if (!ab) return [];
+  const melee = ab.range === "melee" || ab.tags.includes("melee");
+  const band = Array.isArray(ab.range) ? ab.range : null;
+  const needsTarget = melee || band || ab.tags.includes("attack") || ab.tags.includes("curse") || ab.tags.includes("pull");
+  if (!needsTarget) return [];                        // self / no-target ability
+  const out: { iid: string; pos: Pos }[] = [];
+  for (const o of s.units) {
+    if (!o.alive || o.iid === u.iid) continue;
+    const d = chebyshev(u.pos, o.pos);
+    if (melee ? d === 1 : band ? d >= band[0] && d <= band[1] : true) out.push({ iid: o.iid, pos: o.pos });
+  }
+  return out;
+}
+
 // ---------- attack ----------
 
 function dicePool(s: GameState, attacker: Unit): number {

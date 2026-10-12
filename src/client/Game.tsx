@@ -35,6 +35,7 @@ export function Game({ gameId }: { gameId: string }) {
   const [tab, setTab] = useState<"log" | "player" | "audience">("log");
   const [error, setError] = useState<string | null>(null);
   const [pendingAbility, setPendingAbility] = useState<Ability | null>(null);
+  const [targetable, setTargetable] = useState<string[]>([]);
 
   const refetch = useCallback(async () => {
     try { setView(await getJSON<GameView>(`/api/game/${gameId}`)); }
@@ -85,18 +86,28 @@ export function Game({ gameId }: { gameId: string }) {
     lastLogLen.current = log.length;
   }, [view]);
 
-  // when you select your own unit on your turn, highlight where it can move
+  // Highlight the board for the current intent: an armed ability shows its valid
+  // targets (amber); otherwise a selected own unit shows where it can move (red).
   useEffect(() => {
     if (!tableRef.current) return;
     const su = view?.state.units.find((u) => u.iid === selected);
-    if (myTurn && su && su.owner === myseat) {
-      getJSON<{ tiles: { x: number; y: number }[] }>(`/api/game/${gameId}/moves?iid=${selected}`)
-        .then((r) => tableRef.current?.highlightTiles(r.tiles)).catch(() => {});
+    if (!myTurn || !su || su.owner !== myseat) {
+      setTargetable([]); tableRef.current.highlightTiles([]); return;
+    }
+    if (pendingAbility) {
+      getJSON<{ targets: { iid: string; pos: { x: number; y: number } }[] }>(
+        `/api/game/${gameId}/targets?iid=${selected}&ability=${encodeURIComponent(pendingAbility.name)}`)
+        .then((r) => {
+          setTargetable(r.targets.map((t) => t.iid));
+          tableRef.current?.highlightTiles(r.targets.map((t) => t.pos), "target");
+        }).catch(() => {});
     } else {
-      tableRef.current.highlightTiles([]);
+      setTargetable([]);
+      getJSON<{ tiles: { x: number; y: number }[] }>(`/api/game/${gameId}/moves?iid=${selected}`)
+        .then((r) => tableRef.current?.highlightTiles(r.tiles, "move")).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected, view?.state.activeSide, view?.state.round]);
+  }, [selected, pendingAbility, view?.state.activeSide, view?.state.round]);
 
   async function tryMove(x: number, y: number) {
     if (!myTurn || !selectedUnit || selectedUnit.owner !== myseat) return;
@@ -128,8 +139,15 @@ export function Game({ gameId }: { gameId: string }) {
   }
 
   // Refresh the handlers the 3D table calls, so clicks always use current state.
-  handlersRef.current.pickUnit = (iid) => setSelected((cur) => (cur === iid ? null : iid));
-  handlersRef.current.pickTile = (x, y) => tryMove(x, y);
+  handlersRef.current.pickUnit = (iid) => {
+    // If an ability is armed and this unit is a valid target, fire it.
+    if (pendingAbility && targetable.includes(iid)) {
+      useAbility(pendingAbility, iid); setPendingAbility(null); return;
+    }
+    setPendingAbility(null);
+    setSelected((cur) => (cur === iid ? null : iid));
+  };
+  handlersRef.current.pickTile = (x, y) => { if (!pendingAbility) tryMove(x, y); };
   handlersRef.current.hoverUnit = (iid) => setHover(iid);
 
   if (!view) return <div className="pad">{error ?? "Loading the table…"}</div>;
@@ -154,8 +172,9 @@ export function Game({ gameId }: { gameId: string }) {
           {s.phase === "over" ? "The battle is over."
             : view.role === "spectator" ? "You're watching. Drag to orbit the board; chat in Audience."
             : !myTurn ? "Waiting for your opponent. Drag to orbit the board."
+            : pendingAbility ? `Click a glowing (amber) target for ${pendingAbility.name}.`
             : selectedUnit && selectedUnit.owner === myseat
-              ? "Click a glowing tile to move, or pick an ability below. Click the unit again to deselect."
+              ? "Click a glowing (red) tile to move, or pick an ability. Click the unit again to deselect."
               : "Your turn — click one of your units to select it (drag to orbit), then move or act. Or End turn."}
         </div>
 
@@ -165,22 +184,24 @@ export function Game({ gameId }: { gameId: string }) {
             <Stat u={selectedUnit} />
             {myTurn && selectedUnit.owner === myseat && (
               <div className="acts">
-                {selectedUnit.acts.map((a) => (
-                  <button key={a.name} title={a.text}
-                    onClick={() => (a.tags.includes("self") || a.range === "self") ? useAbility(a) : setPendingAbility(a)}>
-                    {a.name}
-                  </button>
-                ))}
+                {selectedUnit.acts.map((a) => {
+                  const selfCast = a.tags.includes("self") || a.range === "self";
+                  const armed = pendingAbility?.name === a.name;
+                  return (
+                    <button key={a.name} title={a.text} className={armed ? "on" : ""}
+                      onClick={() => selfCast ? useAbility(a) : setPendingAbility(armed ? null : a)}>
+                      {a.name}
+                    </button>
+                  );
+                })}
               </div>
             )}
-          </div>
-        )}
-        {pendingAbility && (
-          <div className="panel">
-            <p>Pick a target for <strong>{pendingAbility.name}</strong>, or</p>
-            <AbilityTargets state={s} ability={pendingAbility}
-              onPick={(iid) => { useAbility(pendingAbility, iid); setPendingAbility(null); }} />
-            <button onClick={() => setPendingAbility(null)}>cancel</button>
+            {pendingAbility && (
+              <p className="targeting">
+                Targeting with <strong>{pendingAbility.name}</strong> — click a glowing
+                target on the board, or <button className="link" onClick={() => setPendingAbility(null)}>cancel</button>.
+              </p>
+            )}
           </div>
         )}
 
@@ -242,18 +263,6 @@ function Stat({ u }: { u: Unit }) {
       <span>DF {u.df}+</span> <span>ARM {u.arm ?? "–"}</span>
       <div className="type">{u.type}{u.upgrade ? ` · upgrade: ${u.upgrade}` : ""}</div>
       {toks.length > 0 && <div className="tokens">{toks.map(([t, n]) => `${t}×${n}`).join(" · ")}</div>}
-    </div>
-  );
-}
-
-function AbilityTargets({ state, ability, onPick }:
-  { state: State; ability: Ability; onPick: (iid: string) => void }) {
-  // offer every living unit as a target button; the server validates range/legality
-  return (
-    <div className="targets">
-      {state.units.filter((u) => u.alive).map((u) => (
-        <button key={u.iid} onClick={() => onPick(u.iid)}>{u.name} ({u.pos.x},{u.pos.y})</button>
-      ))}
     </div>
   );
 }
