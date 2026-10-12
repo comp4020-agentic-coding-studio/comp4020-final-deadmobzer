@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import anime from "animejs";
 import { Table, type TableState } from "../three/table.ts";
 import { getJSON, postJSON, openGameSocket } from "./api.ts";
 
@@ -55,8 +56,23 @@ export function Game({ gameId }: { gameId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view !== null]);
 
-  // feed new state into the table
-  useEffect(() => { if (view && tableRef.current) tableRef.current.sync(view.state); }, [view]);
+  // pulse the status line whenever the turn or round changes (anime.js, 2D UI)
+  const statusRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (statusRef.current) anime({ targets: statusRef.current, opacity: [0.3, 1], duration: 500, easing: "easeOutQuad" });
+  }, [view?.state.activeSide, view?.state.round]);
+
+  // feed new state into the table, and roll dice for any newly-logged rolls
+  const lastLogLen = useRef(0);
+  useEffect(() => {
+    if (!view || !tableRef.current) return;
+    tableRef.current.sync(view.state);
+    const log = view.state.log;
+    for (let i = lastLogLen.current; i < log.length; i++) {
+      if (log[i].dice?.length) tableRef.current.rollDice(log[i].dice!);
+    }
+    lastLogLen.current = log.length;
+  }, [view]);
 
   const myseat = view?.role === "p0" ? 0 : view?.role === "p1" ? 1 : null;
   const myTurn = myseat !== null && view?.state.activeSide === myseat && view?.state.phase === "playing";
@@ -101,7 +117,7 @@ export function Game({ gameId }: { gameId: string }) {
     <div className="game">
       <div className="board" ref={mountRef} />
       <aside className="hud">
-        <div className="statusline">
+        <div className="statusline" ref={statusRef}>
           <strong>Round {s.round}</strong> ·{" "}
           {s.phase === "over"
             ? (s.winner === null ? "Draw" : `Side ${s.winner + 1} wins`)

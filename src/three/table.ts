@@ -4,6 +4,7 @@
 // server does. (Heavy lib, client-only — see ADR-002.)
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 export interface TableUnit {
   iid: string; owner: 0 | 1; name: string; art: string;
@@ -64,6 +65,10 @@ export class Table {
     this.controls.maxPolarAngle = Math.PI * 0.49;
     this.controls.minDistance = 4;
     this.controls.maxDistance = 30;
+
+    // Environment map so metallic bases/plinth actually reflect something.
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
     this.buildLights();
     this.buildBoard();
@@ -127,11 +132,13 @@ export class Table {
       let g = this.standees.get(u.iid);
       if (!g) {
         g = this.makeStandee(u, colour);
+        g.position.set(u.pos.x, 0, u.pos.y);
         this.standees.set(u.iid, g);
         this.scene.add(g);
       }
-      g.position.set(u.pos.x, 0, u.pos.y);
-      g.userData = { iid: u.iid };
+      // animate movement: remember the target; the render loop lerps toward it.
+      const plane = g.userData.billboard;
+      g.userData = { iid: u.iid, billboard: plane, tx: u.pos.x, tz: u.pos.y };
     }
     // remove standees for units no longer present/alive
     for (const [iid, g] of this.standees) {
@@ -227,17 +234,78 @@ export class Table {
     this.renderer.setSize(w, h);
   };
 
-  private animate = (): void => {
+    private animate = (): void => {
     this.raf = requestAnimationFrame(this.animate);
-    // billboard the art planes toward the camera (horizontal only)
     for (const g of this.standees.values()) {
+      // slide toward target position (animated movement)
+      const tx = g.userData.tx as number | undefined;
+      const tz = g.userData.tz as number | undefined;
+      if (tx !== undefined && tz !== undefined) {
+        g.position.x += (tx - g.position.x) * 0.2;
+        g.position.z += (tz - g.position.z) * 0.2;
+      }
+      // billboard the art plane toward the camera (horizontal only)
       const plane = g.userData.billboard as THREE.Mesh | undefined;
       if (plane) plane.rotation.y = Math.atan2(
         this.camera.position.x - g.position.x, this.camera.position.z - g.position.z);
     }
+    this.updateDice();
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
   };
+
+  // ----- board dice -----
+  private dice: { mesh: THREE.Mesh; vx: number; vz: number; vy: number; spin: THREE.Vector3; dead: number }[] = [];
+
+  // Roll `values` as tumbling d6 on the board; the top face shows the server's
+  // authoritative value (the animation only presents it, never decides it).
+  rollDice(values: number[]): void {
+    const n = this.size;
+    values.slice(0, 4).forEach((v, i) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), this.dieMaterials(v));
+      mesh.castShadow = true;
+      mesh.position.set(n / 2 - 1 + i * 0.8, 3 + Math.random(), n / 2);
+      mesh.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+      this.scene.add(mesh);
+      this.dice.push({ mesh, vx: (Math.random() - 0.5) * 0.04, vz: (Math.random() - 0.5) * 0.04,
+        vy: 0, spin: new THREE.Vector3(Math.random() * 0.3, Math.random() * 0.3, Math.random() * 0.3), dead: 180 });
+    });
+  }
+
+  private updateDice(): void {
+    for (const d of this.dice) {
+      d.dead--;
+      if (d.mesh.position.y > 0.3) { d.vy -= 0.012; d.mesh.position.y += d.vy; d.mesh.rotation.x += d.spin.x; d.mesh.rotation.z += d.spin.z; }
+      else { d.mesh.position.y = 0.3; // settle flat, top face up (shows the value)
+        d.mesh.rotation.x += (0 - d.mesh.rotation.x) * 0.2; d.mesh.rotation.z += (0 - d.mesh.rotation.z) * 0.2; }
+      d.mesh.position.x += d.vx; d.mesh.position.z += d.vz; d.vx *= 0.96; d.vz *= 0.96;
+    }
+    this.dice = this.dice.filter((d) => { if (d.dead <= 0) { this.scene.remove(d.mesh); return false; } return true; });
+  }
+
+  // six box-face materials; +Y (top, index 2) carries the rolled value.
+  private dieMaterials(value: number): THREE.MeshStandardMaterial[] {
+    const order = [1, 6, value, 7 - value, 3, 4]; // +X,-X,+Y,-Y,+Z,-Z
+    return order.map((pips) => new THREE.MeshStandardMaterial({ map: this.pipTexture(pips), roughness: 0.5, metalness: 0.1 }));
+  }
+  private pipCache = new Map<number, THREE.CanvasTexture>();
+  private pipTexture(pips: number): THREE.CanvasTexture {
+    const cached = this.pipCache.get(pips);
+    if (cached) return cached;
+    const c = document.createElement("canvas"); c.width = c.height = 64;
+    const g = c.getContext("2d")!;
+    g.fillStyle = "#f0f0f0"; g.fillRect(0, 0, 64, 64);
+    g.fillStyle = "#f00000"; g.strokeStyle = "#111"; g.lineWidth = 2; g.strokeRect(1, 1, 62, 62);
+    g.fillStyle = "#111";
+    const P = [[32, 32]], TL = [16, 16], TR = [48, 16], BL = [16, 48], BR = [48, 48], ML = [16, 32], MR = [48, 32];
+    const layouts: Record<number, number[][]> = {
+      1: [[32, 32]], 2: [TL, BR], 3: [TL, [32, 32], BR], 4: [TL, TR, BL, BR],
+      5: [TL, TR, [32, 32], BL, BR], 6: [TL, TR, ML, MR, BL, BR],
+    };
+    for (const [x, y] of (layouts[pips] ?? P)) { g.beginPath(); g.arc(x, y, 6, 0, 7); g.fill(); }
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    this.pipCache.set(pips, tex); return tex;
+  }
 
   dispose(): void {
     cancelAnimationFrame(this.raf);
