@@ -103,5 +103,5 @@ export function getLoadout(userId: number, mode: Mode): SavedLoadout | null {
 
 // Turn a saved loadout into the engine Loadout for a given user.
 export function toEngineLoadout(userId: number, l: SavedLoadout): Loadout {
-  return { userId, house: l.house, colour: l.colour, units: l.units };
+  return { userId, house: l.house, colour: l.colour, units: l.units, upgrades: l.upgrades };
 }

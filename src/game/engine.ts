@@ -9,6 +9,7 @@ import type {
 } from "./types.ts";
 import { makeRng, rollD6, rollPool, type Rng } from "./prng.ts";
 import { allUnitDefs, faction, MAP_SIZE, MAX_ROUNDS } from "./data.ts";
+import { applyUpgrade } from "./upgrades.ts";
 
 // ---------- helpers ----------
 
@@ -64,10 +65,10 @@ function armorReduces(arm: Armor, type: DamageType): boolean {
   return false;
 }
 
-export interface DamageOpts { pierce?: boolean; cannotSlay?: boolean }
+export interface DamageOpts { pierce?: boolean; cannotSlay?: boolean; obliterate?: boolean }
 
 // Apply final damage to a unit, honouring armor, pierce, devil, vitality/
-// vulnerable tokens, and slain/obliterate. Returns damage actually dealt.
+// vulnerable tokens, upgrade flags, and slain/obliterate. Returns damage dealt.
 export function dealDamage(
   s: GameState, target: Unit, amount: number, type: DamageType, opts: DamageOpts = {},
 ): number {
@@ -85,14 +86,16 @@ export function dealDamage(
   if (tok(target, "vulnerable") > 0) { dmg += 1; spendToken(target, "vulnerable"); }
   else if (tok(target, "vitality") > 0) { dmg = Math.max(0, dmg - 1); spendToken(target, "vitality"); }
 
-  // armor
-  if (!opts.pierce && target.arm && armorReduces(target.arm, type)) dmg = Math.max(0, dmg - 1);
+  // armor — upgrade: super armor while at low HP overrides the base armor type
+  let arm = target.arm;
+  if (target.flags?.superArmorAtLowHp && target.hp <= 1) arm = "SUPER";
+  if (!opts.pierce && arm && armorReduces(arm, type)) dmg = Math.max(0, dmg - 1);
 
   if (dmg <= 0) return 0;
   if (opts.cannotSlay) dmg = Math.min(dmg, Math.max(0, target.hp - 1));
 
   target.hp -= dmg;
-  if (target.hp <= 0) slay(s, target);
+  if (target.hp <= 0) { if (opts.obliterate) obliterate(s, target); else slay(s, target); }
   return dmg;
 }
 
@@ -258,6 +261,7 @@ function resolveOp(ctx: Ctx, op: EffectOp) {
         if (aEl && !tEl) pool += 1;                             // high ground: +1D
         if (tEl && !aEl) pool -= 1;                             // shooting uphill: -1D
       }
+      if (actor.flags?.coverAttackBonus && inCover(s, actor.pos)) pool += 1;  // upgrade
       const { value, dice } = rollPool(s.rng, pool);
       ctx.lastRoll = value;
       const tgt = ctx.target;
@@ -268,7 +272,9 @@ function resolveOp(ctx: Ctx, op: EffectOp) {
       if (hit) {
         const dmg = Math.max(0, base + damageBonus(actor));
         if (damageBonus(actor) !== 0) spendToken(actor, tok(actor, "strength") > 0 ? "strength" : "weak");
-        const dealt = dealDamage(s, tgt, dmg, (op.damageType as DamageType) ?? "physical", { pierce: !!op.pierce });
+        const pierce = !!op.pierce || (!!actor.flags?.pierceAtLowHp && actor.hp <= 1);
+        const dealt = dealDamage(s, tgt, dmg, (op.damageType as DamageType) ?? "physical",
+          { pierce, obliterate: actor.flags?.obliterateOnSlay });
         log(s, { side: actor.owner, actor: actor.name, dice, text: `${actor.name} hits ${tgt.name} for ${dealt} (rolled ${value} vs ${tgt.df}+).` });
       } else {
         // graze: 1 damage, inherits type only
@@ -347,6 +353,10 @@ function applyShove(ctx: Ctx, op: EffectOp, sign: number) {
   const { s, actor } = ctx;
   const tgt = pickTarget(ctx, op.target as string);
   if (!tgt) return;
+  if (tgt.flags?.immunePush) {
+    log(s, { side: actor.owner, actor: actor.name, text: `${tgt.name} resists forced movement.` });
+    return;
+  }
   const n = (op.n as number) ?? 1;
   // push: away from actor; pull: toward actor. Orthogonal, one axis (the larger).
   const dx = Math.sign(tgt.pos.x - actor.pos.x) * sign;
@@ -369,14 +379,15 @@ export interface Loadout {
   userId: number;
   house: string;
   colour: string;
-  units: LoadoutEntry[];   // roster unit defIds to field (necromancer auto-added)
+  units: LoadoutEntry[];                 // roster unit defIds to field (necromancer auto-added)
+  upgrades?: Record<string, string>;     // unit defId -> chosen upgrade name
 }
 
 let iidCounter = 0;
-function makeUnit(owner: 0 | 1, house: string, defId: string): Unit {
+function makeUnit(owner: 0 | 1, house: string, defId: string, upgrade?: string): Unit {
   const f = faction(house);
   const def = [f.necromancer, ...f.units].find((d) => d.id === defId)!;
-  return {
+  const u: Unit = {
     iid: `${owner}-${defId}-${iidCounter++}`,
     owner, house, defId,
     name: def.name, type: def.type, art: def.art,
@@ -384,12 +395,15 @@ function makeUnit(owner: 0 | 1, house: string, defId: string): Unit {
     large: !!def.large,
     pos: { x: -1, y: -1 },
     tokens: {},
-    acts: def.acts,
+    // deep-copy abilities so an upgrade patch on one unit can't leak to the shared def
+    acts: def.acts.map((a) => ({ ...a, effect: a.effect ? JSON.parse(JSON.stringify(a.effect)) : undefined })),
     reloaded: Object.fromEntries(def.acts.filter((a) => a.tags.includes("reload")).map((a) => [a.name, true])),
     activatedThisRound: false,
     alive: true,
     isNecromancer: def.type === "necromancer",
   };
+  if (upgrade) applyUpgrade(u, upgrade);
+  return u;
 }
 
 // Generate battlefield terrain in the middle rows (never the deploy zones), the
@@ -424,7 +438,7 @@ export function createGame(a: Loadout, b: Loadout, seed: number, firstSide: 0 | 
   iidCounter = 0;
   const mk = (l: Loadout, owner: 0 | 1): Unit[] =>
     [makeUnit(owner, l.house, faction(l.house).necromancer.id),
-     ...l.units.map((u) => makeUnit(owner, l.house, u.defId))];
+     ...l.units.map((u) => makeUnit(owner, l.house, u.defId, l.upgrades?.[u.defId]))];
   const players: [SidePlayer, SidePlayer] = [
     { userId: a.userId, house: a.house, colour: a.colour, soul: 0, deployed: false, firstSlainTaken: false },
     { userId: b.userId, house: b.house, colour: b.colour, soul: 0, deployed: false, firstSlainTaken: false },

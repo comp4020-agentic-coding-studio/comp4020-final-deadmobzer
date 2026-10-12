@@ -62,6 +62,18 @@ export interface Unit {
   activatedThisRound: boolean;
   alive: boolean;
   isNecromancer: boolean;
+  upgrade?: string;                 // chosen upgrade name (faithful mode), for display
+  flags?: UnitFlags;                // mechanical effects applied by the upgrade
+}
+
+// Passive mechanical effects an upgrade can grant; the engine checks these.
+export interface UnitFlags {
+  immunePush?: boolean;             // can't be pushed or pulled
+  obliterateOnSlay?: boolean;       // this unit's kills obliterate
+  superArmorAtLowHp?: boolean;      // gains super armor at <=1 HP
+  pierceAtLowHp?: boolean;          // its damage pierces at <=1 HP
+  curseproof?: boolean;             // immune to enemy curses (flagged)
+  coverAttackBonus?: boolean;       // +1D on attacks while in cover
 }
 
 export type Phase = "deploy" | "playing" | "over";

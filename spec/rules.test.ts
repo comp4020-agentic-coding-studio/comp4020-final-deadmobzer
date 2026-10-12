@@ -102,6 +102,36 @@ describe("terrain", () => {
   });
 });
 
+describe("upgrades (mechanical)", () => {
+  it("a chosen upgrade is applied to the unit (flag + name)", () => {
+    const l: Loadout = { userId: 1, house: "carcass", colour: "#e6194b",
+      units: [{ defId: "enforcer" }, { defId: "barrelform" }],
+      upgrades: { enforcer: "Bulwark", barrelform: "Extended Barrel" } };
+    const s = createGame(l, LB, 5, 0);
+    const enforcer = s.units.find((u) => u.defId === "enforcer")!;
+    const barrelform = s.units.find((u) => u.defId === "barrelform")!;
+    expect(enforcer.upgrade).toBe("Bulwark");
+    expect(enforcer.flags?.coverAttackBonus).toBe(true);
+    expect(barrelform.flags?.immunePush).toBe(true);
+  });
+  it("super-armor-at-low-hp upgrade reduces all damage only while at 1 HP", () => {
+    const low = dummy(1, null); low.flags = { superArmorAtLowHp: true };
+    expect(dealDamage(g(), low, 2, "fire")).toBe(1);        // SUPER kicks in at 1 hp
+    const high = dummy(5, null); high.flags = { superArmorAtLowHp: true };
+    expect(dealDamage(g(), high, 2, "fire")).toBe(2);       // not low → no reduction
+  });
+  it("an upgrade patch on one unit does not leak to the shared faction data", () => {
+    const l: Loadout = { userId: 1, house: "carcass", colour: "#e6194b",
+      units: [{ defId: "barrelform" }], upgrades: { barrelform: "Caliber Up" } };
+    createGame(l, LB, 5, 0);
+    // a fresh, unupgraded barrelform must not carry the Caliber Up push
+    const plain = createGame({ userId: 1, house: "carcass", colour: "#e6194b", units: [{ defId: "barrelform" }] }, LB, 5, 0);
+    const snipe = plain.units.find((u) => u.defId === "barrelform")!.acts.find((a) => a.name === "Snipe")!;
+    const hasPush = JSON.stringify(snipe.effect).includes('"push"');
+    expect(hasPush).toBe(false);
+  });
+});
+
 describe("turn flow + win", () => {
   it("rejects acting out of turn and on the wrong side's units", () => {
     const s = g(); autoDeploy(s);

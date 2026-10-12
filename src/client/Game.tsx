@@ -8,7 +8,7 @@ interface Unit {
   iid: string; owner: 0 | 1; name: string; type: string; art: string;
   mv: number; hp: number; maxHp: number; df: number; arm: string | null;
   pos: { x: number; y: number }; tokens: Record<string, number>;
-  acts: Ability[]; alive: boolean; isNecromancer: boolean;
+  acts: Ability[]; alive: boolean; isNecromancer: boolean; upgrade?: string;
 }
 interface State extends TableState {
   phase: string; round: number; activeSide: 0 | 1; winner: 0 | 1 | null;
@@ -228,7 +228,7 @@ function Stat({ u }: { u: Unit }) {
     <div className="stat">
       <span>HP {u.hp}/{u.maxHp}</span> <span>MV {u.mv}</span>
       <span>DF {u.df}+</span> <span>ARM {u.arm ?? "–"}</span>
-      <div className="type">{u.type}</div>
+      <div className="type">{u.type}{u.upgrade ? ` · upgrade: ${u.upgrade}` : ""}</div>
       {toks.length > 0 && <div className="tokens">{toks.map(([t, n]) => `${t}×${n}`).join(" · ")}</div>}
     </div>
   );

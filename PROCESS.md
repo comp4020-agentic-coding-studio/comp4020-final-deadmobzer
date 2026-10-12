@@ -99,8 +99,17 @@ faithful Black Mass builder (Malice + dark-power upgrades), spectating, friends,
 avatars and ELO — over the server-authoritative core, green at 40 tests. The client
 is pure presentation, exactly as planned.
 
-The honest follow-ups before the deadline: **apply every upgrade's mechanical
-effect** in the engine (upgrade *selection* is validated, stored and shown, but not
-all effects are simulated yet); self-host the rulebook fonts and bring in open-
-licensed terrain for the board; richer deploy/animation polish; and a pass to put
-every one of these documents fully in my own voice.
+Since then I've closed most of those: the rulebook **fonts are self-hosted** and the
+type system is shared across every page; the board now generates **terrain**
+(walls, an elevated plateau with stairs, hazards, adverse ground) that the engine
+honours — cost-aware movement, hazard damage, and cover / high-ground dice; and
+**upgrades now apply mechanically**, not just cosmetically — a flag/patch system
+grants real effects (cover bonus, push-immunity, obliterate-on-kill, super armour
+and pierce at low HP, extra push/damage, starting tokens…).
+
+The honest remaining work: a handful of upgrades whose faithful effect needs a
+subsystem I haven't built yet (plague, Doom, Miracle, mutation, stance, berserk,
+corpses, deathburst) attach to the unit and show in the inspector but apply only
+the expressible part — fully simulating those subsystems is the next big push.
+After that: open-licensed terrain *models* on the board, richer animation, and a
+pass to put every one of these documents fully in my own voice.
