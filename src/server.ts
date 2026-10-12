@@ -38,7 +38,7 @@ import {
   redirect,
   setSessionCookie,
 } from "./http.ts";
-import { renderDocument } from "./ui/render.tsx";
+import { renderDocument } from "./serverview.ts";
 import type { Mode, PageData } from "./ui/types.ts";
 import { TZ, today } from "./time.ts";
 

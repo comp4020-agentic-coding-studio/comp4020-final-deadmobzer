@@ -37,19 +37,22 @@ wrong — fix it.
 - Schema changes are additive and idempotent (`CREATE TABLE IF NOT EXISTS` /
   `ALTER` guards), because the app must boot from an empty volume (CI runs it
   with a throwaway `/data`).
-- The view layer is **React + Material UI, server-rendered** (`src/ui`, hydrated
-  by `src/client`). This is a deliberate reversal of the earlier "no frontend
-  framework" rule, made for crit 10's redesign (Material UI, a floating bottom
-  nav, full-screen light/dark). Two hard constraints make it safe rather than
-  reckless, and must hold:
-  - **Every GET route server-renders its full HTML.** The spec checks the raw
-    HTML the server sends (it runs no JS), so a client-only SPA would break the
-    shipped privacy/invariants checks. SSR lives in `src/ui/render.tsx`; the
-    client only hydrates and enhances (instant nav, live social, theme toggle).
-  - It must still **compile in the `Dockerfile` and fit the 256 MB machine**. No
-    second service beside the app. The client bundle is built by
-    `scripts/build.mjs` into `public/app.js` (gitignored); keep it lean (no
-    `@mui/icons-material`).
+- The UI is **React + Material UI, rendered in the browser** (`src/ui`, mounted
+  by `src/client` with `createRoot`). This is a deliberate reversal of the earlier
+  "no frontend framework" rule, made for crit 10's redesign (Material UI, a
+  floating bottom nav, full-screen light/dark). Two hard constraints shaped it and
+  must hold:
+  - **The server stays light and still emits the contract as plain HTML.** The
+    spec checks the raw HTML the server sends (it runs no JS), so `src/serverview.ts`
+    server-renders lightweight HTML carrying what the spec reads ("Sign in", the
+    reveal heading, `/day?d=…` links, the README headings) plus `window.__DATA__`;
+    the MUI app then replaces it client-side. Server-rendering MUI itself was tried
+    and abandoned: its module graph needs ~200 MB resident, which **does not fit
+    the 256 MB machine** (it crash-looped). Keep MUI off the server.
+  - It must still **compile in the `Dockerfile` and fit the 256 MB machine** (the
+    server now sits ~75–90 MB). No second service beside the app. The client
+    bundle is built by `scripts/build.mjs` into `public/app.js` (gitignored); keep
+    it lean (no `@mui/icons-material`).
 
 ## When the agent gets it wrong
 

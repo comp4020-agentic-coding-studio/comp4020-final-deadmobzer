@@ -90,21 +90,33 @@ break later.
 
 For crit 10 I reworked the whole look with Material UI: the top bar is gone,
 navigation moved to a floating bottom bar, the content fills the screen in plain
-white or black, and a corner button toggles dark mode. That meant taking on a
-real front-end stack — React, MUI and Emotion — which is the opposite of the
-"avoid front-end JavaScript" decision I made at the start.
+white or black, and a corner button toggles dark mode. I went with Material UI to
+make it feel more modern and expressive — and, honestly, so it looks less
+AI-coded, by leaning on an established design framework instead of hand-rolled
+styles. That meant taking on a real front-end stack — React and MUI — which is the
+opposite of the "avoid front-end JavaScript" decision I made at the start.
 
-The thing that kept it honest was the spec. My checks in `spec/` read the HTML
-the server sends, with no browser, so a client-only app would have quietly broken
-privacy and the published invariants — half the mark. So the app **server-renders**
-every page with MUI (`src/ui/render.tsx`) and the browser only hydrates on top for
-the instant view-switching, live friends list and theme toggle (`src/client`).
-The spec stayed green the whole way through, which is how I knew the redesign
-hadn't moved the contract. The costs I took on: a ~480 KB client bundle and more
-moving parts on the 256 MB machine (I avoided `@mui/icons-material` to keep it
-down). The access-control check I added this week (`spec/access.test.ts`) I
-rewrote to assert via status codes and `/api/state` rather than scraping markup,
-so it survives the new UI.
+On steering: I kept the agent honest by making sure my tests covered the cases I
+cared about, so a redesign that broke a promise would show up red rather than slip
+through. Two things in particular kept it honest, and the second one bit me. First,
+the spec: my checks in `spec/` read the HTML the server sends, with no browser, so
+a client-only app would have quietly broken privacy and the published invariants —
+half the mark. Second, the 256 MB machine. My first attempt server-rendered the
+whole MUI tree and hydrated it in the browser ([`ab31b0c`](../../commit/ab31b0c)),
+and it worked locally — but on Fly it crash-looped and the live `pnpm check` went
+red. I measured it: just loading React + MUI on the server sat at ~202 MB resident
+before a single request, so under load it tipped over the 256 MB limit and kept
+restarting. That's a decision the hardware made for me.
+
+So I split it out in the next commit: the server sends **lightweight plain HTML**
+(`src/serverview.ts`) that carries exactly what the spec reads and works with
+JavaScript off, and the full Material UI app renders in the browser over it
+(`src/ui`, `src/client`). The server dropped back to ~75 MB, the crash-loop
+stopped, and the live check went green again. The trade is that the real UI paints
+a beat after load rather than arriving fully-formed from the server. The
+access-control check I added this week (`spec/access.test.ts`) I wrote against
+status codes and `/api/state` rather than scraping markup, so it survived both the
+redesign and this architecture change.
 
 <!-- EXPAND: server-side logging (the crit-10 spec line) is still unbuilt — note
      it here once it's in, with the commit. -->
@@ -114,5 +126,7 @@ so it survives the new UI.
 <!-- EXPAND for the final submission: what you'd change before the deadline. -->
 
 Before the deadline I want to put the README fully in my own voice, add crit 10's
-server-side logging, and act on whatever the crit surfaces. Longer term, I'd like
-to develop this into a mobile app.
+server-side logging, and act on whatever the crit surfaces. I also want to revisit
+the whole user flow and plan it out properly — in Figma or something similar — so
+the screens hang together as one cohesive experience rather than something that
+grew screen by screen. Longer term, I'd like to develop this into a mobile app.
