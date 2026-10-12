@@ -55,10 +55,14 @@ export function joinLobby(code: string, guestId: number, loadout: SavedLoadout):
 // Quick-join: find an open public lobby in the same mode you don't host, else
 // create one and wait. Returns either a started game or the created lobby code.
 export function quickJoin(userId: number, mode: Mode, loadout: SavedLoadout): { gameId?: string; code?: string } {
+  // Prefer an opponent of similar rating (quick-join is ranked); break ties by
+  // age so lobbies don't wait forever.
+  const myElo = (db.prepare("SELECT elo FROM users WHERE id = ?").get(userId) as { elo: number } | undefined)?.elo ?? 1200;
   const open = db.prepare(
-    `SELECT * FROM lobbies WHERE status = 'open' AND visibility = 'public' AND mode = ? AND host_id != ?
-       ORDER BY created_at ASC LIMIT 1`,
-  ).get(mode, userId) as LobbyRow | undefined;
+    `SELECT l.* FROM lobbies l JOIN users u ON u.id = l.host_id
+      WHERE l.status = 'open' AND l.visibility = 'public' AND l.mode = ? AND l.host_id != ?
+      ORDER BY ABS(u.elo - ?) ASC, l.created_at ASC LIMIT 1`,
+  ).get(mode, userId, myElo) as LobbyRow | undefined;
   if (open) {
     const { gameId } = startGame(open, userId, loadout);
     return { gameId };
