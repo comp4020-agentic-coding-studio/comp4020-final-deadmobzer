@@ -99,17 +99,14 @@ faithful Black Mass builder (Malice + dark-power upgrades), spectating, friends,
 avatars and ELO — over the server-authoritative core, green at 40 tests. The client
 is pure presentation, exactly as planned.
 
-Since then I've closed most of those: the rulebook **fonts are self-hosted** and the
-type system is shared across every page; the board now generates **terrain**
-(walls, an elevated plateau with stairs, hazards, adverse ground) that the engine
-honours — cost-aware movement, hazard damage, and cover / high-ground dice; and
-**upgrades now apply mechanically**, not just cosmetically — a flag/patch system
-grants real effects (cover bonus, push-immunity, obliterate-on-kill, super armour
-and pierce at low HP, extra push/damage, starting tokens…).
+Since then I've closed most of those: the rulebook **fonts are self-hosted** across
+every page; the board generates **terrain** (walls, an elevated plateau with
+stairs, hazards, adverse ground) the engine honours — cost-aware movement, hazard
+damage, cover and high-ground dice; and **upgrades apply mechanically** via a
+flag/patch system (cover bonus, push-immunity, obliterate-on-kill, super armour and
+pierce at low HP, extra push/damage, starting tokens).
 
-The honest remaining work: a handful of upgrades whose faithful effect needs a
-subsystem I haven't built yet (plague, Doom, Miracle, mutation, stance, berserk,
-corpses, deathburst) attach to the unit and show in the inspector but apply only
-the expressible part — fully simulating those subsystems is the next big push.
-After that: open-licensed terrain *models* on the board, richer animation, and a
-pass to put every one of these documents fully in my own voice.
+The honest remainder: upgrades whose faithful effect needs a subsystem I haven't
+built (plague, Doom, Miracle, mutation, stance, berserk, corpses) attach and show
+but apply only the expressible part — those subsystems are the next push, then
+terrain *models* and a voice pass on these documents.
