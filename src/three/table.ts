@@ -186,32 +186,46 @@ export class Table {
   private makeStandee(u: TableUnit, colour: string): THREE.Group {
     const g = new THREE.Group();
     const col = new THREE.Color(colour);
+    const muted = col.clone().lerp(new THREE.Color(0x2a2a2a), 0.55); // base = muted team colour
     const r = u.isNecromancer ? 0.42 : 0.34;
-    // base: tinted low-poly disc
+    // base: muted-colour low-poly disc
     const base = new THREE.Mesh(
       new THREE.CylinderGeometry(r, r * 1.1, 0.16, 16),
-      new THREE.MeshStandardMaterial({ color: col, roughness: 0.4, metalness: 0.5 }),
+      new THREE.MeshStandardMaterial({ color: muted, roughness: 0.5, metalness: 0.4 }),
     );
     base.position.y = 0.14; base.castShadow = true; base.receiveShadow = true;
     g.add(base);
-    // standee: billboard plane with the unit art
+    // standee: billboard plane with the unit art, its accents shifted to the team
+    // colour (neutral/dark pixels keep their value; saturated accents recolour).
     const hgt = u.isNecromancer ? 1.5 : 1.2;
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(hgt * 0.75, hgt),
-      new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.5, roughness: 1, side: THREE.DoubleSide }),
-    );
+    const mat = new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.5, roughness: 1, side: THREE.DoubleSide });
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTint = { value: col };
+      shader.fragmentShader = "uniform vec3 uTint;\n" + shader.fragmentShader.replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+         {
+           float l = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+           float mx = max(max(diffuseColor.r, diffuseColor.g), diffuseColor.b);
+           float mn = min(min(diffuseColor.r, diffuseColor.g), diffuseColor.b);
+           float sat = mx - mn;
+           vec3 tinted = uTint * (0.30 + l);
+           diffuseColor.rgb = mix(diffuseColor.rgb, tinted, clamp(sat * 1.8, 0.0, 0.8));
+         }`,
+      );
+    };
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(hgt * 0.75, hgt), mat);
     plane.position.y = 0.22 + hgt / 2;
     plane.castShadow = true;
     this.loader.load(`/art/${u.art}`, (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace;
-      (plane.material as THREE.MeshStandardMaterial).map = tex;
-      (plane.material as THREE.MeshStandardMaterial).needsUpdate = true;
+      mat.map = tex; mat.needsUpdate = true;
     });
     g.add(plane);
-    // a thin ring in the team colour to read ownership from above
+    // a thin ring in the full team colour to read ownership from above
     const ring = new THREE.Mesh(
       new THREE.TorusGeometry(r * 1.2, 0.04, 8, 24),
-      new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.3 }),
+      new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.4 }),
     );
     ring.rotation.x = Math.PI / 2; ring.position.y = 0.06;
     g.add(ring);

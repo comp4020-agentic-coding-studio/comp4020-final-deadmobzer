@@ -76,6 +76,7 @@ export function Lobby() {
   if (created) {
     return (
       <div className="pad lobby">
+        <nav className="topnav"><a href="/">Home</a><a href="/play">New match</a></nav>
         <h1>Lobby ready</h1>
         <p>Share this code with your opponent:</p>
         <div className="code">{created}</div>
@@ -86,6 +87,10 @@ export function Lobby() {
 
   return (
     <div className="pad lobby">
+      <nav className="topnav">
+        <a href="/">Home</a><a href="/friends">Friends</a>
+        <a href="/profile">Profile</a><a href="/readme/">About</a>
+      </nav>
       <h1>Find a match</h1>
       <div className="row">
         <label>Mode</label>

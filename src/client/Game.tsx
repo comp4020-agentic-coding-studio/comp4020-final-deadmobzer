@@ -28,7 +28,6 @@ export function Game({ gameId }: { gameId: string }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
   const [tab, setTab] = useState<"log" | "player" | "audience">("log");
-  const [msg, setMsg] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pendingAbility, setPendingAbility] = useState<Ability | null>(null);
 
@@ -115,10 +114,9 @@ export function Game({ gameId }: { gameId: string }) {
     try { await postJSON(`/api/game/${gameId}/action`, { action: { kind: "endTurn" } }); refetch(); }
     catch (e) { setError(String(e)); }
   }
-  async function send() {
-    const channel = view?.role === "spectator" ? "audience" : (tab === "audience" ? "audience" : "player");
-    if (!msg.trim()) return;
-    try { await postJSON(`/api/game/${gameId}/chat`, { channel, body: msg }); setMsg(""); refetch(); }
+  async function postChat(channel: "player" | "audience", body: string) {
+    if (!body.trim()) return;
+    try { await postJSON(`/api/game/${gameId}/chat`, { channel, body }); refetch(); }
     catch (e) { setError(String(e)); }
   }
 
@@ -196,17 +194,29 @@ export function Game({ gameId }: { gameId: string }) {
           ))}
         </div>
         {tab !== "log" && !(tab === "player" && view.role === "spectator") && (
-          <div className="compose">
-            <input value={msg} onChange={(e) => setMsg(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder={view.role === "spectator" ? "Cheer from the stands…" : "Say something…"} />
-            <button onClick={send}>Send</button>
-          </div>
+          <ChatBox
+            placeholder={view.role === "spectator" ? "Cheer from the stands…" : "Say something…"}
+            onSend={(b) => postChat(tab === "audience" || view.role === "spectator" ? "audience" : "player", b)} />
         )}
         {tab === "player" && view.role === "spectator" && (
           <p className="blurb">Player chat is read-only for spectators — use Audience.</p>
         )}
       </aside>
+    </div>
+  );
+}
+
+// Chat input with its own local draft state, isolated from the game's frequent
+// re-renders (every WebSocket event refetches the view) so typing never drops.
+function ChatBox({ placeholder, onSend }: { placeholder: string; onSend: (body: string) => void }) {
+  const [draft, setDraft] = useState("");
+  const submit = () => { const b = draft.trim(); if (b) { onSend(b); setDraft(""); } };
+  return (
+    <div className="compose">
+      <input value={draft} placeholder={placeholder}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }} />
+      <button onClick={submit}>Send</button>
     </div>
   );
 }
