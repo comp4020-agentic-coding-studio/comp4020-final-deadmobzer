@@ -5,6 +5,8 @@
     "target": "ES2023",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    // Faction/rules data is JSON imported straight into the server bundle.
+    "resolveJsonModule": true,
     // The view layer is React (src/ui, src/client); the automatic runtime means
     // components don't need to import React themselves.
     "jsx": "react-jsx",
