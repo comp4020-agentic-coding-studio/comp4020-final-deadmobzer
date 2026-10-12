@@ -40,6 +40,7 @@ import {
 } from "./http.ts";
 import { renderDocument } from "./serverview.ts";
 import type { Mode, PageData } from "./ui/types.ts";
+import { audit } from "./audit.ts";
 import { TZ, today } from "./time.ts";
 
 const PORT = Number(process.env.PORT ?? 8080);
@@ -124,6 +125,7 @@ const server = createServer(async (req, res) => {
       try {
         const u = login(form.get("username") ?? "", form.get("password") ?? "");
         setSessionCookie(res, createSession(u.id));
+        audit(u.username, "login");
         return void redirect(res, "/");
       } catch (e) {
         return void html(res, landingHtml(mode, e instanceof AuthError ? e.message : "Sign in failed."), 401);
@@ -138,6 +140,7 @@ const server = createServer(async (req, res) => {
           form.get("display_name") ?? "",
         );
         setSessionCookie(res, createSession(u.id));
+        audit(u.username, "signup");
         return void redirect(res, "/");
       } catch (e) {
         return void html(res, landingHtml(mode, e instanceof AuthError ? e.message : "Sign up failed."), 400);
@@ -146,6 +149,7 @@ const server = createServer(async (req, res) => {
     if (path === "/logout" && method === "POST") {
       destroySession(readCookie(req.headers.cookie, "sid"));
       clearSessionCookie(res);
+      if (user) audit(user.username, "logout");
       return void redirect(res, "/");
     }
 
@@ -182,6 +186,7 @@ const server = createServer(async (req, res) => {
       const kind = form.get("kind") === "friend" ? "friend" : "self";
       try {
         writeEntry(user.id, kind, form.get("body") ?? "");
+        audit(user.username, "entry.save", { kind });
         return void redirect(res, "/?msg=" + encodeURIComponent("Saved."));
       } catch (e) {
         return void redirect(res, "/?msg=" + encodeURIComponent(e instanceof EntryError ? e.message : "Could not save."));
@@ -202,6 +207,7 @@ const server = createServer(async (req, res) => {
       try {
         const to = sendRequest(user, form.get("username") ?? "");
         sendTo(to.id, { type: "friend_request", from: user.display_name });
+        audit(user.username, "friend.request", { to: to.username });
         return void redirect(res, "/friends?msg=" + encodeURIComponent("Request sent."));
       } catch (e) {
         return void redirect(res, "/friends?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not send."));
@@ -212,6 +218,7 @@ const server = createServer(async (req, res) => {
       try {
         const other = acceptRequest(user.id, Number(form.get("friendship_id")));
         sendTo(other.id, { type: "friend_accepted", by: user.display_name });
+        audit(user.username, "friend.accept", { with: other.username });
         return void redirect(res, "/friends?msg=" + encodeURIComponent("You're now friends."));
       } catch (e) {
         return void redirect(res, "/friends?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not accept."));
@@ -219,8 +226,10 @@ const server = createServer(async (req, res) => {
     }
     if (path === "/friends/decline" && method === "POST") {
       const form = await readFormBody(req);
+      const friendshipId = Number(form.get("friendship_id"));
       try {
-        declineRequest(user.id, Number(form.get("friendship_id")));
+        declineRequest(user.id, friendshipId);
+        audit(user.username, "friend.decline", { friendship_id: friendshipId });
       } catch {
         // ignore — the request was already gone
       }

@@ -118,8 +118,17 @@ access-control check I added this week (`spec/access.test.ts`) I wrote against
 status codes and `/api/state` rather than scraping markup, so it survived both the
 redesign and this architecture change.
 
-<!-- EXPAND: server-side logging (the crit-10 spec line) is still unbuilt — note
-     it here once it's in, with the commit. -->
+## Logging who did what
+
+<!-- DRAFT — put in your own voice; add the commit hash once it's citable. -->
+
+The crit also asks the app to log, server-side, who did what — enough to tell two
+people apart from `flyctl logs` alone. Every sign-in and every state change
+(saving an entry, sending / accepting / declining a friend request) now emits one
+readable line like `audit user=alice action=entry.save kind=self` (`src/audit.ts`).
+It records the action and the people involved, never the reflection text — the
+seal holds in the logs too. `spec/audit.test.ts` pins that shape, including that a
+saved reflection's body never reaches a log line.
 
 ## What's next
 
