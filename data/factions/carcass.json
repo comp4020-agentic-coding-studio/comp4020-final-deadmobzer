@@ -12,7 +12,7 @@
   "necromancer": {
     "id": "operator", "name": "Operator", "type": "necromancer",
     "mv": 4, "hp": 8, "df": 4, "arm": "PHYS",
-    "art": "units/carcass/operator.png",
+    "art": "units/carcass/necromancer.png",
     "traits": [
       { "name": "Formation", "text": "While adjacent to an ally, gain +1D on attacks." },
       { "name": "Hot Clip", "text": "Once a round, reloading grants you 1 strength." }

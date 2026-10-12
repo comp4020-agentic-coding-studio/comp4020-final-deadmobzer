@@ -1,0 +1,132 @@
+{
+  "id": "igorri",
+  "name": "Igorri",
+  "blurb": "Experimenters, scientists and travelling physicians fallen into the darker sciences. Skilled surgeons who meld flesh like clay in pursuit of the Greater Form — a tight-knit family of six deformed physician houses pacted to the Multi-Coloured Devil.",
+  "playstyle": "Rapid adaptation.",
+  "accent": "#9000f0",
+  "specialMechanic": { "name": "Spare Parts", "text": "If an ability has spare parts, the unit may absorb any number of adjacent corpses at the start of the ability for additional effects, removing those corpses." },
+  "specialTags": {
+    "Mutate": "When a unit mutates, it gains a mutation token. Mutation tokens can be discarded in place of any other token, and can stand in as a copy of any token.",
+    "Corpse": "When a unit dies it leaves a corpse marker; corpses can stack and be created by other means."
+  },
+  "necromancer": {
+    "id": "chirurgeon", "name": "Chirurgeon", "type": "necromancer",
+    "mv": 4, "hp": 10, "df": 3, "arm": "MAG", "art": "units/igorri/necromancer.png",
+    "traits": [ { "name": "Polyglot", "text": "At turn start, may convert one mutation token into strength, speed or vitality, then mutate." } ],
+    "acts": [
+      { "name": "Experimental Surgery", "tags": ["line"], "range": "self",
+        "text": "Line 4: 1 damage. Allies in the line mutate instead of taking damage.",
+        "effect": [ { "op": "line", "len": 4, "then": [ { "op": "damage", "damage": 1, "damageType": "physical" } ] } ] }
+    ],
+    "souls": [
+      { "name": "Wild Mutation", "soul": 1, "tags": ["ranged"], "range": [4, 4], "text": "Turn start: unit gains 1 strength, (3-4) or 1 speed, (5-6) or 1 vitality. Spare Parts: choose one per corpse instead of rolling." },
+      { "name": "Sample Genome", "soul": 3, "tags": ["ranged"], "range": [4, 4], "text": "Copy all positive tokens on a target, then grant them to another unit in range." }
+    ],
+    "bonusTraits": ["Rapid Move", "Ancillary Limbs", "Accelerate Evolution"],
+    "actPool": ["New Material", "Clone", "Stitch Fix", "Inject Stimulant", "Biotoxin Injector", "Mutagen Injector", "Chaos Beam"],
+    "soulPool": ["Flesh Jump (1)", "Grow Bonus Legs (2)", "Grow Bonus Limbs (2)", "Recycle (3)", "Devolve (4)", "Final Form (6)"]
+  },
+  "units": [
+    {
+      "id": "stitch", "name": "Stitch", "type": "thrall",
+      "mv": 3, "hp": 2, "df": 4, "arm": null, "art": "units/igorri/stitch.png",
+      "traits": [
+        { "name": "Fall to Shambles", "text": "When slain, leaves an extra corpse token in an adjacent space (two corpses total)." },
+        { "name": "Thrall", "text": "2 per unit slot; may activate two at a time." }
+      ],
+      "acts": [
+        { "name": "Unstable Mutation", "tags": ["self"], "range": "self",
+          "text": "Gain 1 strength, (4+) 1 speed, (5+) and 1 vitality, (6+) and explode for splash (self) 1 damage. Spare Parts: roll +1D per corpse, pick highest.",
+          "effect": [ { "op": "token", "token": "strength", "n": 1, "target": "self" } ] },
+        { "name": "Twisting Strike", "tags": ["attack", "melee"], "range": "melee",
+          "text": "Mutate. On hit: 1 damage.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Spread Mutate", "text": "Twisting Strike gains effect (5+): steal a positive token from target." },
+        { "name": "Warping Mutate", "text": "Twisting Strike also causes an adjacent ally to mutate." },
+        { "name": "The Hunger", "text": "If starting turn in range 2 of a corpse, may step 2." }
+      ]
+    },
+    {
+      "id": "chopdoc", "name": "Chop Doc", "type": "freak",
+      "mv": 4, "hp": 4, "df": 4, "arm": "MAG", "art": "units/igorri/chopdoc.png",
+      "traits": [ { "name": "Hunch", "text": "May use corpses as cover spaces." } ],
+      "acts": [
+        { "name": "Inject Mutagen", "tags": ["ranged"], "range": [1, 3],
+          "text": "One or two units in range mutate. Spare Parts: also dole out 1 strength per corpse consumed." },
+        { "name": "Purge", "tags": ["curse", "ranged"], "range": [1, 3],
+          "text": "A unit removes one token of this unit's choice, (3+) two, (5+) all." },
+        { "name": "Marriage", "tags": ["ranged"], "range": [1, 2],
+          "text": "Instantly slay self or an allied unit in range. Another ally in range gains 2 speed, vitality and strength (or 1 each if the slain unit was a thrall)." }
+      ],
+      "upgrades": [
+        { "name": "Genestealer", "text": "May grant one of the tokens stolen by Purge to another unit in range." },
+        { "name": "Autophagia", "text": "At turn start, may deal 1 damage to self (ignoring armor) to generate a corpse in an adjacent space." },
+        { "name": "Conjoin", "text": "If targeting self, Marriage also clears all negative tokens on target first." }
+      ]
+    },
+    {
+      "id": "lycan", "name": "Lycan", "type": "horror",
+      "mv": 4, "hp": 4, "df": 4, "arm": null, "art": "units/igorri/lycan.png",
+      "traits": [ { "name": "Lope", "text": "Has free movement and ignores hazards in spaces occupied by corpses." } ],
+      "acts": [
+        { "name": "Bloodgorger", "tags": ["self"], "range": "self",
+          "text": "Mutate, then gain 1 strength. Spare Parts: then gain (3+) 1 speed, (5+) and 1 vitality, (6+) then mutate again. Roll +1D per corpse, pick highest.",
+          "effect": [ { "op": "token", "token": "strength", "n": 1, "target": "self" } ] },
+        { "name": "Bloody Slashes", "tags": ["attack", "melee", "splash"], "range": "melee",
+          "text": "On hit: 1 damage. Then splash (self): 1 damage.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" }, { "op": "splash", "center": "self", "then": [ { "op": "damage", "damage": 1, "damageType": "physical" } ] } ] }
+      ],
+      "upgrades": [
+        { "name": "Scour Flesh", "text": "May step 1 (4+) or 3 spaces before Unstable/Bloodgorger." },
+        { "name": "Absorb", "text": "Purge deals 1 piercing toxic damage to foes." },
+        { "name": "Sticky Lope", "text": "During free movement over corpses, may create a corpse in a space passed through." }
+      ]
+    },
+    {
+      "id": "strigoi", "name": "Strigoi", "type": "hunter",
+      "mv": 3, "hp": 4, "df": 4, "arm": null, "art": "units/igorri/strigoi.png",
+      "traits": [
+        { "name": "Leftovers", "text": "After MOVEing, drop a corpse in a free adjacent space." },
+        { "name": "Flight", "text": "Ignores adverse terrain and elevation attack and movement penalties." }
+      ],
+      "acts": [
+        { "name": "Regurgitate", "tags": ["ranged", "splash"], "range": [2, 4],
+          "text": "Splash (target): create a corpse in the area for every unit in the area, up to three times, then mutate." },
+        { "name": "Sin Eater", "tags": ["attack", "ranged"], "range": [2, 4],
+          "text": "On hit: 1 damage. Steal a positive token from target (or gain 1 strength if it has none). Spare Parts: steal 1 more per corpse consumed.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Drown in Viscera", "text": "Regurgitate has a 5+ effect chance to strip a token of your choice from each foe in the area." },
+        { "name": "Rapid Adaptation", "text": "May mutate once for each corpse created with Regurgitate instead." },
+        { "name": "Cleansing Wash", "text": "Regurgitate has a 5+ chance to remove a negative token from an ally caught in the area." }
+      ]
+    },
+    {
+      "id": "homonculus", "name": "Homonculus", "type": "tyrant", "large": true,
+      "mv": 4, "hp": 6, "df": 3, "arm": null, "art": "units/igorri/homonculus.png",
+      "traits": [
+        { "name": "Warpflesh", "text": "Starts combat with 4 mutation tokens." },
+        { "name": "Tyrant", "text": "2x2 unit. Large: ignores elevation, cannot take cover, affected by terrain once." }
+      ],
+      "acts": [
+        { "name": "Sculpt Flesh", "tags": ["self"], "range": "self",
+          "text": "Gain 1 strength, OR 1 speed, OR 1 vitality. Spare Parts: repeat once per corpse consumed.",
+          "effect": [ { "op": "token", "token": "strength", "n": 1, "target": "self" } ] },
+        { "name": "Absorb", "tags": ["melee"], "range": "melee",
+          "text": "Deal 1 devil damage to an adjacent unit. If reduced to 0 hp, it is obliterated and this unit gains any tokens it had.",
+          "effect": [ { "op": "damage", "damage": 1, "damageType": "devil", "target": "adjacentFoe" } ] },
+        { "name": "Flesh Whip", "tags": ["attack", "ranged", "splash"], "range": [1, 2],
+          "text": "On hit: 1 damage and splash (target): 1 damage and create one or (5+) two corpses adjacent to target.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" }, { "op": "onHit", "then": [ { "op": "splash", "center": "target", "then": [ { "op": "damage", "damage": 1, "damageType": "physical" } ] } ] } ] }
+      ],
+      "upgrades": [
+        { "name": "Meld", "text": "When choosing to MOVE again, destroys walls and absorbs corpses it moves over, mutating each time." },
+        { "name": "Form Carapace", "text": "If Absorb destroys a unit, gains physical armor for the rest of combat." },
+        { "name": "Ball of Limbs", "text": "When absorbing allies, slays instead of obliterating them, and this unit mutates." }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,10 @@
 import rules from "../../data/rules.json" with { type: "json" };
 import carcass from "../../data/factions/carcass.json" with { type: "json" };
 import goregrinders from "../../data/factions/goregrinders.json" with { type: "json" };
+import gargamox from "../../data/factions/gargamox.json" with { type: "json" };
+import deadsouls from "../../data/factions/deadsouls.json" with { type: "json" };
+import abhorrers from "../../data/factions/abhorrers.json" with { type: "json" };
+import igorri from "../../data/factions/igorri.json" with { type: "json" };
 import type { Ability, Armor, UnitType } from "./types.ts";
 
 export interface UnitDef {
@@ -36,7 +40,9 @@ export interface FactionDef {
 
 export const RULES = rules as typeof rules;
 
-const FACTION_LIST = [carcass, goregrinders] as unknown as FactionDef[];
+const FACTION_LIST = [
+  carcass, goregrinders, gargamox, deadsouls, abhorrers, igorri,
+] as unknown as FactionDef[];
 
 export const FACTIONS: Record<string, FactionDef> = Object.fromEntries(
   FACTION_LIST.map((f) => [f.id, f]),

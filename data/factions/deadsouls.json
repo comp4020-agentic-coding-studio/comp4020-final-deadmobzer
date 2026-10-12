@@ -1,0 +1,131 @@
+{
+  "id": "deadsouls",
+  "name": "Deadsouls",
+  "blurb": "Dark priests of the Dead God Gormengorr who have died a second, spiritual death for mastery over the soul itself. They wield spine blades and ancient curses that wither foes to nothing, inflicting a True Death so dreadful it terrifies even the undead.",
+  "playstyle": "Attritional skirmishers.",
+  "accent": "#00a8a8",
+  "specialMechanic": { "name": "Doom", "text": "Any unit with at least one Doom token takes 4 devil damage at the end of round 4. A unit can only clear a Doom token by slaying another unit." },
+  "specialTags": {
+    "Isolation": "Gains extra effects against units with no allies adjacent.",
+    "Curseproof": "Immune to damage and effects from enemy curses."
+  },
+  "necromancer": {
+    "id": "darkpriest", "name": "Dark Priest", "type": "necromancer",
+    "mv": 4, "hp": 8, "df": 4, "arm": "MAG", "art": "units/deadsouls/necromancer.png",
+    "traits": [ { "name": "Dread Presence", "text": "May move through walls. Foes count as isolated when adjacent to this unit unless they have two or more allies adjacent." } ],
+    "acts": [
+      { "name": "Doomblade", "tags": ["attack", "ranged"], "range": [1, 2],
+        "text": "On hit: 1 curse damage, or 2 against Doomed foes, then (3+) foe is Doomed.",
+        "effect": [ { "op": "attack", "damage": 1, "damageType": "curse" } ] }
+    ],
+    "souls": [
+      { "name": "Cyclopean Monolith", "soul": 1, "tags": ["ranged"], "range": [2, 3], "text": "Turn start: create a wall in range and inflict 1 weak on an adjacent foe to the wall." },
+      { "name": "Soulfeed", "soul": 3, "tags": ["ranged"], "range": [1, 2], "text": "All isolated or doomed foes in range take 1 curse damage, gain 1 weak, and this unit gains 1 strength for each." }
+    ],
+    "bonusTraits": ["Teleport", "Puppet Master", "Maggot Destroyer"],
+    "actPool": ["Unholy Summoning", "Vapor Form", "Tear Soul", "Frozen Hell", "Great Urgal Blade", "Bloody Flail", "Lathean Devil Whip"],
+    "soulPool": ["Twist Sinews (1)", "Writhing Curse (1)", "Disincorporate (2)", "Eternal Curse (3)", "Malebolge (4)", "Great Satania (6)"]
+  },
+  "units": [
+    {
+      "id": "sacrifice", "name": "Sacrifice", "type": "thrall",
+      "mv": 4, "hp": 2, "df": 4, "arm": null, "art": "units/deadsouls/sacrifice.png",
+      "traits": [
+        { "name": "Inverted Crucifix", "text": "When slain, does not remove Doom, and (5+) Dooms its slayer." },
+        { "name": "Thrall", "text": "2 per unit slot; may activate two at a time." }
+      ],
+      "acts": [
+        { "name": "Beckon", "tags": ["ranged", "pull"], "range": [2, 4],
+          "text": "Pull 1 space. Ignores line of sight.",
+          "effect": [ { "op": "pull", "n": 1, "target": "choose" } ] },
+        { "name": "Shudder", "tags": ["attack", "melee"], "range": "melee",
+          "text": "On hit: 1 damage and (4+) Dooms the unit.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Dead Grasp", "text": "May move through walls." },
+        { "name": "Impending Death", "text": "Beckon has a 4+ effect chance to pull 2." },
+        { "name": "Terrorize", "text": "Beckon inflicts 1 weak on isolated units." }
+      ]
+    },
+    {
+      "id": "vizigheist", "name": "Vizigheist", "type": "horror",
+      "mv": 4, "hp": 3, "df": 5, "arm": "MAG", "art": "units/deadsouls/vizigheist.png",
+      "traits": [ { "name": "Teleport", "text": "When MOVEing a second time or more in a turn, may instead remove self and place anywhere in a free space in range 4." } ],
+      "acts": [
+        { "name": "Horrendous Shriek", "tags": ["curse", "self", "splash"], "range": "self",
+          "text": "Splash (self): foes gain 1 weak, (5+) and are Doomed. Doomed units take 1 curse damage.",
+          "effect": [ { "op": "splash", "center": "self", "then": [ { "op": "token", "token": "weak", "n": 1 } ] } ] },
+        { "name": "Urgal Blade", "tags": ["attack", "melee"], "range": "melee",
+          "text": "On hit: 2 curse damage. Against isolated units, gain 1 strength and may then MOVE again.",
+          "effect": [ { "op": "attack", "damage": 2, "damageType": "curse" } ] }
+      ],
+      "upgrades": [
+        { "name": "Terrorize", "text": "Gain 2 strength if Horrendous Shriek hits an isolated foe." },
+        { "name": "Soul Frost", "text": "When teleporting, create a space of adverse terrain in the first space vacated." },
+        { "name": "Condemn", "text": "Shriek obliterates one unit in its area at 1 hp or lower." }
+      ]
+    },
+    {
+      "id": "cultist", "name": "Chosen", "type": "scion",
+      "mv": 4, "hp": 3, "df": 5, "arm": "MAG", "art": "units/deadsouls/cultist.png",
+      "traits": [ { "name": "Slither", "text": "Has free movement while adjacent to a wall." } ],
+      "acts": [
+        { "name": "Tombraiser", "tags": ["ranged"], "range": [1, 2],
+          "text": "Create a wall in range, (3+) then adverse terrain, (5+) then adverse terrain again." },
+        { "name": "Kidnap", "tags": ["curse", "ranged", "pull"], "range": [2, 4],
+          "text": "Pull 1, ignoring line of sight. If pulling into a wall, pull 3 and the unit passes through walls and units during this pull.",
+          "effect": [ { "op": "pull", "n": 1, "target": "choose" } ] },
+        { "name": "Serpent's Kiss", "tags": ["attack", "melee"], "range": "melee",
+          "text": "On hit: 2 damage, then against isolated units inflict 1 weak (4+) and Doom them.",
+          "effect": [ { "op": "attack", "damage": 2, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Ivory Serpent", "text": "Serpent's Kiss also triggers its effects against units standing in adverse terrain." },
+        { "name": "Leap", "text": "May step 1 before ACTing, or step 2 and clear a token if adjacent to a wall." },
+        { "name": "Foul Monuments", "text": "Tombraiser gains +2 max range." }
+      ]
+    },
+    {
+      "id": "banshee", "name": "Banshee", "type": "hunter",
+      "mv": 3, "hp": 3, "df": 5, "arm": "MAG", "art": "units/deadsouls/banshee.png",
+      "traits": [ { "name": "Soul Sight", "text": "Abilities ignore line of sight." } ],
+      "acts": [
+        { "name": "Bale Scream", "tags": ["line"], "range": "self",
+          "text": "Line 4: 1 curse damage. Isolated or Doomed units take 1 curse damage again. May penetrate walls (and gains 1 strength if it passes through one).",
+          "effect": [ { "op": "line", "len": 4, "then": [ { "op": "damage", "damage": 1, "damageType": "curse" } ] } ] },
+        { "name": "Tombstone", "tags": ["ranged"], "range": [2, 4],
+          "text": "Create a wall in range and (5+) adjacent foes to the wall gain 1 weak." }
+      ],
+      "upgrades": [
+        { "name": "Doom Bell", "text": "Tombstone gains effect (6+): adjacent foes are Doomed." },
+        { "name": "Freeze Soul", "text": "If Bale Scream slays a unit, it creates adverse terrain instead of a corpse." },
+        { "name": "Siren", "text": "Bale Scream pulls all units in its area 2." }
+      ]
+    },
+    {
+      "id": "bounddevil", "name": "Bound Devil", "type": "tyrant", "large": true,
+      "mv": 3, "hp": 6, "df": 2, "arm": "MAG", "art": "units/deadsouls/bounddevil.png",
+      "traits": [
+        { "name": "Labyrinth Master", "text": "Before MOVEing, may remove and place any adjacent walls in other free adjacent spaces." },
+        { "name": "Tyrant", "text": "2x2 unit. Large: ignores elevation, cannot take cover, affected by terrain once." }
+      ],
+      "acts": [
+        { "name": "Hell's Grasp", "tags": ["curse", "ranged"], "range": [1, 4],
+          "text": "Choose an isolated unit. It gains 2 weak and may no longer MOVE or step until the end of its next turn or until no longer isolated.",
+          "effect": [ { "op": "token", "token": "weak", "n": 2, "target": "choose" } ] },
+        { "name": "Beckon Lamb", "tags": ["curse", "ranged", "pull"], "range": [2, 4],
+          "text": "Unit gains 1 weak and is pulled 3.",
+          "effect": [ { "op": "token", "token": "weak", "n": 1, "target": "choose" }, { "op": "pull", "n": 3, "target": "choose" } ] },
+        { "name": "Horrendous End", "tags": ["attack", "melee"], "range": "melee",
+          "text": "On hit: 1 damage, +1 for each of these true of the target: Doomed, Isolated, Weak, in adverse terrain.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Supremacy", "text": "Attacks against other Tyrants can't be reduced and obliterate instead of slaying." },
+        { "name": "Strong Pact", "text": "This unit is curseproof." },
+        { "name": "To the Slaughter", "text": "Beckon Lamb has no maximum range against Doomed units." }
+      ]
+    }
+  ]
+}

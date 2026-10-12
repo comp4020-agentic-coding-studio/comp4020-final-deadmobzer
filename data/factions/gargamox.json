@@ -1,0 +1,125 @@
+{
+  "id": "gargamox",
+  "name": "Gargamox",
+  "blurb": "Worthless trash granted power freely by the Filth Devil in a mockery of the Black Sacrament — beggars, outcasts and the depraved who wield the Plague Winds that scour flesh from bone. Area denial and damage over time.",
+  "playstyle": "Area denial and damage over time.",
+  "accent": "#18f030",
+  "specialMechanic": { "name": "Plague", "text": "A unit affected by plague takes 1 toxic damage at the end of its turn, then discards a plague token. This damage can't be reduced or ignored but can't slay. Gargamox units don't take plague damage or remove plague tokens." },
+  "specialTags": {
+    "Infect": "Jumps from the original target up to three times to adjacent characters.",
+    "Deathburst": "An effect that triggers when this unit is slain.",
+    "Hazard": "A unit starting its turn in, or entering, a hazard takes 1 damage ignoring armor."
+  },
+  "necromancer": {
+    "id": "plaguelord", "name": "Plaguelord", "type": "necromancer",
+    "mv": 4, "hp": 10, "df": 4, "arm": null, "art": "units/gargamox/necromancer.png",
+    "traits": [ { "name": "Blessed with Filth", "text": "Immune to hazards. At turn start, gain 1 plague, then may distribute plague tokens on this unit to units in range 2." } ],
+    "acts": [
+      { "name": "Virulence", "tags": ["attack", "ranged"], "range": [1, 3],
+        "text": "On hit: 1 damage and inflict 1 plague. Then may remove a plague token on target to deal 1 toxic damage, again (3+) one more, (5+) one more.",
+        "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+    ],
+    "souls": [
+      { "name": "Infest", "soul": 1, "tags": ["ranged"], "range": [1, 3], "text": "Turn start: grant 2 plague tokens to a unit in range." },
+      { "name": "Slime Form", "soul": 3, "tags": ["self"], "text": "Turn start: MOVE with free movement through walls and units. After, push or pull all units in range 2 one (5+) two spaces." }
+    ],
+    "bonusTraits": ["Pollution Shroud", "Corruptor", "Spreader"],
+    "actPool": ["Melt", "Corpse Explosion", "Vermin Form", "Ceaseless Spew", "Flesh Feeder Blade", "Scourge", "Necrocide"],
+    "soulPool": ["Purge Guts (1)", "Insides Out (1)", "Fecundity (2)", "Unholy Vapors (3)", "Praise the Filth (4)", "Mox Populi (6)"]
+  },
+  "units": [
+    {
+      "id": "scum", "name": "Scum", "type": "thrall",
+      "mv": 3, "hp": 1, "df": 3, "arm": "SUPER", "art": "units/gargamox/scum.png",
+      "traits": [
+        { "name": "Toxic Revenge", "text": "Deathburst: Splash (self) 1 plague, and 1 toxic damage to already-plagued foes." },
+        { "name": "Thrall", "text": "2 per unit slot; may activate two at a time." }
+      ],
+      "acts": [
+        { "name": "Pseudopod", "tags": ["ranged", "pull"], "range": [2, 3],
+          "text": "Pull unit one space. Gains +1 range and pull for each plague token on this unit.",
+          "effect": [ { "op": "pull", "n": 1, "target": "choose" } ] },
+        { "name": "Shamble", "tags": ["attack", "melee"], "range": "melee",
+          "text": "On hit: 1 damage and 1 plague.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Aftermath", "text": "Pseudopod inflicts 1 slow on plagued units." },
+        { "name": "Massive Swell", "text": "Toxic Revenge leaves a hazard instead of a corpse." },
+        { "name": "Tentacle Whip", "text": "Toxic Revenge's splash pushes 1 if this unit is plagued." }
+      ]
+    },
+    {
+      "id": "leech", "name": "Leech", "type": "freak",
+      "mv": 4, "hp": 4, "df": 4, "arm": "MAG", "art": "units/gargamox/leech.png",
+      "traits": [ { "name": "Plaguebearer", "text": "Immune to hazards. May treat plague tokens as strength." } ],
+      "acts": [
+        { "name": "Pustulate", "tags": ["ranged"], "range": [1, 3],
+          "text": "Create a hazard in a free space in range 3 and inflict plague on an adjacent target, (4+) all adjacent targets." },
+        { "name": "Vomitous Mass", "tags": ["line"], "range": "self",
+          "text": "Line 4: 1 plague. Already-plagued foes gain 1 slow.",
+          "effect": [ { "op": "line", "len": 4, "then": [] } ] },
+        { "name": "Rotblade", "tags": ["attack", "melee"], "range": "melee",
+          "text": "On hit: 1 toxic damage and infect: 1 toxic damage.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "toxic" } ] }
+      ],
+      "upgrades": [
+        { "name": "Catalyze", "text": "Vomitous Mass deals 1 toxic damage to units standing in hazards." },
+        { "name": "Invigorating Viscera", "text": "Gain deathburst: splash (self) 1 plague, and allies gain 1 strength." },
+        { "name": "Smog Shroud", "text": "Curseproof and cover from all directions while standing in a hazard." }
+      ]
+    },
+    {
+      "id": "rotten", "name": "Rotten", "type": "scion",
+      "mv": 4, "hp": 4, "df": 3, "arm": "PHYS", "art": "units/gargamox/rotten.png",
+      "traits": [ { "name": "Afflicted", "text": "A Gargamox scion that spreads corruption through curses." } ],
+      "acts": [
+        { "name": "Suppurate", "tags": ["curse", "ranged"], "range": [1, 3],
+          "text": "Unit permanently gains deathburst: splash (self) 1 toxic damage and 1 plague. Stacks with other deathbursts." },
+        { "name": "Evolve Strain", "tags": ["curse", "ranged"], "range": [1, 3],
+          "text": "Strip all plague from a unit in range. Foes take 1 toxic damage, then gain 1 slow per token removed. Allies gain 1 strength per token removed." },
+        { "name": "Swell with Corruption", "tags": ["ranged"], "range": [1, 3],
+          "text": "Unit triggers deathburst without being slain." }
+      ],
+      "upgrades": [
+        { "name": "Deathwash", "text": "Has deathburst: splash (self) remove any 1 token from all units in the area." },
+        { "name": "Pandemic", "text": "Evolve Strain removes 1 plague from all adjacent characters instead, with the same effects." },
+        { "name": "Acid Blood", "text": "Suppurate also grants deathburst: create a hazard instead of a corpse." }
+      ]
+    },
+    {
+      "id": "host", "name": "Host", "type": "hunter",
+      "mv": 3, "hp": 4, "df": 3, "arm": null, "art": "units/gargamox/host.png",
+      "traits": [ { "name": "Swarm Release", "text": "Deathburst: create a hazard under units in range 2 equal to this unit's plague tokens." } ],
+      "acts": [
+        { "name": "Propagate Swarm", "tags": ["ranged"], "range": [2, 4],
+          "text": "Create one, (3+) two, or (5+) three hazards in range. May spend a plague token to re-roll the effect die once." },
+        { "name": "Driving Vermin", "tags": ["attack", "ranged"], "range": [2, 4],
+          "text": "On hit: 2 damage and pull 1. Infect: 1 damage and pull 1. Allies take no damage.",
+          "effect": [ { "op": "attack", "damage": 2, "damageType": "physical" }, { "op": "onHit", "then": [ { "op": "pull", "n": 1, "target": "hit" } ] } ] }
+      ],
+      "upgrades": [
+        { "name": "Swarm Feed", "text": "May spend plague tokens to gain +1D on Driving Vermin per token spent." },
+        { "name": "Toxic Avenger", "text": "Immune to hazards. While standing in a hazard, gain 1 plague at turn start." },
+        { "name": "Defiler", "text": "Driving Vermin gains effect (5+): create a hazard under target before the attack." }
+      ]
+    },
+    {
+      "id": "slime", "name": "Slime", "type": "horror",
+      "mv": 4, "hp": 4, "df": 4, "arm": null, "art": "units/gargamox/slime.png",
+      "traits": [ { "name": "Vile Rupture", "text": "Deathburst: remove up to three plague on this unit, then splash (self) 1 toxic damage once per plague removed." } ],
+      "acts": [
+        { "name": "Percolate", "tags": ["self"], "range": "self",
+          "text": "Inflict two, (5+) or three plague on self, then may inflict 1 slow on an adjacent unit per plague token gained." },
+        { "name": "Surge", "tags": ["self"], "range": "self",
+          "text": "MOVE with free movement in a straight line, immune to hazards, through walls and units. Foes passed through take 1 toxic damage and may receive this unit's plague.",
+          "effect": [ { "op": "chargeLine", "damage": 1, "damageType": "toxic" } ] }
+      ],
+      "upgrades": [
+        { "name": "Rotten Surge", "text": "After Surge, inflict 1 plague on self for each unit passed through." },
+        { "name": "Sticky Trail", "text": "During Surge, may create a hazard in one space passed through." },
+        { "name": "The Gunk", "text": "Surge inflicts 2 slow on the first unit affected." }
+      ]
+    }
+  ]
+}

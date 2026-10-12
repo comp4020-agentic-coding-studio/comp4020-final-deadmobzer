@@ -18,7 +18,7 @@ ROSTER = {
     "goregrinders": {"warhead":"warhead","painghoul":"painghoul","carnifex":"carnifex","painwheel":"painwheel","berserker":"berserker"},
     "gargamox":     {"host":"host","leech":"leech","rotten":"rotten","scum":"scum","slime":"slime"},
     "deadsouls":    {"banshee":"banshee","bounddevil":"bounddevil","cultist":"cultist","sacrifice":"sacrifice","vizigheist":"vizigheist"},
-    "abhorrers":    {"antipriest":"antipriest","exorcist":"exorcist","holybody":"holybody","penitent":"penitent","zealot":"zealot"},
+    "abhorrers":    {"penitent":"penitent","antipriest":"antipriest","zealot":"zealot","inquisitor":"exorcist","holybody":"holybody"},
     "igorri":       {"chopdoc":"chopdoc","homonculus":"homonculus","lycan":"lycan","stitch":"stitch","strigoi":"strigoi"},
 }
 # necromancer portrait (board art + avatar) per house

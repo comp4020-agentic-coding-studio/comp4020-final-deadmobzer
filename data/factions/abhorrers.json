@@ -1,0 +1,130 @@
+{
+  "id": "abhorrers",
+  "name": "Abhorrers",
+  "blurb": "An ancient heretic order that split from the Holy Lance Church to fight necromancy by studying it. Repentant monk-knights, in theory opposed to hell yet necromancers all the same — deadly with Starmetal Sword Arts and consummate monster hunters.",
+  "playstyle": "Slow, building power.",
+  "accent": "#f0c030",
+  "specialMechanic": { "name": "Miracle", "text": "A unit affected by a Miracle has a 5+ effect chance to instantly return to life at 1 hp at the end of any turn it is slain, clearing all tokens." },
+  "specialTags": {
+    "Stance": "An ability with stance gains different effects on odd, even, or special numbered rounds.",
+    "Charge": "Cannot be used on round 1."
+  },
+  "necromancer": {
+    "id": "exorcist", "name": "Exorcist", "type": "necromancer",
+    "mv": 4, "hp": 10, "df": 4, "arm": null, "art": "units/abhorrers/necromancer.png",
+    "traits": [ { "name": "Holy Vessel", "text": "Lacks Miracle, but while alive, miracle triggers for adjacent allies on a 4+, and gains 1 SOUL the first time it triggers in a round." } ],
+    "acts": [
+      { "name": "Starmetal Godsword", "tags": ["attack", "melee"], "range": "melee",
+        "text": "On hit: 1 damage. Stance (Odd): and step 2, (Even): and gain 1 vitality, (Round 5+): increase damage to 3.",
+        "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+    ],
+    "souls": [
+      { "name": "Absolution", "soul": 1, "tags": ["ranged"], "range": [2, 6], "text": "Turn start: self takes 1 piercing (can't slay); one ally in range gains one, (3+) two, (5+) three vitality." },
+      { "name": "Will of God", "soul": 3, "tags": ["ranged"], "range": [1, 3], "text": "Turn start: self or ally may treat the current round as either 2 or 5 this turn." }
+    ],
+    "bonusTraits": ["Winter Rose Stance", "Corpse Violet Stance", "Royal Chrysanthemum Stance"],
+    "actPool": ["Grand Oath", "Redempta", "Communion", "Decree of Forbiddance", "Holy Water Flail", "Relic Lance", "Starmetal Shuriken"],
+    "soulPool": ["Drifting Blossoms (1)", "Safflower Cut (2)", "Grace (2)", "Winter Sprout (3)", "Merciful Snowdrop Cut (4)", "Resurrection (6)"]
+  },
+  "units": [
+    {
+      "id": "penitent", "name": "Penitent", "type": "thrall",
+      "mv": 4, "hp": 3, "df": 2, "arm": "SUPER", "art": "units/abhorrers/penitent.png",
+      "traits": [
+        { "name": "Miracle", "text": "5+ chance to return to life at 1 hp at the end of a turn it is slain." },
+        { "name": "Thrall", "text": "2 per unit slot; may activate two at a time." }
+      ],
+      "acts": [
+        { "name": "Mea Culpa", "tags": ["self", "splash"], "range": "self",
+          "text": "Splash (self): remove one negative token from allies in range and place them on this unit. Then remove one, (4+) two, or (6+) all negative tokens from this unit, gaining 1 strength for each removed." },
+        { "name": "Holy Water", "tags": ["ranged"], "range": [2, 3],
+          "text": "1 holy damage and (3+) create a hazard under target.",
+          "effect": [ { "op": "damage", "damage": 1, "damageType": "holy", "target": "choose" } ] },
+        { "name": "Excoriate", "tags": ["attack", "melee"], "range": "melee",
+          "text": "On hit: 1 damage, and Stance (Odd): splash (self) 1 holy damage, (Even): gain 1 vitality.",
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Holy Blood", "text": "Mea Culpa creates one or (4+) two hazards in free adjacent spaces." },
+        { "name": "Eager", "text": "May step 2 before using Mea Culpa." },
+        { "name": "Taste the Lash", "text": "Stance (round 4+): Excoriate triggers both effects." }
+      ]
+    },
+    {
+      "id": "antipriest", "name": "Antipriest", "type": "freak",
+      "mv": 3, "hp": 4, "df": 3, "arm": "MAG", "art": "units/abhorrers/antipriest.png",
+      "traits": [ { "name": "Miracle", "text": "5+ chance to return to life at 1 hp at the end of a turn it is slain." } ],
+      "acts": [
+        { "name": "Gentleness", "tags": ["self"], "range": "self",
+          "text": "Become unable to MOVE or step until start of next turn. Then adjacent allies gain 1 vitality." },
+        { "name": "Delay Judgement", "tags": ["ranged"], "range": [1, 3],
+          "text": "An ally in range gains miracle. If it already had miracle, miracle triggers on 2+ until end of their next turn." },
+        { "name": "Blessed Censer", "tags": ["self", "splash"], "range": "self",
+          "text": "Splash (self): Stance (Even): allies gain 1 vitality, (Odd): foes take 1 holy damage." }
+      ],
+      "upgrades": [
+        { "name": "Cleansing Prayer", "text": "Self and adjacent units are curseproof during Gentleness." },
+        { "name": "Consecrate", "text": "Blessed Censer may remove up to three corpses or hazards in range." },
+        { "name": "Boiling Censer", "text": "Stance (Round 4+): Blessed Censer's effects trigger twice." }
+      ]
+    },
+    {
+      "id": "zealot", "name": "Zealot", "type": "scion",
+      "mv": 4, "hp": 4, "df": 4, "arm": null, "art": "units/abhorrers/zealot.png",
+      "traits": [
+        { "name": "Miracle", "text": "5+ chance to return to life at 1 hp at the end of a turn it is slain." },
+        { "name": "Zealotry", "text": "When MOVEing for the second time or more in a turn, gain 1 vitality." }
+      ],
+      "acts": [
+        { "name": "Smite", "tags": ["self"], "range": "self",
+          "text": "Stance: MOVE again. The next Whirling Chain deals +damage equal to half the round number, rounded up." },
+        { "name": "Whirling Chain", "tags": ["attack", "ranged"], "range": [1, 2],
+          "text": "On hit: 2 damage. Stance (Odd): and MOVE again, (Even): and push unit 2.",
+          "effect": [ { "op": "attack", "damage": 2, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Suffuse", "text": "Smite removes a negative token from this unit." },
+        { "name": "Punisher", "text": "Stance: Whirling Chain obliterates foes it slays at round 3+." },
+        { "name": "Fiery Chain", "text": "Whirling Chain creates one or (5+) two hazards adjacent to its target after it resolves." }
+      ]
+    },
+    {
+      "id": "inquisitor", "name": "Inquisitor", "type": "hunter",
+      "mv": 3, "hp": 4, "df": 3, "arm": null, "art": "units/abhorrers/inquisitor.png",
+      "traits": [ { "name": "Miracle", "text": "5+ chance to return to life at 1 hp at the end of a turn it is slain." } ],
+      "acts": [
+        { "name": "Winch", "tags": ["self"], "range": "self",
+          "text": "Step 1. Next attack gains +1D and +2 max range. This effect stacks." },
+        { "name": "Requiesce en Pace", "tags": ["attack", "ranged"], "range": [2, 3],
+          "text": "On hit: 2 damage. Stance (Round 3+): with piercing. (Round 5+): 4 damage with piercing.",
+          "effect": [ { "op": "attack", "damage": 2, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Focus", "text": "If this unit does not move during its turn, it may remove a negative token from itself." },
+        { "name": "Heart Destroyer", "text": "Stance: Requiesce en Pace obliterates units it slays at round 3+." },
+        { "name": "Explosive Bolts", "text": "Stance: Requiesce en Pace pushes units one, (Round 3+) two, or (Round 5+) four spaces." }
+      ]
+    },
+    {
+      "id": "holybody", "name": "Holy Body", "type": "tyrant", "large": true,
+      "mv": 3, "hp": 3, "df": 2, "arm": "SUPER", "art": "units/abhorrers/holybody.png",
+      "traits": [
+        { "name": "Miraculous Flesh", "text": "Lacks Miracle, but starts combat with 4 vitality tokens." },
+        { "name": "Tyrant", "text": "2x2 unit. Large: ignores elevation, cannot take cover, affected by terrain once." }
+      ],
+      "acts": [
+        { "name": "Bolides", "tags": ["ranged"], "range": [2, 6],
+          "text": "Create one, (3+) two, (5+) or three hazards in range. May destroy a wall instead of creating a hazard." },
+        { "name": "Indignation", "tags": ["ranged"], "range": [3, 6],
+          "text": "Remove one or two vitality on this unit, then deal 1 holy damage to that many units in range and push them 1." },
+        { "name": "Ablutions", "tags": ["self"], "range": "self",
+          "text": "Gain two vitality. Until start of next turn, adjacent allies may spend this unit's vitality as their own." }
+      ],
+      "upgrades": [
+        { "name": "Scathe", "text": "When Bolides destroys a wall, it can deal 1 damage to an adjacent foe." },
+        { "name": "Holy Font", "text": "Ablutions gains stance (round 3+): gain 3 vitality instead, (round 5+): 4." },
+        { "name": "Witness", "text": "Indignation gains stance (round 4+): deal 2 holy damage instead." }
+      ]
+    }
+  ]
+}

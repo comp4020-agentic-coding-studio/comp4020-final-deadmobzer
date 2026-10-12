@@ -13,7 +13,7 @@
   "necromancer": {
     "id": "warlord", "name": "Warlord", "type": "necromancer",
     "mv": 4, "hp": 10, "df": 3, "arm": null,
-    "art": "units/goregrinders/warlord.png",
+    "art": "units/goregrinders/necromancer.png",
     "traits": [
       { "name": "Blood Rage", "text": "At 0 HP, not slain: gain 1 strength and stay at 0; further damage slays." },
       { "name": "Fueled by Rage", "text": "Gain 1 berserk token at the start of your turn. You may spend berserk tokens as speed and vice versa." }
