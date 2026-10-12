@@ -102,6 +102,7 @@ export function dealDamage(
 function slay(s: GameState, u: Unit) {
   u.hp = 0;
   u.alive = false;
+  s.corpses.push({ x: u.pos.x, y: u.pos.y });   // a slain unit leaves a corpse marker
   log(s, { side: null, actor: u.name, text: `${u.name} is slain.` });
   onSlain(s, u);
 }
@@ -470,6 +471,7 @@ export function createGame(a: Loadout, b: Loadout, seed: number, firstSide: 0 | 
     players,
     units: [...mk(a, 0), ...mk(b, 1)],
     terrain: {},
+    corpses: [],
     rng: makeRng(seed),
     log: [{ round: 1, side: null, actor: "system", text: "The battle begins. Deploy your Black Mass." }],
     winner: null, soulUsedThisTurn: false,

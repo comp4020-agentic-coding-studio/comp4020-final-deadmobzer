@@ -19,6 +19,7 @@ export interface TableState {
   units: TableUnit[];
   players: { colour: string }[];
   terrain?: Record<string, TerrainCell>;
+  corpses?: { x: number; y: number }[];
 }
 export interface TableHandlers {
   onPickTile?: (x: number, y: number) => void;
@@ -180,6 +181,23 @@ export class Table {
     // remove standees for units no longer present/alive
     for (const [iid, g] of this.standees) {
       if (!seen.has(iid)) { this.scene.remove(g); this.standees.delete(iid); }
+    }
+    this.syncCorpses(state.corpses ?? []);
+  }
+
+  private corpseMeshes: THREE.Mesh[] = [];
+  private syncCorpses(corpses: { x: number; y: number }[]): void {
+    for (const m of this.corpseMeshes) this.scene.remove(m);
+    this.corpseMeshes = [];
+    for (const c of corpses) {
+      const m = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.3, 0.05, 10),
+        new THREE.MeshStandardMaterial({ color: 0x6a1010, roughness: 0.9 }),
+      );
+      m.position.set(c.x, 0.15, c.y);
+      m.receiveShadow = true;
+      this.scene.add(m);
+      this.corpseMeshes.push(m);
     }
   }
 

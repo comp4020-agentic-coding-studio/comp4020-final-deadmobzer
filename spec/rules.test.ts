@@ -50,6 +50,21 @@ describe("damage: armor, pierce, devil", () => {
   });
 });
 
+describe("corpses", () => {
+  it("a slain unit leaves a corpse at its square; an obliterated one does not", () => {
+    const s = g(); autoDeploy(s);
+    const victim = s.units.find((u) => u.owner === 1 && !u.isNecromancer)!;
+    const before = s.corpses.length;
+    dealDamage(s, victim, 999, "physical");
+    expect(s.corpses.length).toBe(before + 1);
+    expect(s.corpses.some((c) => c.x === victim.pos.x && c.y === victim.pos.y)).toBe(true);
+    const victim2 = s.units.find((u) => u.owner === 1 && !u.isNecromancer && u.alive)!;
+    const after = s.corpses.length;
+    dealDamage(s, victim2, 999, "devil");   // devil obliterates — no corpse
+    expect(s.corpses.length).toBe(after);
+  });
+});
+
 describe("tokens", () => {
   it("vulnerable adds 1 and is spent", () => {
     const d = dummy(5, null); d.tokens.vulnerable = 1;

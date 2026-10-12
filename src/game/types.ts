@@ -105,6 +105,7 @@ export interface GameState {
   players: [SidePlayer, SidePlayer];
   units: Unit[];
   terrain: Record<string, TerrainCell>;   // keyed "x,y"
+  corpses: Pos[];                          // markers left by slain (not obliterated) units
   rng: Rng;
   log: LogEntry[];
   winner: 0 | 1 | null;
