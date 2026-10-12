@@ -9,17 +9,24 @@ import { escapeHtml } from "./http.ts";
 // No user content is ever interpolated without escapeHtml (no script injection).
 
 const STYLE = `
-  :root{--paper:#f0f0f0;--ink:#111;--blood:#f00000;--line:#000;}
+  :root{--paper:#f0f0f0;--ink:#111;--blood:#f00000;--line:#000;
+    --display:'Pirata One','UnifrakturMaguntia',serif;
+    --label:'Oswald','Arial Narrow',sans-serif;
+    --body:Georgia,'Times New Roman',serif;}
   *{box-sizing:border-box}
   body{margin:0;background:var(--paper);color:var(--ink);
-    font-family:Georgia,'Times New Roman',serif;line-height:1.5}
+    font-family:var(--body);line-height:1.5}
   header{background:var(--ink);color:var(--paper);padding:14px 20px;
     display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-  header .brand{font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:var(--blood)}
-  header a{color:var(--paper);text-decoration:none;margin-right:12px}
+  header .brand{font-family:var(--display);font-size:1.3rem;letter-spacing:.04em;color:var(--blood)}
+  header a{color:var(--paper);text-decoration:none;margin-right:12px;
+    font-family:var(--label);text-transform:uppercase;font-size:.9rem;letter-spacing:.05em}
+  header a:hover{color:var(--blood)}
   main{max-width:860px;margin:0 auto;padding:24px 20px}
-  h1,h2,h3{font-family:Georgia,serif;letter-spacing:.02em}
+  h1,h2,h3{font-family:var(--display);letter-spacing:.02em;font-weight:400}
   h1{border-bottom:3px solid var(--blood);padding-bottom:.2em}
+  label{font-family:var(--label);text-transform:uppercase;font-size:.85rem;letter-spacing:.04em}
+  button{font-family:var(--label);text-transform:uppercase;letter-spacing:.04em}
   a{color:var(--blood)}
   .card{border:2px solid var(--line);padding:16px;margin:14px 0;background:#fff}
   label{display:block;margin:.5em 0 .2em;font-weight:bold}
@@ -41,6 +48,7 @@ export function page(title: string, innerHtml: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(title)} — Maleghast Online</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
 <style>${STYLE}</style></head>
 <body>
 <header><span class="brand">Maleghast Online</span>
@@ -86,6 +94,7 @@ export function appShell(title: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(title)} — Maleghast Online</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
 <link rel="stylesheet" href="/static/app.css">
 </head><body class="app-body">
 <div id="app">Loading the table…</div>

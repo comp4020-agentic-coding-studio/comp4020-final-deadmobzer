@@ -123,6 +123,9 @@ export function Game({ gameId }: { gameId: string }) {
             ? (s.winner === null ? "Draw" : `Side ${s.winner + 1} wins`)
             : myTurn ? "Your turn" : `Side ${s.activeSide + 1}'s turn`}
           {" · "}<span>{view.role}</span> · 👁 {view.audience}
+          <button className="leave" onClick={() => location.assign("/play")}>
+            {view.role === "spectator" ? "Stop watching" : "Leave"}
+          </button>
         </div>
 
         {selectedUnit && (

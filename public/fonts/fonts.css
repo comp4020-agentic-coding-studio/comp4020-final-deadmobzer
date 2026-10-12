@@ -1,0 +1,9 @@
+/* Self-hosted OFL fonts (see LICENSE.md). Pirata One stands in for the rulebook's
+   blackletter display; Oswald for its Impact-like stat labels; Georgia (web-safe)
+   is the body serif. Served at /static/fonts.css (and /fonts/* for the files). */
+@font-face { font-family: "Pirata One"; font-style: normal; font-weight: 400;
+  font-display: swap; src: url("/fonts/pirataone.woff2") format("woff2"); }
+@font-face { font-family: "Oswald"; font-style: normal; font-weight: 500;
+  font-display: swap; src: url("/fonts/oswald-500.woff2") format("woff2"); }
+@font-face { font-family: "Oswald"; font-style: normal; font-weight: 700;
+  font-display: swap; src: url("/fonts/oswald-700.woff2") format("woff2"); }

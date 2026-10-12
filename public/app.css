@@ -2,13 +2,18 @@
    design language: bone paper, black ink, blood-red. Served at /static/app.css. */
 :root {
   --paper: #f0f0f0; --ink: #111; --blood: #f00000; --line: #000; --panel: #15151a;
+  --display: "Pirata One", "UnifrakturMaguntia", serif;
+  --label: "Oswald", "Arial Narrow", sans-serif;
+  --body: Georgia, "Times New Roman", serif;
 }
 * { box-sizing: border-box; }
 .app-body { margin: 0; background: #0b0b0d; color: var(--paper);
-  font-family: Georgia, "Times New Roman", serif; height: 100vh; overflow: hidden; }
+  font-family: var(--body); height: 100vh; overflow: hidden; }
 #app { height: 100vh; }
 .pad { padding: 28px; max-width: 760px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02em; }
 h1 { letter-spacing: .03em; border-bottom: 3px solid var(--blood); padding-bottom: .2em; }
+button, label, .tabs button { font-family: var(--label); text-transform: uppercase; letter-spacing: .04em; }
 .err { color: #ff6b6b; font-weight: bold; }
 button { font: inherit; background: var(--ink); color: var(--paper); border: 1px solid #333;
   padding: .5em .9em; cursor: pointer; border-radius: 3px; }
@@ -36,7 +41,10 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
 .board { position: relative; min-width: 0; }
 .hud { background: #101014; border-left: 1px solid #000; padding: 12px;
   display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
-.statusline { font-size: .95rem; border-bottom: 1px solid #2a2a30; padding-bottom: 8px; }
+.statusline { font-size: .95rem; border-bottom: 1px solid #2a2a30; padding-bottom: 8px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.leave { margin-left: auto; background: #1c1c22; font-size: .8rem; padding: .3em .7em; }
+.leave:hover { background: var(--blood); }
 .panel { background: var(--panel); border: 1px solid #2a2a30; border-radius: 4px; padding: 10px; }
 .panel.ghost { opacity: .8; }
 .panel h3 { margin: 0 0 6px; color: var(--blood); }
