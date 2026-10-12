@@ -14,12 +14,12 @@ import {
   clearSessionCookie, escapeHtml, html, json, readCookie, readFormBody, readJsonBody,
   redirect, setSessionCookie,
 } from "./http.ts";
-import { landing, page, aboutPage } from "./serverview.ts";
+import { landing, page, aboutPage, appShell } from "./serverview.ts";
 import { audit } from "./audit.ts";
 import { today, TZ } from "./time.ts";
 import { FACTIONS, PLAYER_PALETTE } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, LoadoutError, type Mode } from "./loadouts.ts";
-import { createLobby, joinLobby, quickJoin, openLobbies, LobbyError } from "./lobbies.ts";
+import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
 import { gameView, act, recentOpponents, GameError } from "./games.ts";
 import { postMessage, messagesFor, ChatError, type Channel } from "./chat.ts";
 import { getProfile, setAvatar, ProfileError } from "./profile.ts";
@@ -172,7 +172,9 @@ const server = createServer(async (req, res) => {
              <a href="/friends">Friends</a></p>
           <form method="post" action="/logout"><button>Sign out</button></form></div>`));
     }
-    if (path === "/play" && method === "GET") return void html(res, playPage());
+    // The interactive app (React + Three.js): lobby + the 3D table.
+    if (path === "/play" && method === "GET") return void html(res, appShell("Play"));
+    if (path.startsWith("/g/") && method === "GET") return void html(res, appShell("Table"));
     if (path === "/profile" && method === "GET") {
       const p = getProfile(user.id)!;
       return void html(res, page("Profile", `
@@ -241,6 +243,10 @@ const server = createServer(async (req, res) => {
     if (path === "/api/lobbies" && method === "GET") {
       const m = url.searchParams.get("mode");
       return void json(res, { lobbies: openLobbies(m === "faithful" || m === "fixed" ? m : undefined) });
+    }
+    const lobbyMatch = /^\/api\/lobby\/([A-Za-z0-9]+)$/.exec(path);
+    if (lobbyMatch && method === "GET") {
+      return void json(res, { gameId: lobbyGameId(lobbyMatch[1]) });
     }
 
     // friends (JSON)
@@ -313,22 +319,6 @@ const server = createServer(async (req, res) => {
     res.end("something went wrong");
   }
 });
-
-function playPage(): string {
-  return page("Play", `
-    <h1>Find a match</h1>
-    <p>Pick a mode and a House, then quick-join, create a lobby code, or join one.
-       This backend-first build drives the game over the JSON API; the 3D table
-       comes next.</p>
-    <div class="card"><h2>Modes</h2><ul>
-      <li><strong>Fixed roster</strong> — your House's necromancer + its five units.</li>
-      <li><strong>Faithful</strong> — build a Black Mass within the slot budget, with Malice upgrades.</li>
-    </ul>
-    <p>API: <code>GET /api/factions</code>, then <code>POST /api/quickjoin</code> /
-       <code>/api/lobby/create</code> / <code>/api/lobby/join</code> with a loadout;
-       <code>GET /api/game/:id</code>, <code>POST /api/game/:id/action</code>,
-       <code>POST /api/game/:id/chat</code>.</p></div>`);
-}
 
 server.on("upgrade", (req, socket, head) => {
   if (new URL(req.url ?? "/", "http://localhost").pathname === "/ws") {

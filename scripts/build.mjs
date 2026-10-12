@@ -27,4 +27,18 @@ if (leaked.length) {
   throw new Error(`server bundle must stay light; these leaked in: ${leaked.join(", ")}`);
 }
 
-console.log("built dist/server.js (server-only; client bundle comes with the 3D phase)");
+// The client bundle: the browser app (React + Three.js + anime.js), bundled and
+// minified into public/app.js. This is where all the heavy libraries live.
+await build({
+  entryPoints: ["src/client/main.tsx"],
+  bundle: true,
+  platform: "browser",
+  target: "es2020",
+  format: "esm",
+  minify: true,
+  sourcemap: false,
+  define: { "process.env.NODE_ENV": '"production"' },
+  outfile: "public/app.js",
+});
+
+console.log("built dist/server.js (light) and public/app.js (client: React + Three.js)");

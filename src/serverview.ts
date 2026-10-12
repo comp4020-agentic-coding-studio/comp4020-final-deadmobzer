@@ -71,3 +71,17 @@ export function landing(error?: string): string {
 export function aboutPage(readmeHtml: string): string {
   return page("About", readmeHtml);
 }
+
+// The app shell: a full-viewport mount for the client bundle (React + Three.js).
+// Loaded for the lobby and the game table. CSP allows scripts only from 'self',
+// so the bundle is a same-origin module — no inline script.
+export function appShell(title: string): string {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(title)} — Maleghast Online</title>
+<link rel="stylesheet" href="/static/app.css">
+</head><body class="app-body">
+<div id="app">Loading the table…</div>
+<script type="module" src="/static/app.js"></script>
+</body></html>`;
+}
