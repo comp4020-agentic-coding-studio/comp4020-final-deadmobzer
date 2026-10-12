@@ -1,0 +1,243 @@
+hp, clearing all tokens.
+
+T erm s
+•
+
+Adverse terrain: Special terrain type, like
+mud, rubble, water, etc. Costs +1 more
+movement to exit.
+
+•
+
+Armor: Armor blocks 1 damage any time it is
+applied, depending on type.
+
+•
+
+Charge: Cannot be used round 1.
+
+•
+
+Curseproof: Immune to damage and effects
+of Curses from foes.
+
+•
+
+Damage: All damage is physical (untyped),
+magical (toxic, curse, fire, holy), or devil.
+
+•
+
+Death burst: Gargamox faction tag. Effect
+that triggers when this unit is slain.
+
+•
+
+Devil damage: Cannot be reduced,
+increased, or ignored. Obliterates units it
+slays.
+
+•
+
+Elevation: Special terrain type. Provides
+cover. Costs +1 movement to enter from a non
+elevated space. Units on elevation gain +1D on
+attacks against units not on elevation, and
+units gain -1D to attack units on elevation if
+they are on ground level.
+
+G eneric T okens
+•
+•
+•
+•
+•
+•
+
+Strength: +1 damage, discard one after dealing damage. Cancels weak.
+Weak: -1 damage, discard one after dealing damage. Cancels Strength.
+Vitality: Take -1 damage, discard one after reducing damage this way. Cancels
+Vulnerable.
+Vulnerability: Take +1 more damage, discard one after damage is increased this way.
+Cancels Vitality.
+Slow: MOVE a max of 1 space, discard one after MOVEing. Cancels Speed.
+Speed: MOVE +2 more spaces, discard one after MOVEing. Cancels Slow.
+
+•
+
+Formation: CARCASS faction trait. Gain +1D
+on attacks if adjacent to an allied unit.
+
+•
+
+Free movement: Unit’s movement cannot
+be reduced by any means.
+
+•
+
+Hazard: Special terrain type. A unit that
+starts their turn in a hazard takes 1 damage,
+ignoring armor, and a unit also takes this
+damage if they enter a hazard space during
+their turn. Hazards can overlap other terrain
+types.
+
+Faction T okens
+•
+•
+•
+
+•
+
+B erserk: A unit affected by Berserk deals 1 splash damage after ACTing, then discard a
+
+berserk token. This damage can’t be increased in any way. If this doesn’t damage any
+other units, they deal 1 damage to themselves instead, ignoring armor.
+D oom : A unit affected by at least one Doom token takes 4 devil damage at the end of
+round 4. A unit can clear a doom token by slaying another unit, and no other way.
+P lague: Units affected by plague take 1 toxic damage at the end of their turn, then that
+unit discards a plague token. This damage cannot be ignored or reduced by any means
+but cannot slay a unit. Gargamox units don’t take damage from plague and don’t remove
+plague tokens, but can still be affected by plague.
+M utation A unit may discard a mutation token instead of discarding any other token.
+
+Tokens apply a static effect while a unit has at least one. Mutation tokens may be discarded
+in place of any other token, ie they can be a stand-in and act as a ‘copy’ for any other token,
+allowing you to keep the original.
+
+•
+
+•
+
+•
+
+•
+
+61
+
+Headshot: CARCASS special tag. Effect that
+triggers when rolling a 6 on the final attack
+roll.
+Infect: Gargamox faction tag. Jumps from the
+original target up to three times to up to three
+different characters, as long as each character
+is adjacent to the previous.
+Large: This unit is 2x2. It ignores elevated
+spaces and cannot take cover. It is affected by
+terrain and other space-based effects as long
+as their occupy at least one space of their total
+area, but these effects don’t stack on them.
+Line: Affects all units in a line. Lines can only
+be drawn in orthogonal (compass) directions
+and can only be drawn from one of those
+spaces.
+
+•
+
+MAG: Magical armor. Blocks 1 holy, curse,
+toxic, or fire damage.
+
+•
+
+Miracle: Abhorrer faction tag. When a unit
+with miracle is slain, it has a 5+ effect chance
+to return to life at the end of that turn with 1
+
+•
+
+Obliterate: A unit that is obliterated leaves
+neither body nor SOUL and does not trigger
+effects that trigger when they are slain or
+reduced to 0 hp.
+
+•
+
+PHYS: Physical armor. Blocks 1 physical
+damage. All damage is physical by default
+(damage that is not holy, curse, toxic, fire, or
+devil damage)
+
+•
+
+Pierce: This damage ignores armor
+
+•
+
+Pull: Forcibly pull unit a number of spaces, as
+long as each space of the pull is closer to the
+pulling unit or effect than the last space. Does
+not count as a MOVE.
+
+•
+
+Push: Forcibly push unit a number of spaces,
+as long as each space of the push is further
+away from the pushing unit or effect than the
+last space. Does not count as a MOVE.
+
+•
+
+Reload: CARCASS faction tag. This ability
+must be reloaded by sacrificing a MOVE
+before becoming usable again. Reloading
+refreshes all abilities with reload.
+
+•
+
+Retaliation: Goreginders faction tag. Deal 1
+damage after any ability resolves that damages
+this unit, to whichever unit damaged them,
+even if this unit is slain.
+
+•
+
+Soulless: A soulless unit leaves no corpse,
+doesn’t grant SOUL, and can’t be used for
+body block.
+
+•
+
+Spare Parts: Gains an additional effects if an
+adjacent corpse is consumed at the start of the
+ability. Scales per corpse consumed.
+
+•
+
+Splash: Affects all adjacent units, but not the
+target. Can be splash (target) or splash (self).
+
+•
+
+Stance: Abhorrer faction tag.This ability
+gains extra effects based on round number
+
+•
+
+Step: Move the specified number of spaces.
+Does not count as a MOVE.
+
+•
+
+Summon: Summoned units are usually
+created by abilities. When summoning a unit,
+place it on the battlefield in a free space in
+range. Summoning a unit doesn’t count as it
+moving or entering a space. Summoned units
+are SOULLESS and may be activated in the
+round after their summoning.
+
+•
+
+SUPER: Super armor, blocks 1 of any damage
+except devil damage.
+
+•
+
+Wall: Terrain type. Blocks movement and line
+of sight. Can be targeted and destroyed as a
+character but does not trigger effects, and has
+2 hp.
+
+62
+
+

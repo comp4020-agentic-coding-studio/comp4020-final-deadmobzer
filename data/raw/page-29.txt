@@ -1,0 +1,231 @@
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+3
+
+2+
+
+SUPER
+
+T raits
+
+Mea Culpa creates one or
+(4+) two hazards in free
+adjacent spaces.
+
+Miracle
+
+•
+
+ARM
+
+3
+
+4
+
+3+
+
+MAG
+
+Miracle
+
+Mea Culpa: Self
+Splash (self): Remove one negative token from all allies in range and
+place them on this unit. Then remove one, (4+) two, or (6+) all
+negative tokens from this unit, and gain 1 strength for each negative
+token removed this way.
+Holy Water: Range 2-3
+Effect: 1 holy damage and (3+) create a hazard under target.
+Excoriate: Attack, Melee
+On hit: 1 damage, and Stance (Odd): Splash (self): 1 holy damage.
+(Even): gain 1 vitality.
+
+Gentleness: Self
+Effect: Become unable to MOVE or step until start of this unit’s next
+turn. At the start of that turn, allied units adjacent to this unit gain 1
+vitality.
+Delay Judgement: Range 1-3
+Effect: An allied unit in range gains miracle. If it already had
+miracle, miracle triggers on a 2+ until the end of their next turn. At
+the end of that unit’s turn, they lose miracle.
+Blessed Censer: Self
+Effect: Splash (self): Stance (Even): Allies gain 1 vitality. (Odd): foes
+take 1 holy damage.
+
+E ager
+
+T aste the Lash
+
+May step 2 before using Mea
+Culpa
+
+Stance (round 4+): Excoriate
+triggers both effects
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+4
+
+4+
+
+-
+
+T raits
+•
+•
+
+Miracle
+Zealotry: When MOVEing for the
+second time or more in a turn, gain 1
+vitality.
+
+C leansing P rayer
+
+C onsecrate
+
+Self and adjacent units are
+curseproof during
+gentleness.
+
+Blessed Censer may remove up to
+three corpses or hazards in range.
+
+Smite removes a negative token
+from this unit.
+
+Stance (Round 4+): Blessed
+Censer’s effects trigger twice
+
+Abhorrer Hunter
+
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+4
+
+3+
+
+-
+
+T raits
+•
+
+Miracle
+
+A C T A bilities
+
+Smite: Self
+Stance: MOVE again. The next use of Whirling Chain deals
++damage equal to half the round number, rounded up.
+Whirling Chain: Attack, Range 1-2
+On hit: 2 damage. Stance (Odd): and MOVE again, Stance (Even):
+and push unit 2
+
+S uffuse
+
+B oiling C enser
+
+IN Q U ISIT O R
+
+A C T A bilities
+
+51
+
+DF
+
+A C T A bilities
+
+Abhorrer Horror
+
+Stance: Whirling chain
+Obliterates foes it slays at
+round 3+
+
+HP
+
+A C T A bilities
+
+ZEA LO T
+
+P unisher
+
+MV
+
+T raits
+
+HORROR
+
+H oly B lood
+
+Abhorrer Freak
+
+HUNTER
+
+•
+
+A N T IP R IEST
+
+FREAK
+
+Abhorrer Scion
+
+SCION
+
+P EN IT EN T
+
+Fiery C hain
+Whirling chain creates one or
+(5+) two hazards adjacent to its
+target after it resolves
+
+Winch: Self
+Effect: Step 1. Next attack from this unit gains +1D and +2
+maximum range. This effect stacks.
+Requiesce en Pace: Attack, Range 2-3
+On hit: 2 damage. Stance (Round 3+): with piercing. (Round 5+): 4
+damage with piercing.
+
+Focus
+
+H eart destroyer
+
+E xplosive B olts
+
+If this unit does not move
+during its turn, it may
+remove a negative token
+from itself.
+
+Stance: Requiesce en Pace
+obliterates units it slays at round
+3+.
+
+Stance: Requiesce en Pace
+pushes units one, (Round 3+)
+two, or (Round 5+) four spaces.
+
+52
+
+

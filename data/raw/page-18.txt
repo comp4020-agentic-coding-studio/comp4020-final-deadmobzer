@@ -1,0 +1,169 @@
+CARCASS Tyrant
+
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+6
+
+2+
+
+PHYS
+
+T raits
+•
+•
+
+Formation
+Siege Shield: May be used as a cover
+object by allies
+Large: 2x2 unit (see entry).
+
+•
+
+T YRANT
+
+EG IS W eapon
+
+B onus T rait
+•
+•
+•
+•
+
+A C T U pgrades
+•
+•
+
+A C T A bilities
+Juggernaut: Self, Push
+Effect: Step 1, then splash (self) push foes 1. (4+) push foes 2.
+May move into and destroy walls with this step.
+Mortar: Attack, range 3-4, reload, charge
+On hit: 1 damage then Splash: 1 fire damage. Headshot: +1
+damage on main target
+Catechism Devil Cannon: Line, reload
+Effect: Line 5, 1 fire damage. and inflicts 1 vulnerable on the first
+unit in the line. Pierces through walls and can target through
+walls.
+
+Fortify
+
+H eavy C aliber C annon
+
+G unner P ivot
+
+Juggernaut also clears all
+negative tokens.
+
+Catechism pushes all units in the
+line 1 space and destroys walls.
+
+When at least one ally is adjacent
+to this unit, Mortar ignores
+cover.
+
+•
+•
+•
+•
+•
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+8
+
+4+
+
+PHYS
+
+T raits
+• Formation
+• Hot Clip: Once a round, reloading grants you 1 strength
++ Choose One More
+
+A C T A bilities
+Akimbo: Attack, range 2-4, reload. On hit: 2 damage. On hit:(4+): One other foe in range takes
+1 damage, (6+) one other foe in range takes 1 damage.
++ Choose One More
+
+NECROMANCER
+
+CARCASS Necromancer
+
+Grenade jump: Self. Effect: Splash (self): 1 fire damage, then step 2 with free movement. You
+may move through foes with this step.
+Armor Lock: Self. Effect: Push all adjacent foes 1. Until the end of your next turn, you gain
+super armor, cover from all directions, and allied units can use you as a cover object. You cannot
+MOVE, step or be pushed or pulled for the same duration.
+Devil Bullet: Self. Effect: Reload. On hit, your next attack gains piercing and triggers headshot
+effects.
+Superkick: Melee. Effect: Push an adjacent unit 3. Foes gain 1 vulnerable if they would be
+pushed into a wall or elevated space.
+LV4 living cannon: Attack, range 3-6, charge, reload*. On hit: 1 fire damage and 1
+vulnerable. Splash (target): 1 fire damage. Headshot: +1 damage on main target. *Effect: Must
+reload twice before this is usable.
+SG88 two barrel shotgun: Attack, range 2-2, reload*. On hit: 1 damage, then 1 damage. On
+Hit: push 1, then push 1. Headshot: increase all push by +1. *Effect: Must reload twice before
+this is usable.
+Unholy Sixgun: Attack, Range 2-4, reload. On hit: 2 damage. Headshot: this attack deals +1
+base damage on hit for the rest of combat, up to a maximum of 5.
+
+S O U L U pgrades
+•
+
+O perator
+
+Bone Wall: You can use your units as cover. While in cover your abilities gain +2 range.
+Gun Kata: All ranged attacks gain a minimum range of 1 and push units 1 on hit if they are
+adjacent
+Clutch Reload: Your ranged attacks gain headshot: reload
+
+•
+•
+•
+•
+•
+
+Double Tap (1 SOUL): Own turn. Trigger: you reduce a unit to exactly 1 hp. Effect: you may
+immediately activate this ability to deal 1 damage to it.
+Frag Bullet: (1 SOUL): Own Turn. Trigger: You hit an attack. Effect: Target gains 3 vulnerable
+after the ability resolves.
+Bullet hustle (2 SOUL): Any turn. Trigger: After any unit MOVEs. Effect: Step 2, then deal 1
+damage to a unit in range 3.
+Overwatch (3 SOUL): Own turn. Effect: Reload. Until the start of your next turn, enemy units
+entering adjacent spaces without being pushed or pulled there take 1 damage and are pushed 1,
+interrupting their movement. This effect can only trigger once a turn.
+Bullet Sonata (4 SOUL): Own turn. Effect: Every foe in range 2 and line of sight takes 1
+piercing damage and is pushed 1.
+S.T.G. (6 SOUL): Own turn. Trigger: Headshot. Effect: Deal 6 devil damage to the targeted
+unit, sending them Straight to the Grave.
+
+•
+
+S O U L A bilities
+Reload Slide (1 SOUL): Own or allied turn. Effect: Step 1, then you or an adjacent ally reload.
+Bullet Time (3 SOUL): Own turn. Effect: Clear one (5+) or two negative tokens. Ranged attacks
+automatically miss you until the end of your next turn (5+) and you are immune to splash and line
+damage for the duration.
++ Choose One More
+
+29
+
+30
+
+

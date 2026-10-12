@@ -1,0 +1,158 @@
+G unw ight
+(2) CARCASS Thrall
+
+(3)M V
+
+(4) H P
+
+(5) D F
+
+(6) A R M
+
+2
+
+2
+
+4+
+
+-
+
+(7) T raits
+•
+•
+
+So, you’ve got your grubby claws on a heap of
+slavering undead, and a hapless opponent to
+murder. What happens next?
+
+Initiative and D eploym ent
+At the beginning of the match, each side rolls a d6
+to determine initiative, re-rolling ties. The
+winning side can choose who acts first. Whoever
+acts first also deploys all their units first, followed
+by the next side. If there are multiple sides (such
+as a 2v2 or a 4 player free for all), play and
+deployment proceeds clockwise. If you’re playing
+in VTT, play proceeds left to right (or top to
+bottom if you’re in a voice call).
+A player can typically chooses a side of the map to
+deploy from, then can deploy units up to 2 spaces
+from that side, depending on the scenario type.
+Then the battle begins.
+
+V ictory conditions
+In all situations, you are defeated and lose a battle
+when your necromancer is slain. However,
+even if your body is obliterated and your soul
+scattered to the howling wind, you and your
+congregation will rise again - such is the curse of
+Anzenmezzeron.
+Otherwise, victory or defeat will depend on the
+scenario chosen for the combat. There’s a few
+basic scenarios presented in this book, plus six
+special scenarios you can choose from or roll for
+on pg 23.
+Any game results in a draw if round 6 ends
+without a victor.
+
+T urn O rder
+Combat is between two to four sides, depending
+on scenario. Most of the time, Maleghast is played
+as two sides (1v1 or 2v2).
+The side that won initiative acts first. They pick a
+unit to activate (including their necromancer),
+
+11
+
+(10)OL45: (11)Attack, range 2-3, reload
+(12) On hit: 1 piercing damage. Headshot: inflict 1 vulnerable
+Baton: Melee
+Effect: Push 1 and (3+) inflict 1 vulnerable.
+
+Units can only activate and take a unit turn once
+per round, so no picking the same unit more than
+once.
+
+On its turn, a unit can MOVE and ACT in any
+order. They may forgo ACTing to instead MOVE
+again. All units get this turn, even necromancers!
+
+Formation
+Thrall: 2 of these units are worth 1
+unit slot. Can be activated two at a
+time.
+
+(8) A C T A bilities
+
+then take a turn with that unit. After they take
+their turn, they pass their turn to the other side,
+who picks a unit of their own and acts, and so on.
+
+T he U nit T urn
+
+THRALL
+
+(1)
+
+(9) B race
+While in cover, attacks
+gain +1 max range and
+push 1 on hit.
+
+(9) T actical R eload
+
+(9) S cavenge A m m o
+
+Gain Headshot: reload and gain 1
+strength
+
+May consume an adjacent corpse
+to reload and gain 1 strength.
+
+R ound
+Once all units have taken a turn, a round passes.
+A new round starts with the side who didn’t act
+last, or clockwise if playing a game type with more
+than two sides.
+
+U nits
+All units, including your necromancer, have a
+unit card that explains their basic stats and
+abilities and can be used as helpful reference:
+1. Unit name
+2. Unit faction and type. This is a Carcass
+(faction) unit, and a thrall (unit type)
+3. Movement value (MV): How many spaces a
+unit can move when it MOVEs.
+4. Hit points (HP): How much damage a unit can
+take. Subtract damage taken from hp. When a
+unit reaches 0 hp it is slain.
+
+7. Traits: Passive abilities or effects that are
+always active on a unit and do not require
+ACTing to use. For example, this unit has the
+faction trait formation, which grants it +1D on
+attacks when adjacent to an allied unit.
+8. Active Abilities (ACT): Active abilities that can
+only be used by ACTing. Units can only use
+one of these on their turn. Abilities have
+names (10), tags (11), and effects (12).
+9. Upgrades: At higher levels, you may spend
+dark power to upgrade units. Units may pick
+one of three upgrades, which apply to all
+deployed units of the same time. Only one
+upgrade can be chosen.
+Lets go through each, one by one:
+
+5. Defense (DF): A unit attacking this character
+must roll this number or higher to score a hit.
+Any lower and it is a graze and does 1 damage.
+6. Armor (ARM): If a unit has armor against a
+damage type, it reduces all damage from that
+type by 1. Amor is usually physical (PHYS),
+ward (MAG), or super armor (SUPER). This
+unit has no armor.
+
+12
+
+

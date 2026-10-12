@@ -1,0 +1,180 @@
+Use your minions like ablative armor - or don’t.
+The choice is yours. Either way, you will be
+making use of their SOUL.
+
+SO U L actions
+Necromancers are a cut above their minions and
+are able to make use of every part of their
+congregation, even their immortal soul. This soul
+energy can be consumed to perform powerful
+rituals, curses, and attacks.
+The streets of Anzenmezzeron are so suffused with
+the energy of death that even the ambient soul
+anima coursing through the city is enough to
+power some of these abilities - though your own
+minions will provide more.
+All necromancers are able to perform SOUL
+abilities. These are special actions that take
+SOUL to perform, but can be used multiple times
+a round, often on any turn.
+•
+
+SOUL Gather: All necromancers gain +1
+SOUL at the start of each round of combat
+starting with the second. You may use a d6 or
+effect tracker to track SOUL. A necromancer
+can’t have more than 6 SOUL at once.
+
+•
+
+SOUL Harvest: When any unit of your units
+is slain, gain +1 SOUL. You only get this
+benefit the first time a unit is slain in combat,
+and units that are obliterated don’t give SOUL.
+
+•
+
+SOUL Consume: You may consume one or
+more SOUL to use a SOUL ability. Unlike
+regular ACT abilities, these abilities don’t take
+up your ACT slot! SOUL spent is spent at the
+start of the ability. SOUL abilities can be used
+at any point during your necromancer’s turn,
+or sometimes during another unit’s turn at a
+specific point listed in the ability - even during
+a foe’s turn! However, you can only use one
+SOUL ability on any unit turn (either your
+necromancer’s turn, an allied unit’s turn, or a
+foe’s turn). If it’s your side’s turn, your SOUL
+abilities resolve first, before your opponents’
+SOUL abilities have a chance to resolve, even
+if they triggered at the same time.
+
+T he N ecrom ancer
+B attlefield R ules
+
+•
+
+S pecial B attlefield S paces
+
+•
+
+Most battlefield spaces do not have a type.
+However, when creating a battlefield, you may add
+these spaces, or they may be created by abilities:
+
+•
+
+•
+
+•
+
+(A): Wall: This space blocks line of sight,
+provides cover, and provides obstruction. A
+wall can take damage and be targeted like a
+character and has 2 hp, but does not trigger
+effects and is immune to effects. It is
+automatically hit by attacks. Area effects like
+line, splash, etc still damage it as normal.
+(B)(C): Elevated space: This space has
+elevation, whether it is a hill, a walkway, or
+just an object that can be climbed on. Elevated
+has only one (abstracted) level, and spaces
+have the following rules:
+•
+•
+•
+
+19
+
+It costs +1 movement to enter an elevated
+space from a ground space.
+Elevated spaces can be used for cover by
+units on non-elevated spaces.
+Elevation does not factor into range or
+adjacency.
+
+Attacks from elevated units against units
+in non-elevated spaces gain +1D, and
+attacks against characters on elevated
+spaces from non-elevated spaces gain -1D.
+Units cannot be pushed or pulled up
+elevation but can be pushed or pulled
+down elevation normally.
+(D) Stairs: You may optionally add a
+ramp or stairs space, which allows a
+character to skip elevation movement
+costs.
+
+You are a dark wizard, an armed and armored
+scion of the brutal sacraments of un-life, with the
+sacrament of the necropolis and veins of black
+blood. Unfortunately, you are still (relatively)
+mortal. For now.
+
+T he D ark M aster
+You are a unit like any other unit. You take a unit
+turn and can MOVE, then ACT or MOVE again.
+However, there are some special rules regarding
+necromancers that make you a cut above your
+congregation:
+
+T he C enter of the U nholy M ass
+
+•
+
+(E) Hazard: A unit starting a turn in a
+Hazard space or entering such a space on their
+turn deals 1 damage to them, ignoring armor.
+
+If you are slain, you are defeated and instantly
+lose. The dark magic, devil blood, or powerful
+pacts animating or controlling your congregation
+collapse and they disintegrate.
+
+•
+
+(F) Adverse terrain: This space is slime,
+mud, water, a pit, etc and costs +1 more space
+to exit.
+
+Fighting a necromancer, the old adage still stands:
+cut off the head and the body will die. However…
+
+All terrain types can stack on top of each other.
+•
+
+In addition, large units (2x2) interact
+differently with terrain. They ignore
+elevated spacs entirely and are affected by
+terrain as long as at least one of their spaces is
+occupied by that terrain type, but they are only
+affected once. For example, a big unit starting
+its turn over two hazards would only take 1
+damage, not 2.
+
+B ody B lock
+If your necromancer is the primary target of a
+foe’s ability and you’re adjacent to one of your
+minions, you can redirect the ability to target your
+minion instead, regardless of the ability’s range.
+This only works if you are the primary target of an
+ability. For example, if you are caught in a splash
+effect from an explosion, you wouldn’t be able to
+redirect it unless you were directly targeted.
+
+A bilities
+Necromancer traits, SOUL abilities, and ACT
+abilities are customizable and they may learn
+additional abilities as they advance in Malice.
+When you create your necromancer, you get basic
+abilities and a stat card depending on your house.
+Then, you may choose one additional trait,
+SOUL, and ACT ability. You may pick up
+additional ACT and SOUL abilities by spending
+Dark Power as you increase in Malice, but not
+traits - you only get one extra!
+
+20
+
+

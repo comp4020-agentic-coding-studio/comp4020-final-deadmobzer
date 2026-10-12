@@ -1,0 +1,197 @@
+• Thralls (Unlimited) - Basic unit that can
+nevertheless be powerful. Though individually
+weaker, you get two thralls for one unit slot.
+They can also act two at a time. Since you get
+two units per slot with thralls, they are good
+for body blocking and for generating SOUL.
+
+•
+
+Optional rule for 2v2 mode: Possession:
+When a necromancer is slain, they still track
+SOUL and may take SOUL actions, acting with
+their allied necromancer who is still alive.
+
+B A SIC SCEN A R IO S
+
+• Scion (3) - A specialist, elite unit with
+powerful abilities that play off its faction.
+• Freak (2)- A support unit that is weak on its
+own, but increases the power of your other
+units or weakens enemy units.
+
+S laughter
+Free for all, from 2-4 players
+Map Size:
+
+10x10 or 12x12
+
+Deployment
+
+The side that wins initiative
+choose who goes first. The first
+player deploys first, and may
+choose a side of the map to
+deploy on. Each subsequent
+player then chooses a side of the
+map. Players may deploy up to 2
+spaces from the edge and 2
+spaces from enemy units.
+
+Unit Limit
+
+4 slots + necromancer
+
+• Horror (2)- Fast but fragile unit
+• Hunter (2)- Ranged unit with high damage
+that is weak up close.
+• Tyrant (1)- A powerhouse, large unit that
+takes up 4 spaces (2x2). You can only take one
+tyrant, though it still only takes one unit slot.
+Tyrants can disrupt formations, smash
+through walls, and deal lots of area of effect
+damage, and while generally very sturdy they
+have low defense.
+
+M urder
+
+P ick your P oison
+R aise the D ead!
+B uilding your D ark M ass
+Creating a Dark Mass for Maleghast is relatively
+simple.
+• Pick a house for your necromancer, and
+gain the base stat card for that necromancer
+type. You gain 1 trait, 1 ACT ability, and two
+SOUL abilities. You may then make one more
+choice for each.
+• Pick units to fill your remaining unit slots.
+You get 5 unit slots by default, or 4 if you’re
+playing a larger game. Some have unit limits
+(see below) and some can be taken two for one
+(thralls).
+• You can only pick units from your base
+house. If you’re playing with Heresy, you can
+pick units from up to one other house.
+• Then, gain dark power based on the Malice
+level of your battle (if playing at Loathing or
+higher). You can spend dark power one at a
+time to upgrade a unit type, or to gain a new
+necromancer ACT or SOUL ability. Units can
+
+21
+
+only choose one upgrade unless you’re playing
+at Ultrahell Malice. .
+
+B A SIC M O D ES
+D uel
+
+For your first battle, it is recommended you stick
+to only your base house (no heresy) and play at
+Spite (no upgrades).
+
+Map Size:
+
+8x8
+
+H ouse m echanics
+
+Deployment
+
+Deploy on opposite sides of the
+map, up to two spaces from the
+edge
+
+Unit Limit
+
+5 slots + necromancer
+
+Units have basic types, which inform how they
+function, and a unit limit in parentheses, which is
+the maximum number you can take.
+
+B raw l
+A 2v2 Match. Initiative, turns, and victory
+conditions are tracked for each side.
+Map Size:
+
+10x10 or 12x12
+
+Deployment
+
+Each side deploys on one
+opposite side of the map, up to
+two spaces from the edge
+
+Unit Limit
+
+4 slots + necromancer
+
+Slay all other enemy
+necromancers
+
+B lood G rinder
+A scenario that tests mass slaughter
+Victory
+Condition
+
+A 1v1 Match
+
+Each house has its own play style, vibe, and
+unique mechanics. Go with whatever suits you!
+
+U nit T ypes and Lim its
+
+Victory
+Condition
+
+Maleghast has several default game modes and
+scenarios. Game mode mostly affects map size,
+initiative order, and unit count.
+
+• Name your necromancer and maybe
+some of your units if you’re sentimental, or
+your Black Mass if you think it needs a name.
+
+Generally houses will interact with only two
+tokens, and two or three effects. Mix and match
+upgrades and abilities to find combinations that
+work for you that can create more powerful
+outcomes. When playing with Heresy, you can
+find combinations of houses that can become even
+more potent.
+
+A very basic scenario
+
+Units may return to the
+battlefield if slain or obliterated,
+placed in their deployment zone.
+Slaying a unit scores points (1 for
+a thrall, 2 for any other unit, 5
+for a necromancer). Most points
+at the end of round 6 wins.
+
+T reasure H unt
+A scenario that tests decision making
+Victory
+Condition
+
+Place four one space objective
+markers, one in each quadrant of
+the map. Units in an objective
+space may INTERACT to search
+for treasure once for free during
+their turn, gaining a treasure
+token on a 3+. Units may drop or
+pick up treasure tokens by
+entering or exiting their space,
+and drop them all when they are
+slain. At the end of the game, the
+side holding the most treasure
+tokens (dropped treasure doesn’t
+count) wins.
+
+22
+
+

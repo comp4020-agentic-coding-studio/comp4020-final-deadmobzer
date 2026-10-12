@@ -1,0 +1,97 @@
+Worthless trash that draw their power as a gutter
+draws refuse. Unlike other necromancers, they have
+no pact with a powerful devil for their abilities, but
+instead are granted it freely and almost randomly by
+the Filth Devil, who siphons it away from dead and
+dying necromancers, and imbues it into those it
+deems worthy in a mockery of the Black Sacrament.
+Those that pray for or receive this power are
+typically on the underbelly of society - beggars,
+outcasts, the destitute, lost, and depraved.
+Some say the Filth Devil created the
+Gargamox to cull the hubris of other
+necromancers and remind them of their
+origins. Ultimately, they are no less
+powerful than other necromancers,
+despite the defiled nature of their power,
+and make up a powerful House, one able
+to wield the Plague Winds that can scour
+flesh from bone.
+
+P laystyle
+
+S pecial T ags:
+Infect: Jumps from the original target up to three
+times to up to three different characters, as long as
+each new character is adjacent to the previous.
+
+D eath burst:Effect that triggers when this unit is
+slain.
+
+O ther M echanics
+•
+
+•
+•
+•
+•
+
+Area denial and damage over time.
+
+S oundtrack:
+The Black Dahlia Murder - Verminous
+Cattle Decapitation - Bring Back the
+Plague
+Scumfuck - Sewage
+
+S pecial M echanic:
+P lague: Units affected by plague take 1 toxic
+
+•
+•
+•
+•
+
+•
+
+Hazard: Special terrain type. A unit that starts their turn
+in a hazard takes 1 damage, ignoring armor, and a unit also
+takes this damage if they enter a hazard space during their
+turn. Hazards can overlap other terrain types.
+Line: Affects all units in a line. Lines can only be drawn in
+orthogonal (compass) directions and can only be drawn
+from one of those spaces.
+Obliterate: A unit that is obliterated leaves neither body
+nor SOUL and does not trigger effects that trigger when
+they are slain or reduced to 0 hp.
+Piercing: This damage ignores armor
+Pull: Forcibly pull unit a number of spaces, as long as each
+space of the pull is closer to the pulling unit or effect than
+the last space.
+Splash: Affects all adjacent units, but not the target. Can
+be splash (target) or splash (self).
+Slow (token): MOVE a max of 1 space, discard one after
+MOVEing
+Strength (token): +1 damage, discard one after dealing
+damage
+Summon: Summoned units are usually created by
+abilities. When summoning a unit, place it on the
+battlefield in a free space in range. Summoning a unit
+doesn’t count as it moving or entering a space. Summoned
+units are SOULLESS and may be activated in the round
+after their summoning.
+SOULless: A soulless unit doesn’t grant SOUL, doesn’t
+leave a corpse, and cannot be used for body block.
+
+damage at the end of their turn, then that unit
+discards a plague token. This damage cannot be
+reduced or ignored in any way (by tokens or armor)
+but cannot slay a unit. Gargamox units don’t take
+damage from plague and don’t remove plague
+tokens, but can still be affected by plague.
+
+37
+
+38
+
+

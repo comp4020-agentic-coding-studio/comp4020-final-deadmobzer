@@ -1,0 +1,198 @@
+Damage comes in three categories:
+•
+•
+•
+
+The most common is physical damage.
+Unless otherwise noticed, all damage is
+physical.
+The next is magical damage, which is toxic,
+fire, curse, and holy.
+The last is devil damage.
+
+Physical Armor reduces all physical damage
+taken by 1. Magic Armor reduces all toxic, fire,
+curse, and holy damage by 1. Super armor
+reduces all damage by 1.
+Some damage is listed as piercing. Piercing
+damage ignores armor. It otherwise keeps its
+damage type.
+Devil damage is its own category and cannot be
+reduced, increased, or ignored for any reason.
+Additionally units reduced to 0 hp by devil
+damage are instantly obliterated (don’t leave a
+corpse token) and don’t trigger any effects.
+
+1.
+2.
+
+17
+
+A is a valid line, and hits both skeletons. B is also a valid line placement.
+C is a splash centered on Penny, hitting skeleton C. Splashes can also occur around enemies targeted, like throwing a
+grenade or casting a curse
+
+S plash and Line effects
+
+D am age
+
+Some ACT abilities inflict effects or damage in an
+area. These come in two forms, line and splash
+effects.
+
+Most abilities and other effects inflict damage.
+
+Line effects affect all units in a straight line,
+drawn in a straight compass direction from the
+ACTing unit of a certain number of spaces. Lines
+can’t be drawn diagonally and don’t penetrate
+through walls. They can be drawn over elevated
+spaces only if the ACTing unit is itself on on an
+elevated space, otherwise they stop before that
+space.
+
+•
+
+It is subtracted directly from a target’s HP
+(after armor or vitality).
+
+•
+
+Damage can be increased. If damage is
+increased, it is listed as +X (for example, +1 or
++2). Increasing damage inherits the base
+damage type and any properties it has, such as
+ignoring armor.
+
+Splash effects affect all units adjacent to and in
+line of sight from the targeted unit or space, but
+not the target itself. For example, if an ability
+inflicts 1 fire damage, then splash (target) 1 fire
+damage, all units adjacent to the targeted unit
+would take 1 fire damage, and the targeted unit
+would take 1 fire damage.
+
+•
+
+When abilities deal damage:
+
+Damage can also be applied multiple times,
+Abilities that apply damage multiple times say
+‘X damage, again’. Each time you deal damage
+this way, it can be increased (by +1 from
+strength for example) or decreased (by armor,
+for example). For example, an attack that
+deals 1 damage, then 1 damage again to a unit
+with 1 armor would deal no damage to it!
+However, by applying damage multiple times,
+a unit has multiple opportunities to increase
+damage (each time damage is dealt) and might
+be able to punch through armor or do massive
+damage.
+
+T okens:
+•
+
+Strength: +1 damage, discard one after
+dealing damage.
+• Weak: -1 damage, discard one after dealing
+damage.
+Strength and weak cancel each other.
+• Vitality: Take -1 damage, discard one after
+taking damage.
+• Vulnerability: Take +1 more damage,
+discard one after taking damage.
+Vitality and Vulnerability cancel each other.
+• Slow: MOVE a max of 1 space, discard one
+after MOVEing.
+• Speed: MOVE +2 more spaces, discard one
+after MOVEing.
+Slow and speed cancel each other.
+
+S pecial effects
+Some effects from ACT abilities have special,
+tagged effects. For example:
+
+T ags
+
+•
+
+Most ACT abilities have tags that give some basic
+information about the ability. Tags usually simply
+show what type of ability an ability is (attack,
+curse, etc), range (range X or melee), or special
+effects that it has (push, pull, etc).
+
+The reload effect is the CARCASS faction
+effect. It means this ability cannot be used
+again until reloaded, which requires sacrificing
+a MOVE.
+
+•
+
+The splash effect inflicts damage or other
+effects on units adjacent to the target
+
+•
+
+A push effect moves a unit 1 space away from
+the pushing effect
+
+•
+
+Units that are obliterated don’t leave a corpse,
+don’t leave a SOUL, and don’t trigger effects
+from being slain or reduced to 0 hp.
+
+•
+
+The curseproof effect means a unit is immune
+to all damage and effects from curses
+
+T okens
+Many ACT abilities and traits interact with
+tokens. Tokens are simple positive or negative
+effects that can be tracked with a virtual tabletop
+tool, or in person with colored d6s placed on unit
+cards, a sheet of paper, or a note pad.
+Tokens have a static effect as long as you have at
+least one of those tokens, then are discarded. For
+example, the strength token grants +1 damage
+when dealing damage.When a unit with at least
+one strength deals damage, they increase that
+damage by +1, then discard a token. A unit with 2
+strength would still deal +1 damage, not +2.
+Tokens cancel each other out, like Strength and
+Weak. A unit with 2 strength tokens would simply
+remove one if they gain a weak token, and vice
+versa.
+Spending a token is not optional, and tokens
+are always spent when their condition is satisfied.
+You can choose how to spend a token if multiple
+conditions trigger at once. For example, if 3 units
+are hit by a splash effect that deals 1 damage and
+the attacking unit has 1 strength, you can choose
+which of those units takes +1 damage from the
+strength.
+
+You can see a list of all a faction’s special
+effects at the start of that faction’s page. You
+only have to know those effects and tokens to play
+that faction, and many of them are common.
+
+C reation effects
+Some effects from ACT abilities create things, like
+walls, corpses, or special terrain spaces. When
+something is created by an ACT ability, it must be
+created in a space in line of sight and range that is
+currently unoccupied by a unit or a wall.
+
+S tart/E nd of turn effects
+Some effects from abilities take place at the start
+or end of a unit’s turn. In this case, the acting unit
+can choose which order they resolve in if multiple
+trigger at once.
+
+18
+
+

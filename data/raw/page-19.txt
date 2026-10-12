@@ -1,0 +1,79 @@
+The Goregrinders are brutal, ferocious necrowarriors and speed freaks that gain their power
+from paying tithe to the Corpse Piler, an ancient
+and colossal devil that squats over the cavernous
+machine forges, close to the hell side of the city.
+By fusing their own flesh and that of their minions
+with black-metal blades, devil blood injectors, and
+infernal engines, they pay homage their machine
+god and are capable of wielding unbelievable
+power - at a steep price, as they are always
+teetering on the brink of igniting in their own
+fierce blaze.
+
+O ther m echanics:
+•
+•
+
+•
+•
+
+P laystyle
+•
+•
+
+Aggressive melee.
+S oundtrack
+Signs of the Swarm - Tower of Torsos
+Shadow of Intent - Intensified Genocide
+Cannibal Corpse - I will kill you
+
+•
+•
+•
+
+Curseproof: Immune to damage and effects from
+enemy Curses.
+Large: This unit is 2x2. It ignores elevated spaces and
+cannot take cover. It is affected by terrain and other
+space-based effects as long as their occupy at least one
+space of their total area, but these effects don’t stack on
+them.
+Line: Affects all units in a line. Lines can only be drawn
+in orthogonal (compass) directions and can only be
+drawn from one of those spaces.
+Obliterate: A unit that is obliterated leaves neither
+body nor SOUL and does not trigger effects that trigger
+when they are slain or reduced to 0 hp.
+Piercin: This damage ignores armor.
+Pull: Involuntarily pull unit a number of spaces, as long
+as each space of the pull is closer to the pulling unit or
+effect than the last space.
+Splash: Affects all adjacent units, but not the target. Can
+be splash (target) or splash (self).
+Speed (token): MOVE +2 more space when MOVEing,
+discard one after MOVEing
+Strength (token): +1 damage, discard one after
+dealing damage
+
+S pecial M echanic
+B lood R age: If a unit with this trait is reduced to
+0 hp, they are not slain, but instead gain 1
+strength and remain at 0 hp, no matter how much
+damage they took. If they take any further damage
+at 0 hp, they are slain as normal.
+S pecial T ags
+B erserk: After a berserk unit ACTs, it splashes
+(self) 1 damage, then discards a berserk token.
+This damage can’t be increased in any way. If this
+effect does not damage any other characters, it
+deals 1 damage to itself instead, ignoring armor.
+Berserk counts as a positive and a negative token.
+R etaliation: After any ability resolves that
+damages this unit, this unit deals 1 damage back
+to the ability’s owner, even if this unit was slain.
+
+31
+
+32
+
+

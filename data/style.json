@@ -1,0 +1,142 @@
+{
+  "source": "Magnagothica Maleghast rulebook (maleghast_update3.pdf)",
+  "fonts": {
+    "all": [
+      "ArialMT",
+      "Georgia",
+      "Georgia-Bold",
+      "Georgia-BoldItalic",
+      "Georgia-Italic",
+      "Impact",
+      "Metal_Blackletter"
+    ],
+    "roles": {
+      "display_gothic": "Metal Blackletter",
+      "stat_label": "Impact",
+      "body": "Georgia",
+      "incidental": "Arial"
+    },
+    "web_fallbacks": {
+      "display_gothic": "'UnifrakturMaguntia','Pirata One',serif",
+      "stat_label": "'Oswald','Anton','Impact',sans-serif",
+      "body": "Georgia,'Times New Roman',serif"
+    }
+  },
+  "palette": {
+    "paper": "#f0f0f0",
+    "ink": "#000000",
+    "ink_soft": "#181818",
+    "primary_blood": "#f00000",
+    "neutrals": [
+      "#f0f0f0",
+      "#000000",
+      "#a8a8a8",
+      "#181818",
+      "#303030",
+      "#c0c0c0"
+    ],
+    "accents": [
+      "#f00000",
+      "#f000a8",
+      "#18f030",
+      "#9000f0",
+      "#f0c030",
+      "#f07818",
+      "#90f0d8",
+      "#f0a830",
+      "#f00078",
+      "#00d848"
+    ]
+  },
+  "house_accents": {
+    "carcass": "#f000a8",
+    "deadsouls": "#00a8a8",
+    "abhorrers": "#f0c030",
+    "goregrinders": null,
+    "gargamox": null,
+    "igorri": null
+  },
+  "notes": "Some pages are inverted (dark) -> support a dark theme. House accents null above are sampled per-House during art extraction.",
+  "_per_page_samples": {
+    "1": [
+      "#f00000",
+      "#f0f0f0",
+      "#000000",
+      "#181818",
+      "#303030",
+      "#301818"
+    ],
+    "8": [
+      "#f0f0f0",
+      "#c0c0c0",
+      "#a8a8a8",
+      "#909090",
+      "#787878",
+      "#d8d8d8"
+    ],
+    "12": [
+      "#f0f0f0",
+      "#000000",
+      "#a8a8a8",
+      "#c0c0c0",
+      "#909090",
+      "#d8d8d8"
+    ],
+    "16": [
+      "#f0f0f0",
+      "#f000a8",
+      "#f00078",
+      "#a8a8a8",
+      "#787878",
+      "#909090"
+    ],
+    "17": [
+      "#f0f0f0",
+      "#000000",
+      "#a8a8a8",
+      "#f000a8",
+      "#181818",
+      "#c0c0c0"
+    ],
+    "19": [
+      "#000000",
+      "#f07818",
+      "#303030",
+      "#181818",
+      "#f07800",
+      "#484848"
+    ],
+    "22": [
+      "#f0f0f0",
+      "#18f030",
+      "#000000",
+      "#00d848",
+      "#484848",
+      "#181818"
+    ],
+    "25": [
+      "#000000",
+      "#90f0d8",
+      "#181818",
+      "#00a8a8",
+      "#303030",
+      "#909090"
+    ],
+    "28": [
+      "#f0f0f0",
+      "#f0c030",
+      "#f0a830",
+      "#d8d8d8",
+      "#c0c0c0",
+      "#f0d8c0"
+    ],
+    "31": [
+      "#000000",
+      "#9000f0",
+      "#c0c0c0",
+      "#606060",
+      "#9018f0",
+      "#303030"
+    ]
+  }
+}

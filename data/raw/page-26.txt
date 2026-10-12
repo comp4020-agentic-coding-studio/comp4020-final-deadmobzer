@@ -1,0 +1,217 @@
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+2
+
+4+
+
+-
+
+T raits
+•
+
+•
+
+V IZIG H EIST
+Deadsouls Horror
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+3
+
+5+
+
+MAG
+
+T raits
+
+Inverted Crucifix: When slain, does
+not remove Doom, and (5+) Dooms
+slayer.
+Thrall: 2 of these units are worth 1
+unit slot. Can be activated two at a
+time.
+
+•
+
+Teleport: When MOVEing a second
+time or more in a turn, may instead
+remove self from the battlefield, then
+place anywhere in free space in range
+4
+
+HORROR
+
+Deadsouls Thrall
+
+THRALL
+
+SA CR IFICE
+
+A C T A bilities
+
+A C T A bilities
+Horrendous Shriek: Curse, Self
+Curse: Splash (self): foes gain 1 weak. (5+): and are Doomed.
+Doomed units take 1 curse damage.
+Urgal Blade: Attack, Melee
+On hit: 2 curse damage. Effect: Against isolated units, gain 1
+strength and may then MOVE again.
+
+D ead G rasp
+
+Im pending D eath
+
+May move through walls.
+
+Beckon has a 4+ effect chance to
+pull 2.
+
+T errorize
+
+Beckon inflicts 1 weak on
+isolated units.
+
+CH O SEN
+Deadsouls Scion
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+3
+
+5+
+
+MAG
+
+Gain 2 strength if
+Horrendous Shriek hits an
+isolated foe.
+
+S oul Frost
+
+C ondem n
+
+When teleporting, create a space
+Shriek obliterates one unit in its
+of adverse terrain in the first space area at 1 hp or lower.
+vacated.
+
+SCION
+
+S quirm
+
+B A N SH EE
+Deadsouls Hunter
+
+T raits
+•
+
+Slither: Has free movement while
+adjacent to a wall
+
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+3
+
+5+
+
+MAG
+
+T raits
+•
+
+Soul Sight: Abilities ignore line of
+sight
+
+HUNTER
+
+Beckon: Range 2-4
+Effect: Pull 1 spaces. Ignores line of sight.
+Shudder: Attack, Melee
+On hit: 1 damage and (4+) Dooms unit.
+
+A C T A bilities
+Tombraiser: Melee, range 1-2
+Effect: Create a wall in range (3+) then create adverse terrain (5+)
+then create adverse terrain again.
+Kidnap: Curse, Range 2-4
+Curset: Pull 1, ignoring line of sight. If pulling a unit into a wall, pull
+3 instead and the kidnapped unit can pass through walls and units
+during this pull.
+Serpent’s Kiss: Attack, melee
+On hit: 2 damage, then against isolated units inflict 1 weak (4+) and
+Doom them.
+
+Ivory S erpent
+
+Leap
+
+Serpent’s Kiss also triggers May step 1 before ACTing, or step
+its effects against units
+2 and clear a token if adjacent to a
+standing in adverse terrain wall
+
+45
+
+Foul M onum ents
+Tombraiser gains +2 max range
+
+A C T A bilities
+Bale scream: Line 4
+Effect: Line: 1 curse damage. Isolated or Doomed units take 1 curse
+damage again. May penetrate walls and does not damage walls.
+Effect: If this line passes through a wall, this unit gains 1 strength.
+Tombstone: Range 2-4
+Effect: Create a wall in range and (5+) adjacent foes to the wall gain
+1 weak.
+
+D oom B ell
+Tombstone gains effect
+(6+): adjacent foes are
+Doomed
+
+Freeze S oul
+
+S iren
+
+If Bale Scream slays a unit, it
+creates a space of adverse terrain
+instead of a corpse.
+
+Bale Scream pulls all units in its
+area 2.
+
+46
+
+

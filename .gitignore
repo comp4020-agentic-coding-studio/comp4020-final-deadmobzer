@@ -5,6 +5,12 @@ dist/
 # built client bundle (produced by `pnpm build` from src/client/)
 public/app.js
 
+# Game source material: the full Magnagothica Maleghast rulebook PDFs, art zips,
+# and design notes (~227 MB). We extract what we need (stats -> data/, art ->
+# public/art/) and never commit the heavyweight originals. The author's work is
+# credited in README.md.
+Magnagothica Maleghast/
+
 # editor and OS junk
 .DS_Store
 ._*

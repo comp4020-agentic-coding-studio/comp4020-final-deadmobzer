@@ -1,0 +1,74 @@
+A legendary private military company,
+C.A.R.C.A.S.S. rely on the power of their
+house’s pact with their commanding officer
+Carcenkarrion, the bone carapace devil. Their
+skeletons fuse and grow over time and must be
+trimmed and cultivated with forbidden Bone
+Tactics Bible techniques. With this ability, they
+are able to create incredibly powerful fusions of
+bone and metal - weapon-laden constructs and reanimate marksmen. They are well known for their
+signature power armor, their formation tactics,
+their mastery of gun kata, and their stratagems,
+which rely primarily on liberal application of
+overwhelming firepower.
+
+P laystyle:
+Ranged dominance.
+
+Faction S oundtrack
+
+O ther m echanics:
+•
+•
+
+•
+•
+•
+•
+•
+•
+•
+
+Charge: This ability cannot be used on round 1.
+Large: This unit is 2x2. It ignores elevated spaces and
+cannot take cover. It is affected by terrain and other
+space-based effects as long as their occupy at least one
+space of their total area, but these effects don’t stack on
+them.
+Line: Affects all units in a line. Lines can only be drawn
+in orthogonal (compass) directions and can only be
+drawn from one of those spaces.
+Obliterate: A unit that is obliterated leaves neither
+body nor SOUL and does not trigger effects that trigger
+when they are slain or reduced to 0 hp.
+Piercing: This damage ignores armor.
+Push: Forcibly move a unit a number of spaces, as long
+as each space of the push is further away from the
+pushing unit or effect than the last space.
+Splash: Affects all adjacent units, but not the target.
+Can be splash (target) or splash (self).
+Strength (token): +1 damage, discard one after
+dealing damage
+Vulnerable (token): Take +1 more damage, discard
+one after taking damage.
+
+Within Destruction - No Way Out (AMV)
+BABYMETAL - Megitsune
+Igorrr - Dorohedoro
+
+S pecial m echanic:
+Form ation: While adjacent to an ally, gain +1D
+on attacks.
+
+S pecial tags:
+R eload: Once used, a unit cannot use any ability
+with this tag until it reloads. To reload, sacrifice a
+MOVE. Other abilities may allow a reload for free.
+H eadshot: Effect that triggers when rolling a 6 on
+the final attack roll.
+
+25
+
+26
+
+

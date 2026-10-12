@@ -1,0 +1,229 @@
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+2
+
+4+
+
+-
+
+T raits
+Fall to Shambles: When slain, leaves
+an extra corpse token in an adjacent
+space (two corpses total)
+Thrall: 2 of these units are worth 1
+unit slot. Can be activated two at a
+time.
+
+•
+
+Igorri Horror
+
+•
+
+T he H unger
+If starting turn in range 2
+of a corpse, may step 2
+
+Igorri Freak
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+4
+
+4+
+
+MAG
+
+T raits
+
+May grant one of the
+tokens stolen by Purge
+to another unit in range
+
+57
+
+Purge deals 1 piercing toxic
+damage to foes
+
+4+
+
+-
+
+Lope: Has free movement and ignores
+hazards in spaces occupied by corpses.
+
+H unch
+
+At turn start, may deal 1 damage
+May use corpses as cover spaces
+to self, ignoring armor, to generate
+a corpse in an adjacent space
+
+Igorri Hunter
+
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+4
+
+4+
+
+-
+
+T raits
+
+Leftovers: After MOVEing, drop a
+corpse in a free adjacent space
+
+•
+
+Flight: Ignores adverse terrain and
+elevation attack and movement
+penalties
+
+A C T A bilities
+
+Inject Mutagen: Range 1-3
+Effect: One or two units in range mutate. Spare parts: and also dole
+out 1 strength per corpse consumed.
+Purge: Curse, Range 1-3
+Effect: A unit in range removes one token of this unit’s choice (3+):
+two (5+) all
+Marriage: Range 1-2
+Effect: Instantly slay self or an allied unit in range. Another allied
+unit in range gains 2 speed, vitality, and strength, or just 1 if the
+slain unit was a thrall.
+
+S cour Flesh
+
+4
+
+ST R IG O I
+
+A C T A bilities
+
+A bsorb
+
+4
+
+A utophagia
+
+FREAK
+
+May step 1 (4+) or 3 spaces
+before Unstable mutation
+
+CH O P D O C
+
+•
+
+ARM
+
+Bloodgorger: Self
+Effect: Mutate, then gain 1 strength. Spare Parts: Then gain (3+) 1
+speed, (5+) and 1 vitality, (6+) then mutate again. Roll +1D per
+corpse and pick the highest result.
+Bloody Slashes: Melee, Attack
+On hit: 1 damage. Effect: splash (self): 1 damage.
+
+W arping M utate
+
+Twisting strike gains Effect Twisting strike also causes an
+(5+): steal a positive token adjacent ally to mutate.
+from target.
+
+DF
+
+A C T A bilities
+
+Unstable Mutation: Self
+Effect: Gain 1 strength, (4+) 1 speed, (5+) and 1 vitality, (6+) and
+explode for splash (self): 1 damage. Spare parts: Roll +1D per
+corpse and pick the highest result.
+Twisting Strike: Attack, Melee
+Effect: Mutate. On hit: 1 damage.
+
+S pread M utate
+
+HP
+
+T raits
+
+A C T A bilities
+
+G enestealer
+
+MV
+
+HUNTER
+
+•
+
+LY CA N
+
+HORROR
+
+Igorri Thrall
+
+THRALL
+
+ST IT CH
+
+C onjoin
+IF targeting self, Marriage also
+clears all negative tokens on
+target first
+
+Regurgitate: Range 2-4
+Effect: Splash (target): Create a corpse in the area for every unit in
+the area, up to three times, then mutate.
+Sin Eater: Range 2-4, Attack
+On hit: 1 damage. Effect: Steal a positive token from target. If target
+has no positive tokens, gain 1 strength instead of stealing a token.
+Spare Parts: steal 1 more token per corpse consumed.
+
+D row n in V iscera
+
+R apid A daptation
+
+C leansing W ash
+
+Regurgitate has a 5+ effect
+chance to strip a token of
+your choice from each foe
+in the area.
+
+May mutate once for each corpse
+created with Regurgitate instead.
+
+Regurgitate has a 5+ effect
+chance to remove a negative
+token from an ally caught in the
+area
+
+58
+
+

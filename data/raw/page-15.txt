@@ -1,0 +1,84 @@
+IV . H E A D S ! H E A D S ! H E A D S !
+Heads! Heads! Heads!
+
+Special scenarios that can add extra twists to a fight.
+You can use these examples to write your own.
+These scenarios use 6x8 maps for quicker action.
+Roll D6 or choose:
+
+The Pate Collector demands heads. Unit can saw
+off one corpse’s head by INTERACTing as long as
+it share their space, removing that corpse. Track
+heads carried as tokens. Unit can deliver any
+heads carried by INTERACTing in the center
+special zone. Heads can be dropped or picked up
+by entering or exiting their space or are also
+dropped when a unit is slain. Game ends when
+one side scores victory by turning in 6 heads.
+
+Scenarios use the special INTERACT action.
+Every unit can use this alongside their ACT or
+MOVE, but only gets one on their turn.
+
+I . P ools of O bliteration
+
+V . T horn Forest
+
+These pools boil over with dark magic.
+Units may respawn in any free space in any
+special zone at the start of the round. Score
+points for units slain (1 thrall, 2 all others, 5 for
+necromancer). Units standing in special zones
+take +1 damage from all sources. Most points at
+the end of round 6 wins.
+
+Thick bloodoak trees cover this area, remnants of dead sinners
+who have mutated from repeated death.
+Thick blood thorns cover this area. The special
+zones are thorn forests that block line of sight
+into, out of, or across the zone. Units inside a
+thorn zone can see each other normally. Use
+basic scenarios for victory conditions.
+
+II . B one Feeder
+A tarsal ghoul has threatened to kill you both if you don’t bring
+them enough food. Bad luck!
+
+V I . Invigorating S pirits
+
+Collect the bones of the dead from coffin spaces.
+While standing in a special space, a unit may
+INTERACT and roll a d6 to search for bones (3+
+finds one, 6 finds two). Units can escape from
+map with bones and turn them in by spending 1
+space of movement at the map edge, but then are
+removed from the battle. Units can drop or pick
+up bones by entering or exiting their space and
+drop them when they are slain. Game ends if one
+side manages to turn in five bones.
+
+An unfinished ritual site
+Loose necrotic magic permits this place. The map
+has 4 tiles that grant a unit 1 vigor if they end
+their turn there. Use basic scenarios for victory
+conditions.
+
+III . O ld M aggie
+The colossal necrotroll Old Maggie sits asleep in the middle of
+the map. Even slumbering, she can swat your army into a
+paste.
+Old Maggie sits in the middle of the map,
+counting as a 4x4 indestructible, immovable wall.
+Any unit that would get pushed or pulled into
+Old Maggie or that would enter any of space of
+her for any reason takes 2 damage, ignoring
+armor. If you don’t slay the opposing
+necromancer by the end of round 6, Maggie gets
+up and eats both of you, forcing the draw.
+
+N ext:
+23
+
+24
+
+

@@ -1,0 +1,216 @@
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+1
+
+3+
+
+-
+
+T raits
+
+Goregrinder Freak
+
+Blood Rage
+Thrall: 2 of these units are worth 1
+unit slot. Can be activated two at a
+time.
+
+Gain Curseproof
+
+CA R N IFEX
+Goregrinder Scion
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+4
+
+3+
+
+-
+
+T raits
+•
+
+4
+
+4
+
+3+
+
+-
+
+Blood Rage
+
+Pain Frenzy: Curse, Range 1-3
+Effect: Unit gains 2 berserk or 2 speed.
+Cauterize: Curse, Range 1-3
+Effect: Clear all negative tokens on self or a unit, then deal 1
+piercing fire damage to them. This damage can’t slay a unit.
+Meat Hook: Pull, Range 2-3
+Effect: Pull unit 3
+
+Lobotom ized
+
+At 1 hp or lower, gain free
+movement
+
+ARM
+
+A C T A bilities
+
+S tim H aze
+
+Frenzy H ook
+
+A drenalize
+
+At 1 hp or lower, self and
+adjacent allies become
+curseproof
+
+At 1 hp or lower, Meat Hook can
+pull up to three units
+
+Allies gain 1 speed per negative
+token removed from Cauterize
+
+SCION
+
+Charge has a (5+) chance
+to grant retaliation until
+the start of its next turn.
+
+DF
+
+•
+
+Charge: Self
+Effect: MOVE as far as possible in a straight line, passing through
+units. Then, units passed through during this move take 1 damage.
+Cleave: Melee, attack
+On hit: 1 damage and 1 damage to another adjacent unit.
+
+O verclocked
+
+HP
+
+T raits
+
+A C T A bilities
+
+B laded
+
+MV
+
+P A IN W H EEL
+Goregrinder Horror
+
+MV
+
+HP
+
+DF
+
+ARM
+
+5
+
+4
+
+3+
+
+-
+
+T raits
+
+Blood Rage
+•
+•
+
+A C T A bilities
+
+A C T A bilities
+
+Rev: Self
+Effect: Gain 1 strength and speed (4+) and retaliation until the start
+of this unit’s next turn.
+Chainsaw: Melee, attack
+On hit: 1 damage, and (effect: 4+): 1 damage again, (6+): 1 damage
+again
+Wild Slashes: Self
+Effect: MOVE as far as possible in a straight line. Then, all units
+adjacent to any space of this MOVE take 1 fire damage.
+
+H eavy sw ing
+
+R ile
+
+May step 1 before and after Rev grants one (5+) or two
+using Chainsaw.
+berserk.
+
+33
+
+B loody T eeth
+At 0 hp, all damage gains pierce.
+
+Blood Rage
+Hellwheel: This unit may spend speed
+tokens as strength. May pass through
+units but not end their turn in their
+spaces.
+
+HORROR
+
+•
+•
+
+P A IN G H O U L
+
+FREAK
+
+Goregrinder Thrall
+
+THRALL
+
+W A R H EA D
+
+Exfoliate: Melee, Attack
+On hit: 1 damage and (effect: 4+) 1 damage again. (6+) 1 damage
+again.
+Spin Out: Self
+Effect: Unit MOVEs as far as possible in a straight line. The first
+enemy unit this unit passes through during this MOVE takes 1 fire
+damage. Then this unit gains 2 speed.
+
+B arbed W heel
+
+E ndless S cream ing
+
+Spin Out may pull a unit in Spin out grants 1 berserk
+range 3 one space before
+its MOVE
+
+H urtle
+At 1 hp, may MOVE again for free
+at any point during turn
+
+34
+
+

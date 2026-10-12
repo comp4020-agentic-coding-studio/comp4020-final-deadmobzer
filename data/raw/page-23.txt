@@ -1,0 +1,229 @@
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+1
+
+3+
+
+SUPER
+
+T raits
+•
+
+A fterm ath
+
+Pseudopod inflicts 1 slow on
+plagued units.
+
+M assive S w ell
+
+Toxic Revenge leaves a hazard
+instead of a corpse.
+
+R O T T EN
+Gargamox Scion
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+4
+
+3+
+
+PHYS
+
+4
+
+4+
+
+MAG
+
+Deathwash: Has Deathburst: Splash
+(self) Remove any 1 token from all
+units in the area.
+
+Swell with corruption has
+a 4+ effect chance to
+trigger twice.
+
+P andem ic
+
+A cid B lood
+
+Evolve Strain removes 1 plague
+from all adjacent characters
+instead, with the same effects.
+
+Suppurate also grants
+deathburst: Create a hazard
+instead of a corpse
+
+H O ST
+Gargamox Hunter
+
+T raits
+•
+
+4
+
+Suppurate: Curse, Range 1-3
+Effect: Unit permanently gains death burst: splash (self): 1 toxic
+damage and 1 plague. This effect cannot stack with itself but stacks
+with other death burst effects.
+Evolve Strain: Curse, Range 1-3
+Effect: Strip all plague tokens from a unit in range. Foes take 1 toxic
+damage. Then, they gain 1 slow per token removed. Allies gain 1
+strength per token removed.
+Swell with Corruption: Range 1-3
+Effect: Unit triggers deathburst without being slain.
+
+SCION
+
+Toxic Revenge’s splash
+effect pushes 1 if this unit
+is plagued.
+
+ARM
+
+A C T A bilities
+
+Pseudopod: Range 2-3
+Effect: Pull unit one space. This gains +1 range and pull for each
+plague token on this unit.
+Shamble: Attack, melee
+On hit: 1 damage and 1 plague
+
+T entacle W hip
+
+DF
+
+•
+
+A C T A bilities
+
+B loat
+
+HP
+
+T raits
+
+Toxic Revenge: Has Deathburst:
+Splash (self): 1 plague, and 1 toxic
+damage to already plagued foes.
+Thrall: 2 of these units are worth 1
+unit slot. Can be activated two at a
+time.
+
+•
+
+MV
+
+FREAK
+
+Gargamox Thrall
+
+Gargamox Freak
+
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+4
+
+3+
+
+-
+
+T raits
+
+Plaguebearer: Immune to hazards.
+May treat plague tokens as strength
+
+•
+
+Swarm release: Has deathburst:
+create a hazard under a number of
+units in range 2 equal to the number of
+plague tokens on this unit.
+
+HUNTER
+
+SCU M
+
+THRALL
+
+LEECH
+
+A C T A bilities
+A C T A bilities
+
+Pustulate: Range 1-3
+Effect: Create a hazard in free space in range 3 and inflict plague on
+an adjacent target (4+) all adjacent targets.
+Vomitous Mass: Line 4
+Line: 1 plague. Already plagued foes gain 1 slow.
+Rotblade: Attack, Melee
+On hit: 1 toxic damage and infect: 1 toxic damage
+
+C atalyze
+Vomitous mass deals 1
+toxic damage to units
+standing in hazards
+
+39
+
+Invigorating V iscera
+Gain death burst: splash (self): 1
+plague, and allies gain 1 strength.
+
+S m og S hroud
+Curseproof and cover from all
+directions while standing in a
+hazard.
+
+Propagate Swarm: Range 2-4
+Effect: Create one, (3+) two, or (5+) three hazards in range. May
+spend a plague token on self to re-roll the effect die once.
+Driving Vermin: Attack, Range 2-4
+On hit: 2 damage and pull 1. Infect: 1 damage and pull 1. Effect:
+Allies take no damage.
+
+S w arm Feed
+May spend plague tokens
+on self to gain +1D on
+Driving Vermin per token
+spent.
+
+T oxic A venger
+
+D efiler
+
+Immune to hazards. While
+Driving Vermin gains effect (5+)
+standing in a hazard, gain 1 plague create a hazard under target
+at turn start.
+before the attack.
+
+40
+
+

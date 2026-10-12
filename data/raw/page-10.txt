@@ -1,0 +1,142 @@
+D efenses
+
+A bilities
+
+All units have a hit point (HP) value. Subtract all
+final damage taken from HP. When a unit’s hp
+reaches 0, it is slain. Remove the unit from the
+battlefield and put a corpse down in its space.
+Corpses indicate a unit was slain in a space (they are
+not units and don’t provide obstruction) and
+interact with some abilities. Bigger units (2x2) leave
+bigger corpse markers. Corpses can overlap if two or
+more are left in a space.
+Units have two defenses: a defense value (DF), and
+armor (ARM).
+•
+
+•
+
+Penny has 4 movement. She can’t move through the skeleton ahead of her, so has to move around since
+she can’t move diagonally. Moving up a space of elevation costs +1 extra movement.
+
+Units may move spaces equal to their MV value
+when they MOVE. A unit can always MOVE on its
+turn, either before or after ACTing, and may
+MOVE again if it forgoes ACTing. Movement has
+the following additional rules:
+
+• A unt may never ACT in the middle of a
+MOVE.
+
+13
+
+A CT A bilities
+All units have active abilities that can be used by
+ACTing on a unit’s turn. Only one ability can be used
+by a unit when ACTing. Most units have only one or
+two ACT abilities, but some may have more,
+especially necromancers.
+
+R olls
+Many (but not all) ACT abilities roll dice, using d6s
+(six sided die).
+When rolling dice, you roll one or more d6s, then
+choose the highest result as the final result.
+
+D ice P ools
+By default, you roll one die for all rolls. Some
+abilities allow you to add or subtract dice from this
+pool. This is written as +1D or -1D, so for example
+an ability that gives you +1D to attacks gives you 1
+(base) plus 1 (bonus) die, for a total of two. You
+would roll both dice, then pick the highest result for
+your attack roll.
+If your total dice pool would be reduced to 0, roll
+two dice and pick the lowest result. Dice pools can’t
+be reduced lower than 0.
+
+S teps, Forced M ovem ent,
+and Free M ovem ent
+Some abilities grant units special movement
+types:
+•
+
+Step: When a unit steps, it moves that many
+spaces, but it doesn’t count as a MOVE.
+
+•
+
+Push or pull: When a unit is pushed or
+pulled by an ability, it is called forced
+movement. Forced movement ignores
+movement penalties (such as from terrain)
+and doesn’t count as a MOVE or step.
+
+•
+
+Free movement: Some abilities grant free
+movement while moving. Free movement
+means a unit’s movement can’t be reduced by
+any means.
+
+• Movement cannot be made if a character
+would move into an obstruction. Obstructions
+by default are foes (enemy units) and walls
+(like a wall or pillar).
+• Units can move through the spaces of allies,
+but not end movement there.
+
+Armor represents strong supernatural or
+physical protection from damage. If a unit is
+armored against a damage type, it takes 1 less
+damage from that type, any time it takes
+damage. This could reduce damage to 0. Armor
+types are physical (any damage that is not fire,
+toxic, curse, or holy), magical (fire, toxic,
+curse, and holy damage), and super armor (all
+damage). Armor does not stack with itself if a
+unit would gain it more than once.
+
+Passive abilities that provide an always-active or
+conditional effect. Traits of the same name do not
+stack with each other.
+
+• Some effects can cause moving in or out of a
+space to cost additional spaces of movement.
+A character can always move at least 1 space
+when they MOVE, even if the total movement
+cost to do so would be too high.
+
+M ovem ent
+
+• Movement may only be made in compass
+directions (orthogonal) and cannot be made
+diagonally.
+
+When attacked, a unit’s defense represents how
+hard it is to score a direct hit on that unit with
+an attack, whether it is well protected or can
+otherwise avoid damage. When attacking a unit,
+a final attack result of the unit’s defense value or
+higher scores a hit, otherwise the attack is a
+graze and does just 1 damage. For example, a
+unit with a defense value of 4+ is only hit on a 4,
+5, or 6, and grazed on a 1, 2, or 3.
+
+T raits
+
+1D. Rolled a 4!
+
+3D. Picking
+the highest
+result here, we
+get a 5.
+
+0D. Picking
+the lowest, we
+get a 1. Sad!
+
+14
+
+

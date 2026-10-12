@@ -1,0 +1,90 @@
+The dark priests of the Dead God Gormengorr,
+who have died a second, spiritual death in return
+for mastery over the soul itself. By sacrificing their
+souls to Gormengorr, who will devour their
+essence upon their eventual death and consign
+them to eternal oblivion, they have inured
+themselves against other forms of spiritual
+corruption and degradation, making them
+extremely dangerous opponents and potent in
+binding and forming pacts with devils. Sacrificing
+one’s soul upon death to a soul-devouring deity is
+not an issue, of course, if you do not plan to die.
+Deadsouls are capable of wielding spine blades
+and ancient curses that scorch the very essence of
+their foes, withering them to nothingness. Their
+penchant for inflicting True Death upon their
+opponents means their very presence inspires a
+dread terror so powerful that it affects even the
+undead.
+
+P laystyle
+Attritional skirmishers
+
+S oundtrack
+Dimmu Borgir - Progenies of the Great
+Apocalypse
+At the Gates - Slaughter of the Soul
+Carpathian Forest - Skjend Hans Lik
+
+O ther m echanics:
+•
+•
+•
+
+•
+•
+•
+•
+•
+•
+•
+
+•
+
+Adverse terrain: Special terrain type, like mud,
+rubble, water, etc. Costs +1 more movement to exit.
+Curseproof: Immune to damage and effects from foe’s
+Curses.
+Large: This unit is 2x2. It ignores elevated spaces and
+cannot take cover. It is affected by terrain and other
+space-based effects as long as their occupy at least one
+space of their total area, but these effects don’t stack on
+them.
+Line: Affects all units in a line. Lines can only be drawn
+in orthogonal (compass) directions and can only be
+drawn from one of those spaces.
+Obliterate: A unit that is obliterated leaves neither
+body nor SOUL and does not trigger effects that trigger
+when they are slain or reduced to 0 hp.
+Piercing: This damage ignores armor
+Pull: Involuntarily pull unit a number of spaces, as long
+as each space of the pull is closer to the pulling unit or
+effect than the last space.
+Splash: Affects all adjacent units, but not the target.
+Can be splash (target) or splash (self).
+Strength (token): +1 damage, discard one after
+dealing damage
+Wall: Special terrain type. Blocks line of sight and
+movement and provides cover. Has 2 hp and can take
+damage or be targeted like a character but does not triger
+effects.
+Weak (token): -1 damage, discard one after dealing
+damage
+
+S pecial M echanic:
+D oom : Any unit affected by at least one Doom
+
+token takes 4 devil damage at the end of round 4.
+A unit can only clear a Doom token by slaying
+another unit.
+
+S pecial T ag:
+Isolation: Gains extra effects against units with
+no allies adjacent.
+
+43
+
+44
+
+

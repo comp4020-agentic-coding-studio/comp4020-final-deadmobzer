@@ -130,6 +130,25 @@ It records the action and the people involved, never the reflection text — the
 seal holds in the logs too. `spec/audit.test.ts` pins that shape, including that a
 saved reflection's body never reaches a log line.
 
+## A complete shift: from diary to game recreation
+
+<!-- DRAFT — put in your own voice before submission. Fill in: how the new idea
+     satisfies multi-user/real-time, the stack decision, what (if anything) of
+     "a small daily" carries over, and cite the commit(s) once they exist. -->
+
+Going into the rest of the project I'm making a complete shift away from "a small
+daily". The diary idea never really earned the multi-user, real-time brief — the
+only live piece was a friend request notification, and the two people in it
+barely touched the same state at the same time. Rather than keep patching that
+mismatch, after some struggle with it I decided to give the agent a harder,
+different problem: read a ruleset for a game and recreate that game, given some
+visual assets. I wanted to push what Claude could do with a less familiar kind of
+task than another CRUD-shaped web app.
+
+[TODO: say how this new app is multi-user and real-time in practice, what stack
+it's built on, and whether anything from the old build — auth, logging, the
+access-control approach — carries across.]
+
 ## What's next
 
 <!-- EXPAND for the final submission: what you'd change before the deadline. -->
@@ -139,3 +158,6 @@ server-side logging, and act on whatever the crit surfaces. I also want to revis
 the whole user flow and plan it out properly — in Figma or something similar — so
 the screens hang together as one cohesive experience rather than something that
 grew screen by screen. Longer term, I'd like to develop this into a mobile app.
+
+<!-- NOTE: this section still describes "a small daily". Revisit it for the new
+     game-recreation direction once that idea is further along. -->

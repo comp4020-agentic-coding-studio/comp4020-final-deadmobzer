@@ -1,0 +1,174 @@
+Goregrinder Tyrant
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+6
+
+2+
+
+-
+
+T raits
+•
+•
+
+•
+
+Blood Rage
+Steaming Rage: When taking damage,
+gain 1 berserk and 1 strength. This
+effect can’t trigger more than one a
+round.
+Tyrant: 2x2 unit
+
+B onus T rait
+•
+•
+•
+
+A C T U pgrades
+•
+•
+•
+
+Pulverize: Self
+Effect: Pull all units in range 2 one space towards this
+unit. Then splash (self): 1 fire damage and destroy all
+adjacent walls.
+Building Rage: Self
+Effect: Gain 1 strength and 1 berserk, (4+) then gain
+retaliation until end of this unit’s next turn.
+Rip and Tear: Melee, Attack
+On hit: 2 damage. Deal 1 damage again if this unit has 3 or less hp,
+then deal 1 damage again if it is at 1 hp or less.
+
+•
+•
+
+Fuel Injectors
+
+•
+•
+
+•
+
+Rip and Tear obliterates units
+that it reduces to 0 hp.
+
+Goregrinder Necromancer
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+10
+
+3+
+
+-
+
+T raits
+•
+•
+
+Blood Rage
+Fueled by Rage: Gain 1 berserk token at the start of your turn. You
+may spend berserk tokens as speed tokens and vice versa.
++ Choose One More
+
+A C T A bilities
+Superheated Chainblade: Attack, Melee. On hit: 1 damage and (effect: 4+): 1 fire damage
+again, (6+): 1 fire damage again
++ Choose one more
+
+NECROMANCER
+
+•
+
+W A R LO R D
+
+Quench: Self. Effect: Convert up to 3 negative tokens on self or adjacent allies to speed or
+strength tokens. Then this unit becomes curseproof until the start of its next turn.
+Frenzy Chain: Range 2-3. Pull a unit in range 2 spaces. Effect (3+): Pull another unit. (5+):
+Pull another unit.
+Furious Roar: Self. Destroy all adjacent walls. Then, self and two other adjacent units may
+step 1 and gain 1 speed.
+Apoplexy: Self. Gain 1 strength and 1 berserk, then double all berserk and strength tokens.
+Pilebunker: Attack, melee. On hit: 2 damage, then 1 fire damage again. Effect: This attack rolls
+-1D.
+Saw Toothed Slayer Axe: Line 4. Line: 1 damage. If only one unit is caught in the area,
+increase this damage to 2 instead and this line passes through and destroys walls.
+Spine Devil Blade: Attack, melee. On hit: 1 fire damage. Effect: Increase this damage by+1 on
+hit for every 3 hp this unit is missing. If this unit is at 0 hp, this damage obliterates its target if it
+slays them.
+
+S O U L U pgrades
+
+B ifurcate
+
+May step 2 before using Pulverize
+
+Nerve Twitch: At 3 hp or lower, DF increases to 5+.
+Blood Drinker: Slaying a unit clears two negative tokens.
+Blood Rush: At 3 hp or lower, gain retaliation.
+
+•
+
+A C T A bilities
+
+M achineheart
+At 1 hp or lower, gains
+super armor.
+
+T YRANT
+
+B ER SER K ER
+
+•
+•
+•
+•
+
+Hellrider Kick (1 SOUL): Own or allied turn. Effect: MOVE with free movement, then deal 1
+fire damage to an adjacent foe.
+Overclock (1 SOUL): Own or allied turn, range 1-3. Effect: Self or unit in range gains 2 speed.
+If the unit is at 1 hp or lower, splash (target): 1 fire damage.
+Gorebather (2 SOUL): Any turn: Trigger: You slay a unit. Effect: Step 1. All allied units
+anywhere may step 1.
+Killing Spree (3 SOUL): Any turn. Trigger: After a unit ACTs. Effect: Step 1, then deal 1
+piercing damage to an adjacent unit. Speed can be spent to extend this step by +2. If that unit is
+slain, repeat this effect. It can repeat any number of times.
+Blood Boil (4 SOUL): Any turn: Trigger: Unit is slain. Effect: Unit is not slain but remains at 0
+hp and becomes immune to all damage. At the end of its next turn, it explodes, obliterating it, and
+dealing splash (self): 1 fire damage.
+Devil Impact (6 SOUL): Own turn. Effect: Deal 6 devil damage to an adjacent unit. Then deal 6
+devil damage to yourself.
+
+S O U L A bilities
+•
+
+Ignite (1 SOUL): Own or allied turn, Range 3: Effect: Deal 1 piercing fire damage to self or a
+unit in range. That damage cannot slay them. Unit gains 1 berserk, and 1 speed.
+• Glory Kill (3 SOUL): Own or allied turn: Effect: Obliterate an adjacent unit at 1 hp or
+lower. Gain 2 strength, then step 2.
++ Choose One More
+
+35
+
+36
+
+

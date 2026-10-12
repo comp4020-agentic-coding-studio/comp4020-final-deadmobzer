@@ -1,0 +1,86 @@
+The Abhorrers are an ancient heretic order that
+split off from the Holy Lance Church Knights five
+hundred years ago. The monk-poet Henryk the
+Impious, a philosopher and occultist, was the first
+of their order. Henryk suggested that the best way
+to purge and fight the scourge of necromancy was
+for the order itself to begin studying the dark arts
+- a path that eventually led to him being drawn,
+quartered, and burned - but not before his Schism
+Dogma had taken root and found many willing
+disciples. Abhorrers are highly unusual
+necromancers that practice their own Repentant
+Rites and are, at least in theory, fundamentally
+opposed to the powers of hell, devils, and
+necromancy. This has caused some speculation, as
+the only known way to become a necromancer is
+through a pact with a powerful devil - something
+the Abhorrers vehemently deny. They are a strict
+order, although in practice not all their members
+are as orthodox as they appear. Their specially
+built Starmetal Sword Arts are incredibly deadly
+and they are consummate monster hunters,
+wardens, and mercenaries.
+
+P laystyle
+Slow, building power.
+
+O ther M echanics
+•
+•
+
+•
+
+•
+•
+•
+•
+•
+•
+
+Charge: Cannot be used round 1
+Hazard: Special terrain type. A unit that starts their
+turn in a hazard takes 1 damage, ignoring armor, and a
+unit also takes this damage if they enter a hazard space
+during their turn. Hazards can overlap other terrain
+types.
+Large: This unit is 2x2. It ignores elevated spaces and
+cannot take cover. It is affected by terrain and other
+space-based effects as long as their occupy at least one
+space of their total area, but these effects don’t stack on
+them.
+Line: Affects all units in a line. Lines can only be drawn
+in orthogonal (compass) directions and can only be
+drawn from one of those spaces.
+Obliterate: A unit that is obliterated leaves neither
+body nor SOUL and does not trigger effects that trigger
+when they are slain or reduced to 0 hp.
+Push: Involuntarily push unit a number of spaces, as
+long as each space of the push is further away from the
+pushing unit or effect than the last space.
+Splash: Affects all adjacent units, but not the target.
+Can be splash (target) or splash (self).
+Strength (token): +1 damage, discard one after
+dealing damage
+Vitality (token): Take -1 damage, discard one after
+taking damage.
+
+S oundtrack
+Mental Cruelty - Obsessis a Daemonio
+Nile - Utterances of the Crawling Dead
+Opeth - The Grand Conjuration
+
+S pecial M echanic:
+M iracle: A unit affected by a Miracle has a 5+
+effect chance to instantly return to life at 1 hp at
+the end of any turn it is slain, clearing all tokens.
+
+S pecial T ag:
+S tance: An ability with stance gains different
+effects on odd, even, or special numbered rounds.
+
+49
+
+50
+
+

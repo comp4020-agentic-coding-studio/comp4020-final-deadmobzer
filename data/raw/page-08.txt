@@ -1,0 +1,153 @@
+M alice
+As you increase in power as a necromancer, you
+increase in Malice.
+
+W hat is this devilry?
+Maleghast is a skirmish wargame for two or more
+players where you take the role of a powerful
+necromancer commanding their Black Mass of
+undead in combat against another necromancer,
+seeking the heart of the undying mega-necropolis
+Anzenmezzeron.
+
+U sing this book
+Feel free to skip around in this book as needed.
+There’s a useful glossary of terms in the back that
+you might find it helpful to print or refer to. I
+recommend reading this introductory section,
+then the combat rules, before picking a faction
+and making a necromancer.
+
+D ice and M aterials
+Maleghast is built with virtual table top (VTT) in
+mind, which makes tracking tokens and other
+effects quite easy. However, it can be played in
+person with miniatures, a square grid battle map,
+and a ruler or tape for checking line of sight.
+Maleghast only uses six sided dice (d6)s, of which
+you’ll probably need no more than 3 or 4. If
+playing in person, you may also want colored dice
+or small objects for tracking tokens and a sheet of
+paper or a pencil. You’ll also need minis or
+standees to represent your units and you can print
+and cut out the unit cards for ease of access. Place
+and remove tokens on the relevant unit cards to
+easily track them.
+
+T he M ap
+Maleghast is fought on a square grid.
+
+T he B lack M ass
+The unholy undead that you command make up
+your Black Mass. Each member of your Black
+Mass, and yourself, is a unit you may control on
+the battlefield. You can use miniatures to
+represent your units, or tokens if playing in virtual
+table top.
+Each Master must bring themselves into battle as
+a unit, and have a number of other unit slots
+(usually 4 or 5) to fill with units from their
+congregation. Units are stronger and weaker vs
+other units and perform different roles on the
+battlefield.
+
+M aster M alificus
+
+Malice Level
+
+Dark Power
+
+Spite
+
+0
+
+Loathing
+
+4
+
+Hatred
+
+7
+
+Hell
+
+10
+
+Ultrahell
+
+12. Units can choose
+two upgrades.
+
+Before fighting a battle, you must decide on the
+Malice strength of the battle. This gives you a
+budget in dark power. You may spend a dark
+power point in two ways:
+• Upgrade a unit type in your roster. Doing so
+grants all your units of that type one of three
+upgraded abilities. You can only choose one
+upgrade per unit type, they are exclusive - so
+choose carefully!
+• Choose a new Necromancer ACT or SOUL
+ability.
+
+H eresy
+As an optional rule, you don’t have to stick fully to
+your chosen faction, but may also commit heresy
+and take up to three units or abilities from one
+other faction, in any combination.
+• Heresy must be agreed on with your
+opponent before a battle as it ups the
+complexity of the fight significantly.
+• You can choose any combination of units and
+abilities, as long as the total is 3 or less (two
+abilities and one unit, three units, etc).
+• Additionally, heresy is forbidden at Spite
+malice level.
+Any ability, power, or unit you take outside of
+your house is considered heretic. Your
+necromancer’s base house still determines their
+basic abilities, gear, and powers, and basic house
+abilities and gear cannot be swapped out.
+
+B uilding a B lack M ass
+You can skip ahead to pg. 21 and build your black
+mass now if you’re feeling confident, or you can
+continue and read the combat rules.
+
+In general, higher levels of Malice will create more
+complex fights that will take longer. For your first
+game, I recommend playing on Spite. For most
+games, I recommend playing on Loathing or
+Hatred.
+
+You are a master necromancer. When abilities
+refer to ‘you’, they refer to your necromancer,
+your avatar on the battlefield. As a master of death
+and pontifex of your Black Mass, you wield dread
+and exceptional powers. However, you are a unit
+on the battlefield like any other and the weakest
+point of your formation. Your defeat heralds your
+doom!
+
+H ouse
+You must choose one of the great Houses to follow
+when creating your necromancer. These are the
+many different warring factions, each interpreting
+the Black Rites in different ways. Your chosen
+faction determines the base powers, abilities,
+strengths and weaknesses of your necromancer, as
+well as the unit roster available to you.
+
+• Default map size is 8x8 map, 64 squares,
+chessboard size.
+• A large map (for multiple opponents or a
+scenario) is 10x10 (100 squares) or a little
+larger.
+• A small map (for scenarios, etc) is 6x6 (36
+squares).
+
+9
+
+10
+
+

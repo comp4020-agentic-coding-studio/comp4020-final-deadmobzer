@@ -1,0 +1,165 @@
+Gargamox Horror
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+4
+
+4+
+
+-
+
+T raits
+•
+
+Vile Rupture: This unit has
+deathburst: Remove up to three
+plague tokens on this unit, then splash
+(self): 1 toxic damage, once, per plague
+token removed.
+
+HORROR
+
+SLIM E
+
+B onus T rait
+•
+•
+•
+•
+
+A C T U pgrades
+•
+•
+
+A C T A bilities
+•
+Percolate: Self
+Effect: Inflict two, (5+) or three plague on self, then may inflict 1
+slow on an adjacent unit per plague token gained.
+Surge: Self
+Effect: MOVE with free movement in a straight line. During this
+move, is immune to hazards and may move through walls and units.
+Any foe this unit passes through takes 1 toxic damage and this unit
+may pass off any plague tokens on this unit to affected units.
+
+R otten S urge
+
+S ticky T rail
+
+•
+•
+•
+•
+
+T he G unk
+
+After Surge, inflict 1 plague During Surge, may create a hazard Surge inflicts 2 slow on the first
+on self for each unit passed in one space passed through.
+unit affected.
+through.
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+10
+
+4+
+
+-
+
+T raits
+•
+
+Blessed with Filth: Immune to hazards. At turn start, gain 1 plague,
+then may distribute any number of plague tokens on this unit to
+any other units in range 2.
++ Choose One More
+
+A C T A bilities
+Virulence. Attack, range 1-3.
+On hit: 1 damage and inflict 1 plague. Then, may immediately remove a plague token on target to
+deal 1 toxic damage, again (effect: 3+) one more, (5+) one more.
++ Choose one more
+
+NECROMANCER
+
+Gargamox Necromancer
+
+Melt: Curse, Range 1-3. Effect: Unit takes 1 devil damage. If this reduces it to 0 hp, it is
+obliterated and it melts, creating a hazard in its space.
+Corpse Explosion: Range 1-4. Effect: Choose a corpse in range. It explodes for a splash effect
+centered on it for 1 plague and push 1. Then remove it and replace it with a hazard.
+Vermin Form: Range 2-6. Effect: Choose a corpse or a hazard in range and and swap places
+with it. You push all adjacent units 1 and become curseproof until the end of your next turn.
+Ceaseless Spew: Line 6. Effect: 1 plague (6+) or 2 plague. Already plagued foes take 1 toxic
+damage. Pull all affected units 1.
+Flesh Feeder Blade: Attack, melee. On hit: 1 damage and Infect: 1 plague to foes and 1
+strength to self or allied units. Double this effect if it slays a foe.
+Scourge: Attack, Range 2-4: On hit: 1 damage, create a hazard under target and (effect: 3+)
+slow them (5+) twice.
+Necrocide: Attack, Range 2-3: On hit: 1 toxic damage. Infect: 1 toxic damage. Effect: After this
+ability resolves, gain 1 plague on self for each unit affected.
+
+S O U L U pgrades
+•
+
+P LA G U ELO R D
+
+Pollution shroud: While standing in a hazard, you have cover from all directions and are
+curseproof.
+Corruptor: After you MOVE, create a hazard in an adjacent space.
+Spreader: Infect abilities that you use or that target you may jump an extra time.
+
+•
+•
+•
+•
+•
+
+Purge Guts (1 SOUL): Self or Allied turn, Range 1-3. Effect: Remove up to three plague tokens
+from self or allied unit and grant them to any other adjacent unit to target. Then, remove a
+negative token on the target for each plague token removed.
+Insides Out (1 SOUL): Curse, Any turn, Range 1-3. Trigger: Turn start. Effect: Unit gains 1 slow
+and creates a hazard under themselves at the end of this turn.
+Fecundity (2 SOUL): Any turn, Range 1-3. Trigger: Turn Start. Effect: Double all plague
+tokens on a unit. If this puts them at 5 or more tokens, they also explode with splash (target): 1
+toxic damage.
+Unholy Vapors: (3 SOUL): Curse, Any turn, Range 1-3. Trigger: Target turn Start. Effect: At
+the end of the targeted unit’s turn, targeted unit takes 1 piercing toxic damage, for every hazard in
+range 2 of them.
+Praise the Filth (4 SOUL): Own turn, Range 1-2: Effect: Place one hazard in range for every
+other hazard in range.
+Mox Populi (6 SOUL): Own turn. Effect: Remove up to four corpse tokens or hazards
+anywhere and summon a SCUM unit for each. Then splash (target) on all scum created this way
+for 1 toxic damage to foes. Characters can only be damaged once by this effect.
+
+S O U L A bilities
+•
+
+Infest (1 SOUL): Any turn, Range 1-3. Trigger: Turn start. Effect: Grant 2 plague tokens to
+a unit in range.
+• Slime Form (3 SOUL): Any Turn. Trigger: Turn start. Effect: MOVE with free movement.
+Can pass through walls and units during this movement. After the movement finishes, push or
+pull all units in range 2 one space (5+) two spaces.
++ Choose One More
+
+41
+
+42
+
+

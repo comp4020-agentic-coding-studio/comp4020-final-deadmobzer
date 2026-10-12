@@ -1,0 +1,180 @@
+Igorri Tyrant
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+6
+
+3+
+
+-
+
+T raits
+•
+•
+
+Warpflesh: Starts combat with 4
+mutation tokens
+Large: 2x2 unit. See entry.
+
+T YRANT
+
+H O M O N CU LU S
+
+B onus T rait
+•
+•
+•
+
+Accelerate Evolution: At turn end, may remove one token from this unit and grant to a unit in
+range 2.
+Rapid Move: May remove a mutation token at start or end of own turn to step 2 with free
+movement.
+Ancillary Limbs: May remove a mutation token on self to grant +2 range to any ability and +1D
+on any attacks it makes.
+
+•
+
+A C T U pgrades
+
+A C T A bilities
+•
+
+Sculpt Flesh: Self
+Effect: Gain 1 strength, OR 1 speed, OR 1 vitality. Spare
+parts: Repeat this effect once for each corpse consumed.
+Absorb: Melee
+Effect: Deal 1 devil damage to an adjacent unit. If reduce to 0
+hp, obliterates unit and the homunculus gains any tokens the
+absorbed unit had.
+Flesh Whip: Attack, Range 1-2
+On hit: 1 damage and splash (target): 1 damage and create
+one or (5+) or two corpse tokens in an adjacent space to
+target.
+
+•
+•
+•
+•
+
+M eld
+
+Form C arapace
+
+•
+
+When choosing to MOVE
+again, destroys walls and
+absorbs corpses it moves
+over, mutating each time
+
+When absorbing allies, slays
+instead of obliterating them, and
+this unit mutates.
+
+If absorb destroys a unit, gains
+physical armor for the rest of
+combat.
+
+•
+
+CH IR U R G EO N
+Igorri Necromancer
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+10
+
+3+
+
+MAG
+
+T raits
+•
+
+Polyglot: At turn start, may convert one of this unit’s mutation
+tokens into strength, speed, or vitality. Then, mutate.
++ Choose One More
+
+A C T A bilities
+Experimental Surgery: Line 4. Line: 1 damage. Effect: Allies in the line mutate instead of
+taking damage.
++ Choose One More
+
+NECROMANCER
+
+B all of Lim bs
+
+New Material: Self. Effect: Create two or (5+) three corpses in free adjacent spaces, then
+mutate.
+Clone: Range 2. Effect: Create a perfect copy of an allied unit in range in any other free space in
+range. Then obliterate the original as it collapses into flesh and replace it with a corpse token.
+Stitch Fix: Range 3. Effect: Remove up to three negative tokens from a unit, then it may step 1
+and it mutates. Spare Parts: The unit mutates and steps once for each negative token removed
+instead.
+Inject Stimulant: Range 3. Effect: Choose a unit in range. That unit may step 2. If it ends its
+turn in the space of a corpse, it mutates, removes the corpse, then may repeat this effect.
+Biotoxin Injector: Attack, range 2-5. On hit: 1 toxin damage. Effect: At end of target’s next
+turn, they explode for a splash (target) effect for 1 toxin damage. Your allies in the area mutate
+instead of taking damage.
+Mutagen Injector: Attack, Range 2-5. On hit: May remove one positive token from target,
+then deal 1 toxin damage. Spare Parts: If at least one corpse was consumed, repeat this effect.
+Chaos Beam: Line 3. Effect: Line: 1 fire damage and inflict 1 vulnerable, (3-4) OR 1 toxic
+damage and inflict 1 slow, (5-6) OR 1 curse damage and inflict 1 weak. Spare Parts: Roll 1D for
+effect per corpse consumed and choose any result.
+
+S O U L U pgrades
+•
+•
+•
+•
+•
+•
+
+Flesh Jump (1 SOUL): Own or allied turn. Range 3. Effect: Swap places with an allied unit,
+then both of you mutate.
+Grow Bonus Legs (2 SOUL): Own or allied turn. Range 3. Effect: Remove any number of
+mutation tokens on self or target unit, then target may step 2 per token removed with free
+movement, ignoring hazards.
+Grow Bonus Limbs (2 SOUL): Own or allied turn. Range 3. Trigger: Turn start. Effect:
+Remove any number of mutation tokens from target, then target gains +1D on attacks this turn
+per token removed, and their damage ignores armor.
+Recycle (3 SOUL): Curse, Any turn. Trigger: Turn end. Effect: Deal 1 toxic damage to unit. If
+this reduces them to 0 hp, they are obliterated. Create up to 3 corpse tokens under their space or
+in free adjacent spaces.
+Devolve (4 SOUL): Curse, Foe turn. Range 3. Trigger: Turn start. Effect: Inflict 1 slow, weak,
+and vulnerable on a foe (5+) twice.
+Final Form (6 SOUL): Own turn. Trigger: Turn start. Effect: Increase MV to 6, DF to 6+, deal
++1 damage with all abilities, become curseproof, gain free movement, and gain super armor. Keep
+any damage taken. At the end of your next turn, your form destabilizes and you are obliterated.
+
+•
+
+S O U L A bilities
+Wild Mutation (1 SOUL): Own or Allied Turn, Range 4. Trigger: Turn start. Effect: Unit gains
+1 strength, (3-4) OR 1 speed, (5-6) OR 1 vitality. Spare Parts: May choose one token per corpse
+consumed instead of rolling.
+Sample Genome (3 SOUL): Own or allied turn. Range 4. Copy all positive tokens on target
+unit, then grant them to another unit in range.
++ Choose One More
+
+59
+
+60
+
+

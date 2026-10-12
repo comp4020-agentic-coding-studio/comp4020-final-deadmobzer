@@ -1,0 +1,225 @@
+MV
+
+HP
+
+DF
+
+ARM
+
+2
+
+2
+
+4+
+
+-
+
+T raits
+•
+•
+
+•
+
+Formation
+Thrall: 2 of these units are worth 1
+unit slot. Can be activated two at a
+time.
+
+Gain Headshot: reload and gain 1
+strength
+
+May consume one adjacent
+corpse before or after ACTing to
+reload and gain 1 strength.
+
+E nforcer
+CARCASS Scion
+
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+4
+
+3+
+
+PHYS
+
+T raits
+•
+
+Bone shards gains effect:
+(4+) push 1, (6) push 1
+again.
+
+27
+
+-
+
+Formation
+
+H ot C ham ber
+
+CARCASS Hunter
+
+MV
+
+HP
+
+DF
+
+ARM
+
+2
+
+4
+
+4+
+
+-
+
+T raits
+•
+
+Formation
+
+A C T A bilities
+Snipe: Attack, range 2-4, reload
+On hit: 2 damage. Headshot: and inflict 1 vulnerable.
+Transform to Gun: Self
+Effect: Unit becomes unable to MOVE or step, but ranged abilities
+gain +2 maximum range and ignore armor and cover. It can end
+this effect by sacrificing a MOVE, but if it does, it loses all associate
+effects.
+Deathmark: Curse, Range 2-4
+Effect: Inflict 2 vulnerable, (4+): 3 vulnerable, (6+): Remove any
+vitality first.
+
+Skull Crack: Attack, melee, push
+On hit: 2 damage and push 1. Headshot: push 2
+Flashbang: Range 2-3, Reload, splash
+Effect: 1 fire damage and 1 vulnerable, then Splash (target): push 1
+away from target.
+Shieldwall: Self
+Effect: Until start of this unit’s next turn, this unit cannot MOVE,
+step, or be pushed or pulled, gains cover, and grants cover to
+adjacent allies from all directions.
+
+Unit may step 1 before using Shieldwall also clears up to two
+Skull Crack and it gains
+negative tokens on self or adjacent
+splash (self) push foes 1
+allies.
+
+4+
+
+Destructive Glee’s splash effect gains Regurgitate Ammo now
+effect (4+): +1 fire damage (6+): and targets two different adjacent
++1 vulnerable
+unit and no longer grants
+strength.
+
+Formation
+
+B ulw ark
+
+4
+
+B arrelform
+
+A C T A bilities
+
+S hield C harge
+
+3
+
+N apalm Injector
+
+SCION
+
+While in cover, attacks
+gain +1 max range and
+push 1 on hit.
+
+ARM
+
+Regurgitate Ammo: Range 1-2
+Effect: A unit in range reloads and gains one, (6+) or two strength.
+Bone Shards: Curse, Range 1-3
+Effect: Unit takes 1 damage after any ACT ability resolves that
+pushes or pulls them. Lasts until end of this units next turn or until
+this unit has taken 3 damage this way.
+Destructive Glee: Self
+Effect: Step 1, then Splash (self): 1 fire damage, push 1, and inflict 1
+vulnerable, then self is obliterated.
+
+V om it B ullets
+
+S cavenge A m m o
+
+DF
+
+A C T A bilities
+
+OL45: Attack, range 2-3, reload
+On hit: 1 piercing damage. Headshot: inflict 1 vulnerable
+Baton: Push, melee
+Effect: Push 1 and (3+) inflict 1 vulnerable.
+
+T actical R eload
+
+HP
+
+T raits
+
+A C T A bilities
+
+B race
+
+MV
+
+HUNTER
+
+CARCASS Thrall
+
+THRALL
+
+G unw ight
+
+CARCASS Freak
+
+FREAK
+
+A m m o G oblin
+
+B one D ust N apalm
+
+C law P itons
+
+E xtended B arrel
+
+Flashbang deals 1 splash fire
+damage but gains charge and
+has no effect on its main
+target.
+
+Transform to Gun makes
+this unit immune to push
+and pull.
+
+Snipe gains +1D when this unit is in
+cover, and -1D when it is not.
+
+C aliber U p
+Snipe gains push 1 and
+Headshot: push 2
+
+28
+
+

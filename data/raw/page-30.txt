@@ -1,0 +1,175 @@
+Abhorrer Tyrant
+
+MV
+
+HP
+
+DF
+
+ARM
+
+3
+
+3
+
+2+
+
+SUPER
+
+T raits
+•
+•
+
+T YRANT
+
+H O LY B O D Y
+
+B onus T rait
+•
+•
+•
+•
+
+A C T U pgrades
+
+Miraculous flesh: Lacks miracle, but
+starts combat with 4 vitality tokens.
+Large: 2x2 unit. See entry.
+
+•
+
+A C T A bilities
+
+•
+
+Bolides: Range 2-6
+Effect: Create one, (3+) two, (5+) or three hazards in range.
+May destroy a wall instead of creating a hzard.
+Indignation: Self: Range 3-6
+Effect: Remove one or two vitality tokens on this unit, then deal
+1 holy damage to that many units in range, and push those units
+1.
+Ablutions: Self
+Effect: Gain two vitality. Until the start of this unit’s next turn,
+adjacent allies may spend vitality tokens on this unit as if they
+were their own.
+
+S cathe
+
+H oly Font
+
+When Bolides destroys a
+wall, it can deal 1 damage
+to an adjacent foe.
+
+•
+•
+•
+•
+•
+
+W itness
+•
+
+MV
+
+HP
+
+DF
+
+ARM
+
+4
+
+10
+
+4+
+
+-
+
+T raits
+•
+
+Holy Vessel: Lacks Miracle. However, while alive, miracle triggers
+for adjacent allies on a 4+, and gain 1 SOUL the first time it
+triggers in a round.
++ Choose One More
+
+A C T A bilities
+Starmetal Godsword: Melee, attack. On hit: 1 damage. Stance (Odd): and step 2, Stance
+(Even): and gain 1 vitality, Stance (Round 5+): Increase damage to 3
++ Choose One More
+
+NECROMANCER
+
+•
+
+Abhorrer Necromancer
+
+Grand Oath: Self. Effect: Splash (self). Self and allies in the area may convert any number of
+vitality to strength.
+Redempta: Range 4. Effect: Remove all negative tokens on an ally, then transfer to self. That
+ally gains 1 vitality per negative token removed and becomes curseproof until the start of its
+next turn.
+Communion: Self. Effect: Gain 1 vitality. Until end of next turn, self and adjacent allies may
+spend this unit’s hp as if it were vitality tokens.
+Decree of Forbiddance: Curse, Self. Effect: Until end of next turn, foes ending their turn in
+range 2 of this unit have a hazard created under them, then are pushed 1.
+Holy Water Flail: Attack, range 2-4, charge. On hit: 1 holy damage and splash (target): 1 holy
+damage. Stance (Round 3+): and create a hazard under target (round 5+) all targets in the area.
+Relic Lance: Attack, melee. On hit: 2 damage. Stance: May step spaces equal to the round
+number with free movement, in a straight line, before the attack. On hit, push target half that
+many spaces.
+Starmetal Shuriken: Attack, range 2-5. On hit: 1 damage. Stance: Roll the effect die. If you
+roll under the round number, deal 1 holy damage again. If you roll exactly the round number,
+deal 2 holy damage again instead.
+
+S O U L U pgrades
+
+Ablutions gains stance (round
+Indignation gains stance (round
+3+): gain 3 vitality instead, (round 4+): deal 2 holy damage instead.
+5+): gain 4 vitality instead.
+
+EX O R CIST
+
+Winter Rose Stance: Stance: (Round 3+): Attacks cannot miss (all misses turn into hits).
+Corpse Violet Stance: Stance: (Round 3+): Gain either physical or magical armor (choose).
+Royal Chrysanthemum Stance: Stance (Round 3+): May step 2 after ACTing.
+
+•
+•
+•
+•
+
+Sword Art: Drifting Blossoms (1 SOUL): Any turn. Trigger: A unit MOVEs, and that move
+resolves. Effect: Stance: Step spaces equal to 1 + the round number, then push an adjacent unit 1.
+Sword Art: Safflower cut (2 SOUL): Own or Allied turn. Line, Stance: Step 1, then cut a line
+area with spaces equal to the round number +2, dealing 1 damage to all characters within and
+pushing those characters 1. Stance (R5+): This damage becomes Devil Damage.
+Grace (2 SOUL): Own or Allied turn, range 1-3. Trigger: Turn start. Effect: Unit becomes
+curseproof until end of its next turn and attacks against it gain -1D for the duration.
+Sword Art: Winter Sprout (3 SOUL): Any Turn. Trigger: This unit takes damage from an
+ACT ability, and that ability resolves. Effect: Splash (self): remove 1 negative token on self or gain
+1 vitality for every foe in the splash area. Stance (R4+): both effects trigger.
+Supreme Sword Art: Merciful Snowdrop Cut (4 SOUL): Own Turn. Trigger: You hit an
+attack. Effect: Splash (self): 1 holy damage. Stance (R3+): 2 holy damage (R5+): 4 holy damage.
+(R6+): 5 holy damage.
+Resurrection (6 SOUL): Any turn. Trigger: Allied unit is slain. Effect: Return unit to life at 1
+hp at the end of the turn. It becomes immune to all damage and curseproof until the start of its
+next turn. Stance (R3+) and it gains 1 vitality (R5+) 3 vitality instead.
+
+•
+
+S O U L A bilities
+Absolution (1 SOUL): Any turn, Range 2-6. Trigger: Turn start. Effect: Self takes 1 piercing
+damage, which cannot slay self. One allied unit in range gains one, (3+) two, or (5+) three vitality.
+Will of God: (3 SOUL): Own or Allied Turn, range 1-3. Trigger: Turn start. Effect: For this turn
+only, self or allied unit in range may treat the current round number as either 2 or 5.
++ Choose One More
+
+53
+
+54
+
+

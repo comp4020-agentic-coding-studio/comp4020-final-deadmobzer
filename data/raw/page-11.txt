@@ -1,0 +1,129 @@
+A ttacks
+ACT abilities with the attack tag make an attack
+roll. To make an attack roll, roll 1d6 and compare
+it to your foe’s defense.
+• If you match or beat their defense, you score a
+hit. Attacks that hit deal their hit damage and
+may have other effects on hit.
+• Attacks that miss graze. Grazes deal 1
+damage. Grazes inherit damage types, but no
+other effects (such as ignoring armor, or
+allowing a roll of the effect die).
+• Attacks with the melee tag can only attack
+adjacent characters. Attacks with a listed
+range can attack any character inside their
+range, even diagonally, but often cannot attack
+adjacent characters and suffer against cover.
+All abilities have a minimum range of 1
+unless specified.
+
+E ffects and the E ffect D ie
+Other ACT abilities apply effects. Effects happen
+as described, in the order described. Some
+common effects include moving allies or foes,
+inflicting positive or negative tokens, or just
+dealing damage.
+
+•
+
+•
+
+•
+•
+
+Some effects require you to roll an effect die,
+which is a d6. If they do, they’ll be listed as
+effect (X+), and the effect takes place on a
+certain number or higher. So effect (4+) has an
+effect that takes place on a 4 or higher.
+Some abilities have both an attack and and
+effect die rolled at the same time, others have
+just the effect die. If an effect doesn’t have a
+die roll attached, it doesn’t need one, and
+simply always happens.
+Only roll one effect die per ability no matter
+how many effects are attached to an ability.
+Effects attached to an attack sometimes only
+trigger on hit and are listed as such.
+
+C urses
+Abilities with the curse tag are powerful dark
+magic ACT abilities. Curses pick one or more
+targets, then sometimes roll the effect die to see
+what happens. They are not attacks and also
+typically deal magical damage or inflict negative
+tokens on foes. Some units have the ability to
+become curseproof, making curses have no
+effect on them.
+
+1.
+2.
+3.
+
+Skeletons (B) and (C) are past the red line, so Penny has cover from them. Skeleton (A) is flanking Penny, so she has no
+cover.
+Skeletons (A) and (C) have line of sight to Penny, since they can draw corner to corner. Skeleton (B) does not.
+No skeleton has cover from Penny, since they are not touching the cover piece. She can only see Skeletons A and C.
+
+T argeting A bilities, A djacency, C over,
+and Line of S ight
+Abilities can target any unit or space that is inside
+its range and line of sight. If the ability has the
+melee tag, it can only be used on adjacent units or
+spaces.
+•
+
+Ranged abilities often cannot target adjacent
+characters and attacks gain -1D against
+characters in cover.
+
+•
+
+Units can take cover against ranged attacks
+by moving next to a space that grants cover
+(by default an elevated space or a wall). If they
+do, draw an imaginary straight line across the
+battlefield lined up with where they are
+touching their cover. They gain cover against
+units in spaces past that line. Cover grants -1D
+on ranged attacks.
+
+•
+
+Line of sight can be blocked by LoS blockers
+and some abilities. By default, these are
+created by walls (special terrain spaces). To
+check line of sight, draw a straight line from
+any corner of the square of your unit to any
+corner of the other unit. If the line passes so
+that it touches an LoS blocker (even the edge
+or corner of one), there is no line of sight.
+
+Adjacency: A unit is considered adjacent for
+targeting if it is within 1 space, even
+diagonally.
+
+A lot of effects rely on adjacency. For other
+important tags:
+
+15
+
+•
+
+•
+
+Range can be measured in any direction,
+including diagonally. Abilities have a
+minimum range of 1 by default, but may
+have a higher minimum range (range 2-4, for
+example, meaning adjacent characters or
+spaces cannot be targeted)
+
+•
+
+Melee abilities can only target adjacent
+characters.
+
+16
+
+

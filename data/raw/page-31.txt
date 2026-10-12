@@ -1,0 +1,75 @@
+Experimenters, scientists and traveling physicians,
+the Igorri are a family made up of those who have
+fallen into the darker sciences, whether by their
+own inquiries, or through accident or
+misfortunate. The ranks of the Igorri are old and
+well established, and they are a tight knit and
+welcoming lot, the core of which originally hailed
+from a group of six old physician families that
+suffered from grotesque genetic and physical
+deformity, eventually resorting to a pact with the
+Multi-Colored Devil and falling to necromancy.
+They are skilled surgeons and scientists, able to
+meld flesh as easily as clay - always pursuing the
+Greater Form, but unable to find it. They
+frequently find work in Anzenmezzeron as
+surgeons, barbers, and traveling merchants.
+
+P laystyle
+
+O ther M echanics:
+•
+•
+•
+
+•
+•
+•
+•
+
+Rapid adaptation
+
+Corpse: When a unit dies, it leaves a corpse marker.
+Multiple corpses can stack in one location. Corpses can
+be created by other means.
+Curseproof: Immune to damage and effects from
+Curses.
+Large: This unit is 2x2. It ignores elevated spaces and
+cannot take cover. It is affected by terrain and other
+space-based effects as long as their occupy at least one
+space of their total area, but these effects don’t stack on
+them.
+Line: Affects all units in a line. Lines can only be drawn
+in orthogonal (compass) directions and can only be
+drawn from one of those spaces.
+Obliterate: A unit that is obliterated leaves neither
+body nor SOUL and does not trigger effects that trigger
+when they are slain or reduced to 0 hp.
+Splash: Affects all adjacent units, but not the target.
+Can be splash (target) or splash (self).
+All tokens
+
+S oundtrack:
+Mastodon - Colony of Birchmen
+Revocation - Communion
+Jinjer - Sit Stay Roll Over
+
+Faction M echanic:
+S pare parts: If an ability has spare parts, the
+
+unit may absorb any number of adjacent corpses
+at the start of this ability to grant it additional
+effects, removing those corpses.
+
+S pecial T ag:
+M utate: When a unit mutates, it gains a mutation
+token. Mutation tokens can be discarded instead
+of discarding any other token. (Mutation tokens can
+be a stand-in and act as a ‘copy’ for any other token,
+allowing you to keep the original)
+
+55
+
+56
+
+
