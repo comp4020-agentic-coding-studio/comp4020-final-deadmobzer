@@ -20,7 +20,7 @@ import { today, TZ } from "./time.ts";
 import { FACTIONS, PLAYER_PALETTE, allUnitDefs } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, maliceLevels, LoadoutError, type Mode } from "./loadouts.ts";
 import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
-import { gameView, act, movesFor, targetsFor, recentOpponents, activeGames, GameError } from "./games.ts";
+import { gameView, act, movesFor, targetsFor, leaveGame, recentOpponents, activeGames, GameError } from "./games.ts";
 import { postMessage, messagesFor, ChatError, type Channel } from "./chat.ts";
 import { getProfile, setAvatar, ProfileError } from "./profile.ts";
 import type { Action } from "./game/types.ts";
@@ -176,7 +176,7 @@ const server = createServer(async (req, res) => {
           <form method="post" action="/logout"><button>Sign out</button></form></div>`));
     }
     // The interactive app (React + Three.js): lobby + the 3D table.
-    if (path === "/play" && method === "GET") return void html(res, appShell("Play"));
+    if (path === "/play" && method === "GET") return void html(res, appShell("Play", { header: true }));
     if (path.startsWith("/g/") && method === "GET") return void html(res, appShell("Table"));
     if (path === "/profile" && method === "GET") {
       return void html(res, profilePage(user));
@@ -296,11 +296,12 @@ const server = createServer(async (req, res) => {
       return void json(res, { opponents: recentOpponents(user.id) });
     }
     if (path === "/api/games/active" && method === "GET") {
-      return void json(res, { games: activeGames() });
+      // only show games someone is actually in (an empty game isn't worth watching)
+      return void json(res, { games: activeGames().filter((g) => audienceCount(g.id) > 0) });
     }
 
-    // games: /api/game/<id>, /action, /chat, /moves, /targets
-    const gameMatch = /^\/api\/game\/([A-Za-z0-9_-]+)(\/action|\/chat|\/moves|\/targets)?$/.exec(path);
+    // games: /api/game/<id>, /action, /chat, /moves, /targets, /leave
+    const gameMatch = /^\/api\/game\/([A-Za-z0-9_-]+)(\/action|\/chat|\/moves|\/targets|\/leave)?$/.exec(path);
     if (gameMatch) {
       const id = gameMatch[1];
       const sub = gameMatch[2];
@@ -312,6 +313,11 @@ const server = createServer(async (req, res) => {
         const iid = url.searchParams.get("iid") ?? "";
         const ability = url.searchParams.get("ability") ?? "";
         return void json(res, { targets: targetsFor(id, user.id, iid, ability) });
+      }
+      if (sub === "/leave" && method === "POST") {
+        const ended = leaveGame(id, user.id);
+        if (ended) broadcastGame(id, { type: "game", gameId: id });
+        return void json(res, { ok: true });
       }
       if (!sub && method === "GET") {
         const v = gameView(id, user.id);

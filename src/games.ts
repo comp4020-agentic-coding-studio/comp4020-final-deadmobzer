@@ -143,6 +143,29 @@ export function activeGames(limit = 30): { id: string; mode: string; players: st
   return rows.map((r) => ({ id: r.id, mode: r.mode, players: [r.p0, r.p1] }));
 }
 
+// A participant leaving ends the game as a forfeit (the other side wins), so the
+// opponent isn't left waiting. Spectators leaving is purely client-side. Returns
+// true if the game was ended.
+export function leaveGame(id: string, userId: number): boolean {
+  const row = rowFor(id);
+  if (!row) return false;
+  const role = roleOf(id, userId);
+  if (role === "spectator") return false;
+  if (row.status === "over") return true;
+  const state = JSON.parse(row.state_json) as GameState;
+  const winnerSide: 0 | 1 = role === "p0" ? 1 : 0;
+  state.phase = "over";
+  state.winner = winnerSide;
+  state.log.push({ round: state.round, side: null, actor: "system",
+    text: `${usernameOf(userId)} left — side ${winnerSide + 1} wins by forfeit.` });
+  const winnerUser = winnerSide === 0 ? row.p0_id : row.p1_id;
+  db.prepare("UPDATE games SET state_json = ?, status = 'over', winner = ?, updated_at = ? WHERE id = ?")
+    .run(JSON.stringify(state), winnerUser, nowISO(), id);
+  audit(usernameOf(userId), "game.leave", { game: id });
+  if (row.ranked) applyRankedResult(row.p0_id, row.p1_id, winnerUser);
+  return true;
+}
+
 // Distinct recent opponents for a user, newest first — used by the Friends tab.
 export function recentOpponents(userId: number, limit = 10): { id: number; username: string; display_name: string }[] {
   return db.prepare(

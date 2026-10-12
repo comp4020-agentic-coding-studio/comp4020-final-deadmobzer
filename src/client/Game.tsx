@@ -132,6 +132,13 @@ export function Game({ gameId }: { gameId: string }) {
     try { await postJSON(`/api/game/${gameId}/action`, { action: { kind: "endTurn" } }); refetch(); }
     catch (e) { setError(String(e)); }
   }
+  async function leave() {
+    // participants forfeit on leave so the opponent isn't stranded; spectators just go
+    if (view && view.role !== "spectator" && view.state.phase !== "over") {
+      try { await postJSON(`/api/game/${gameId}/leave`, {}); } catch { /* leave anyway */ }
+    }
+    location.assign("/play");
+  }
   async function postChat(channel: "player" | "audience", body: string) {
     if (!body.trim()) return;
     try { await postJSON(`/api/game/${gameId}/chat`, { channel, body }); refetch(); }
@@ -163,10 +170,17 @@ export function Game({ gameId }: { gameId: string }) {
             ? (s.winner === null ? "Draw" : `Side ${s.winner + 1} wins`)
             : myTurn ? "Your turn" : `Side ${s.activeSide + 1}'s turn`}
           {" · "}<span>{view.role}</span> · 👁 {view.audience}
-          <button className="leave" onClick={() => location.assign("/play")}>
+          <button className="leave" onClick={leave}>
             {view.role === "spectator" ? "Stop watching" : "Leave"}
           </button>
         </div>
+
+        {s.phase === "over" && (
+          <div className="gameover">
+            <h2>{s.winner === null ? "Draw" : myseat === s.winner ? "Victory" : myseat === null ? `Side ${s.winner + 1} wins` : "Defeat"}</h2>
+            <button className="endturn" onClick={leave}>Back to lobby</button>
+          </div>
+        )}
 
         <div className="hint">
           {s.phase === "over" ? "The battle is over."
