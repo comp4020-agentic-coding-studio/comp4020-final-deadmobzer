@@ -92,10 +92,15 @@ is what the test talks to.
 
 ## What's next
 
-The server-side game is complete and green (34 tests). The remaining major piece is
-the **3D client**: a Three.js table with the faction art as standees, orbit camera,
-lighting and reflections, dice that roll on the board, and the battle-log and chat
-panels. It is deliberately the last thing, because it is pure presentation over a
-proven, authoritative core — the correctness of the game never depended on it. Before
-the deadline I also want to self-host the rulebook fonts and bring in open-licensed
-terrain for the board, and put every one of these documents fully in my own voice.
+The game is now playable end to end and deployed: a Three.js table (faction art as
+standees, orbit camera, lighting and reflections, dice that roll on the board, a
+battle log + player/audience chat, a hover stat inspector), both lobby modes with a
+faithful Black Mass builder (Malice + dark-power upgrades), spectating, friends,
+avatars and ELO — over the server-authoritative core, green at 40 tests. The client
+is pure presentation, exactly as planned.
+
+The honest follow-ups before the deadline: **apply every upgrade's mechanical
+effect** in the engine (upgrade *selection* is validated, stored and shown, but not
+all effects are simulated yet); self-host the rulebook fonts and bring in open-
+licensed terrain for the board; richer deploy/animation polish; and a pass to put
+every one of these documents fully in my own voice.
