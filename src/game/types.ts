@@ -13,6 +13,15 @@ export type UnitType =
 
 export interface Pos { x: number; y: number }
 
+// A battlefield cell's special terrain (rulebook pg. 19). Types stack.
+export interface TerrainCell {
+  wall?: { hp: number };   // blocks LoS + movement, gives cover, 2 HP
+  elevated?: boolean;      // +1 to enter from ground, gives cover, +/-1D
+  hazard?: boolean;        // 1 damage (ignores armor) on entering / starting there
+  adverse?: boolean;       // +1 movement to exit
+  stairs?: boolean;        // skips the elevation entry cost
+}
+
 export type Tokens = Partial<Record<TokenType, number>>;
 
 // A single effect op (see data/factions/SCHEMA.md). Loosely typed on purpose —
@@ -83,6 +92,7 @@ export interface GameState {
   firstSide: 0 | 1;     // who won initiative / acts first each round
   players: [SidePlayer, SidePlayer];
   units: Unit[];
+  terrain: Record<string, TerrainCell>;   // keyed "x,y"
   rng: Rng;
   log: LogEntry[];
   winner: 0 | 1 | null;

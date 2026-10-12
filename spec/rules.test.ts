@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from "vitest";
 import {
-  createGame, autoDeploy, applyAction, dealDamage, reachable,
+  createGame, autoDeploy, applyAction, dealDamage, reachable, legalMoves, terrainAt,
   type Loadout,
 } from "../src/game/engine.ts";
 import type { GameState, Unit } from "../src/game/types.ts";
@@ -70,6 +70,35 @@ describe("movement", () => {
     const spots = reachable(s, u, u.mv);
     expect(spots.length).toBeGreaterThan(0);
     for (const p of spots) expect(s.units.some((o) => o.alive && o.pos.x === p.x && o.pos.y === p.y)).toBe(false);
+  });
+});
+
+describe("terrain", () => {
+  it("every game generates terrain (walls / elevated / hazard / adverse)", () => {
+    const s = g();
+    const cells = Object.values(s.terrain);
+    expect(cells.length).toBeGreaterThan(0);
+    expect(cells.some((c) => c.wall)).toBe(true);
+    expect(cells.some((c) => c.elevated)).toBe(true);
+  });
+  it("a wall blocks movement — no legal move lands on it", () => {
+    const s = g(); autoDeploy(s);
+    const walls = new Set(Object.entries(s.terrain).filter(([, c]) => c.wall).map(([k]) => k));
+    for (const u of s.units.filter((x) => x.alive)) {
+      for (const p of legalMoves(s, u.iid)) expect(walls.has(`${p.x},${p.y}`)).toBe(false);
+    }
+  });
+  it("entering a hazard deals 1 damage ignoring armor", () => {
+    const s = g(); autoDeploy(s);
+    const mover = s.units.find((u) => u.owner === s.activeSide && !u.isNecromancer)!;
+    // put a hazard on an empty orthogonal neighbour and move onto it
+    const spot = legalMoves(s, mover.iid)[0];
+    s.terrain[`${spot.x},${spot.y}`] = { hazard: true };
+    const hp0 = mover.hp;
+    const r = applyAction(s, s.activeSide, { kind: "move", iid: mover.iid, to: spot });
+    expect(r.ok).toBe(true);
+    expect(mover.hp).toBe(hp0 - 1);
+    expect(terrainAt(s, spot)?.hazard).toBe(true);
   });
 });
 

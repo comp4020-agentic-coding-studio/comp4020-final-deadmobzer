@@ -37,6 +37,11 @@ export function Game({ gameId }: { gameId: string }) {
     catch (e) { setError(String(e)); }
   }, [gameId]);
 
+  const myseat = view?.role === "p0" ? 0 : view?.role === "p1" ? 1 : null;
+  const myTurn = myseat !== null && view?.state.activeSide === myseat && view?.state.phase === "playing";
+  const selectedUnit = view?.state.units.find((u) => u.iid === selected) ?? null;
+  const hoverUnit = view?.state.units.find((u) => u.iid === hover) ?? null;
+
   // initial load + live socket
   useEffect(() => {
     refetch();
@@ -74,11 +79,18 @@ export function Game({ gameId }: { gameId: string }) {
     lastLogLen.current = log.length;
   }, [view]);
 
-  const myseat = view?.role === "p0" ? 0 : view?.role === "p1" ? 1 : null;
-  const myTurn = myseat !== null && view?.state.activeSide === myseat && view?.state.phase === "playing";
-
-  const selectedUnit = view?.state.units.find((u) => u.iid === selected) ?? null;
-  const hoverUnit = view?.state.units.find((u) => u.iid === hover) ?? null;
+  // when you select your own unit on your turn, highlight where it can move
+  useEffect(() => {
+    if (!tableRef.current) return;
+    const su = view?.state.units.find((u) => u.iid === selected);
+    if (myTurn && su && su.owner === myseat) {
+      getJSON<{ tiles: { x: number; y: number }[] }>(`/api/game/${gameId}/moves?iid=${selected}`)
+        .then((r) => tableRef.current?.highlightTiles(r.tiles)).catch(() => {});
+    } else {
+      tableRef.current.highlightTiles([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, view?.state.activeSide, view?.state.round]);
 
   async function tryMove(x: number, y: number) {
     if (!myTurn || !selectedUnit || selectedUnit.owner !== myseat) return;
@@ -126,6 +138,15 @@ export function Game({ gameId }: { gameId: string }) {
           <button className="leave" onClick={() => location.assign("/play")}>
             {view.role === "spectator" ? "Stop watching" : "Leave"}
           </button>
+        </div>
+
+        <div className="hint">
+          {s.phase === "over" ? "The battle is over."
+            : view.role === "spectator" ? "You're watching. Drag to orbit the board; chat in Audience."
+            : !myTurn ? "Waiting for your opponent. Drag to orbit the board."
+            : selectedUnit && selectedUnit.owner === myseat
+              ? "Click a glowing tile to move, or pick an ability below. Click the unit again to deselect."
+              : "Your turn — click one of your units to select it (drag to orbit), then move or act. Or End turn."}
         </div>
 
         {selectedUnit && (

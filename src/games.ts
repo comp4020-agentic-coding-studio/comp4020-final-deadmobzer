@@ -1,8 +1,8 @@
 import { db } from "./db.ts";
 import { nowISO } from "./time.ts";
 import { randomBytes } from "node:crypto";
-import { applyAction, autoDeploy, createGame, viewFor, type Loadout } from "./game/engine.ts";
-import type { Action, GameState } from "./game/types.ts";
+import { applyAction, autoDeploy, createGame, viewFor, legalMoves, type Loadout } from "./game/engine.ts";
+import type { Action, GameState, Pos } from "./game/types.ts";
 import { applyRankedResult } from "./elo.ts";
 import { audit } from "./audit.ts";
 
@@ -69,6 +69,21 @@ export function gameView(id: string, userId: number | null): { role: Role; state
   if (!state) return null;
   const role = roleOf(id, userId);
   return { role, state: viewFor(state, userId) };
+}
+
+// The legal move tiles for one of a player's units — only for its owner, on their
+// turn. Returns [] otherwise (never leaks the other side's options as "yours").
+export function movesFor(id: string, userId: number, iid: string): Pos[] {
+  const row = rowFor(id);
+  if (!row) return [];
+  const role = roleOf(id, userId);
+  if (role === "spectator") return [];
+  const state = JSON.parse(row.state_json) as GameState;
+  const side: 0 | 1 = role === "p0" ? 0 : 1;
+  if (state.activeSide !== side) return [];
+  const u = state.units.find((x) => x.iid === iid);
+  if (!u || u.owner !== side) return [];
+  return legalMoves(state, iid);
 }
 
 // Apply a player's action. Rejects spectators and anyone acting for the other

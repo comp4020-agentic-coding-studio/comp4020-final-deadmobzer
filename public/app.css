@@ -45,6 +45,8 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .leave { margin-left: auto; background: #1c1c22; font-size: .8rem; padding: .3em .7em; }
 .leave:hover { background: var(--blood); }
+.hint { font-family: var(--body); font-size: .9rem; background: #1c1c22; border-left: 3px solid var(--blood);
+  padding: 8px 10px; border-radius: 3px; color: #ddd; }
 .panel { background: var(--panel); border: 1px solid #2a2a30; border-radius: 4px; padding: 10px; }
 .panel.ghost { opacity: .8; }
 .panel h3 { margin: 0 0 6px; color: var(--blood); }

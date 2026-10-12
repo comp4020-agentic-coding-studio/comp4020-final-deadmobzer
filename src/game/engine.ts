@@ -5,7 +5,7 @@
 
 import type {
   Ability, Action, Armor, DamageType, EffectOp, GameState, LogEntry, Pos,
-  SidePlayer, TokenType, Unit,
+  SidePlayer, TerrainCell, TokenType, Unit,
 } from "./types.ts";
 import { makeRng, rollD6, rollPool, type Rng } from "./prng.ts";
 import { allUnitDefs, faction, MAP_SIZE, MAX_ROUNDS } from "./data.ts";
@@ -130,31 +130,61 @@ function checkWin(s: GameState, slainUnit: Unit) {
 
 // ---------- movement ----------
 
+export function terrainAt(s: GameState, p: Pos): TerrainCell | undefined {
+  return s.terrain?.[key(p)];
+}
+function isWall(s: GameState, p: Pos): boolean {
+  return !!terrainAt(s, p)?.wall;
+}
+// A unit has cover if it is on, or orthogonally beside, a wall or elevated space.
+function inCover(s: GameState, p: Pos): boolean {
+  const here = terrainAt(s, p);
+  if (here?.elevated || here?.wall) return true;
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    const t = terrainAt(s, { x: p.x + dx, y: p.y + dy });
+    if (t?.wall || t?.elevated) return true;
+  }
+  return false;
+}
+
 function blocked(s: GameState, p: Pos, mover: Unit): boolean {
+  if (isWall(s, p)) return true;                   // walls obstruct
   const u = unitAt(s, p);
   if (!u) return false;
   // can pass through allies (but not end there — enforced by caller), blocked by foes
   return u.owner !== mover.owner;
 }
 
-// Orthogonal BFS up to `budget` spaces; returns reachable empty cells.
+// Cost to step from `cur` into `np`: 1, +1 to enter elevated (unless stairs),
+// +1 to exit an adverse cell (rulebook pg. 19).
+function stepCost(s: GameState, cur: Pos, np: Pos): number {
+  let c = 1;
+  const to = terrainAt(s, np);
+  if (to?.elevated && !to?.stairs) c += 1;
+  if (terrainAt(s, cur)?.adverse) c += 1;
+  return c;
+}
+
+// Cost-aware orthogonal search up to `budget` movement points; returns the empty
+// cells a unit can legally end on, honouring walls, foes, elevation and adverse.
 export function reachable(s: GameState, u: Unit, budget: number): Pos[] {
   const start = u.pos;
-  const seen = new Map<string, number>([[key(start), 0]]);
+  const best = new Map<string, number>([[key(start), 0]]);
   const q: Pos[] = [start];
   const out: Pos[] = [];
   const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   while (q.length) {
     const cur = q.shift()!;
-    const d = seen.get(key(cur))!;
-    if (d >= budget) continue;
+    const d = best.get(key(cur))!;
     for (const [dx, dy] of dirs) {
       const np = { x: cur.x + dx, y: cur.y + dy };
-      if (!inBounds(np) || seen.has(key(np))) continue;
-      if (blocked(s, np, u)) continue;            // foe/wall blocks path
-      seen.set(key(np), d + 1);
+      if (!inBounds(np) || blocked(s, np, u)) continue;
+      const nd = d + stepCost(s, cur, np);
+      if (nd > budget) continue;
+      if (best.has(key(np)) && best.get(key(np))! <= nd) continue;
+      best.set(key(np), nd);
       q.push(np);
-      if (!unitAt(s, np)) out.push(np);            // can't END on an ally
+      if (!unitAt(s, np) && !out.some((p) => p.x === np.x && p.y === np.y)) out.push(np);
     }
   }
   return out;
@@ -165,6 +195,13 @@ function moveBudget(u: Unit): number {
   let b = u.mv;
   if (tok(u, "speed") > 0) b += 2;
   return b;
+}
+
+// The tiles a unit may legally move to right now (for the client to highlight).
+export function legalMoves(s: GameState, iid: string): Pos[] {
+  const u = unit(s, iid);
+  if (!u || !u.alive || u.activatedThisRound || s.phase !== "playing") return [];
+  return reachable(s, u, moveBudget(u));
 }
 
 // ---------- attack ----------
@@ -211,7 +248,16 @@ function resolveOp(ctx: Ctx, op: EffectOp) {
   const { s, actor } = ctx;
   switch (op.op) {
     case "attack": {
-      const pool = dicePool(s, actor);
+      let pool = dicePool(s, actor);
+      const t = ctx.target;
+      if (t) {
+        const ranged = !adjacent(actor.pos, t.pos);            // ranged ⇒ cover applies
+        if (ranged && inCover(s, t.pos)) pool -= 1;            // -1D vs a covered target
+        const aEl = !!terrainAt(s, actor.pos)?.elevated;
+        const tEl = !!terrainAt(s, t.pos)?.elevated;
+        if (aEl && !tEl) pool += 1;                             // high ground: +1D
+        if (tEl && !aEl) pool -= 1;                             // shooting uphill: -1D
+      }
       const { value, dice } = rollPool(s.rng, pool);
       ctx.lastRoll = value;
       const tgt = ctx.target;
@@ -346,6 +392,32 @@ function makeUnit(owner: 0 | 1, house: string, defId: string): Unit {
   };
 }
 
+// Generate battlefield terrain in the middle rows (never the deploy zones), the
+// scenario-style mix the rulebook recommends: a couple of walls, an elevated
+// plateau reached by stairs, a hazard patch, and some adverse terrain. Seeded, so
+// it's part of the authoritative, persisted state.
+function generateTerrain(s: GameState): void {
+  const n = s.mapSize;
+  const lo = 2, hi = n - 3;                     // middle band, clear of deploy rows
+  const set = (x: number, y: number, c: TerrainCell) => {
+    if (x < 0 || y < 0 || x >= n || y >= n) return;
+    s.terrain[key({ x, y })] = { ...s.terrain[key({ x, y })], ...c };
+  };
+  const pick = () => ({ x: lo + Math.floor(rollD6(s.rng) / 6 * (hi - lo + 1)) % (hi - lo + 1),
+                        y: lo + Math.floor(rollD6(s.rng) / 6 * (hi - lo + 1)) % (hi - lo + 1) });
+  // a 2x2 elevated plateau with a stair tile
+  const p = pick();
+  set(p.x, p.y, { elevated: true }); set(p.x + 1, p.y, { elevated: true });
+  set(p.x, p.y + 1, { elevated: true, stairs: true }); set(p.x + 1, p.y + 1, { elevated: true });
+  // a short wall line (cover + LoS block)
+  const w = pick();
+  for (let i = 0; i < 2 + (rollD6(s.rng) % 2); i++) set(w.x + i, w.y, { wall: { hp: 2 } });
+  // a hazard patch
+  const h = pick(); set(h.x, h.y, { hazard: true }); set(h.x + 1, h.y, { hazard: true });
+  // adverse terrain
+  const a = pick(); set(a.x, a.y, { adverse: true }); set(a.x, a.y + 1, { adverse: true });
+}
+
 // Create a game from two loadouts. `seed` makes dice deterministic; `firstSide`
 // is the initiative winner (rolled by the caller/lobby).
 export function createGame(a: Loadout, b: Loadout, seed: number, firstSide: 0 | 1 = 0): GameState {
@@ -362,10 +434,12 @@ export function createGame(a: Loadout, b: Loadout, seed: number, firstSide: 0 | 
     activeSide: firstSide, firstSide,
     players,
     units: [...mk(a, 0), ...mk(b, 1)],
+    terrain: {},
     rng: makeRng(seed),
     log: [{ round: 1, side: null, actor: "system", text: "The battle begins. Deploy your Black Mass." }],
     winner: null, soulUsedThisTurn: false,
   };
+  generateTerrain(s);
   return s;
 }
 
@@ -451,6 +525,11 @@ export function applyAction(s: GameState, side: 0 | 1, action: Action): ApplyRes
       if (tok(u, "slow") > 0) spendToken(u, "slow");
       if (tok(u, "speed") > 0) spendToken(u, "speed");
       log(s, { side, actor: u.name, text: `${u.name} moves to (${action.to.x},${action.to.y}).` });
+      // entering a hazard deals 1 damage, ignoring armor
+      if (terrainAt(s, u.pos)?.hazard) {
+        const dealt = dealDamage(s, u, 1, "physical", { pierce: true });
+        if (dealt) log(s, { side: null, actor: u.name, text: `${u.name} takes ${dealt} from a hazard.` });
+      }
       u.activatedThisRound = true;
       endTurn(s);
       return { ok: true, state: s };

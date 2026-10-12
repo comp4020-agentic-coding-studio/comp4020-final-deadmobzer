@@ -11,10 +11,14 @@ export interface TableUnit {
   pos: { x: number; y: number };
   hp: number; maxHp: number; alive: boolean; isNecromancer: boolean;
 }
+export interface TerrainCell {
+  wall?: { hp: number }; elevated?: boolean; hazard?: boolean; adverse?: boolean; stairs?: boolean;
+}
 export interface TableState {
   mapSize: number;
   units: TableUnit[];
   players: { colour: string }[];
+  terrain?: Record<string, TerrainCell>;
 }
 export interface TableHandlers {
   onPickTile?: (x: number, y: number) => void;
@@ -72,6 +76,7 @@ export class Table {
 
     this.buildLights();
     this.buildBoard();
+    this.buildTerrain(state);
     this.sync(state);
 
     this.renderer.domElement.addEventListener("click", this.onClick);
@@ -118,6 +123,38 @@ export class Table {
         tile.userData = { x, y };
         this.scene.add(tile);
         this.tileMeshes.push(tile);
+      }
+    }
+  }
+
+  private buildTerrain(state: TableState): void {
+    const t = state.terrain ?? {};
+    for (const [k, cell] of Object.entries(t)) {
+      const [x, y] = k.split(",").map(Number);
+      if (cell.elevated) {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.5, 0.96),
+          new THREE.MeshStandardMaterial({ color: 0x3a3a44, roughness: 0.7, metalness: 0.2 }));
+        m.position.set(x, 0.3, y); m.castShadow = true; m.receiveShadow = true; this.scene.add(m);
+      }
+      if (cell.stairs) {
+        const ramp = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.9),
+          new THREE.MeshStandardMaterial({ color: 0x5a5a66, roughness: 0.8 }));
+        ramp.position.set(x, 0.42, y); ramp.rotation.x = 0.25; this.scene.add(ramp);
+      }
+      if (cell.wall) {
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.3, 0.9),
+          new THREE.MeshStandardMaterial({ color: 0x0e0e12, roughness: 0.6, metalness: 0.3 }));
+        wall.position.set(x, 0.65, y); wall.castShadow = true; wall.receiveShadow = true; this.scene.add(wall);
+      }
+      if (cell.hazard) {
+        const haz = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.05, 0.96),
+          new THREE.MeshStandardMaterial({ color: 0xf00000, emissive: 0xf00000, emissiveIntensity: 0.7, roughness: 0.4 }));
+        haz.position.set(x, 0.14, y); this.scene.add(haz);
+      }
+      if (cell.adverse) {
+        const mud = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.05, 0.96),
+          new THREE.MeshStandardMaterial({ color: 0x2b2416, roughness: 1, transparent: true, opacity: 0.85 }));
+        mud.position.set(x, 0.14, y); this.scene.add(mud);
       }
     }
   }
