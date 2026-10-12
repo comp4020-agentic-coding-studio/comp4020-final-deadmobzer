@@ -28,7 +28,9 @@ ENV NODE_ENV=production
 ENV DATA_DIR=/data
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY public ./public
+# public/ carries the committed static assets AND the client bundle that
+# `pnpm build` writes to public/app.js, so it comes from the build stage.
+COPY --from=build /app/public ./public
 COPY package.json README.md ./
 EXPOSE 8080
 CMD ["node", "dist/server.js"]

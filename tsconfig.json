@@ -5,6 +5,9 @@
     "target": "ES2023",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    // The view layer is React (src/ui, src/client); the automatic runtime means
+    // components don't need to import React themselves.
+    "jsx": "react-jsx",
     // Imports name the file they mean, extension and all --- which is what
     // node itself wants when it runs a .ts file directly.
     "allowImportingTsExtensions": true,

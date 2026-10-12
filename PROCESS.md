@@ -82,6 +82,33 @@ rather than trusting that the happy path worked, and fixed it. The privacy, seal
 and real-time promises are now pinned by checks in `spec/` so they can't quietly
 break later.
 
+## The crit-10 redesign: Material UI
+
+<!-- DRAFT — factual record of the change, put it in your own voice before you
+     submit. Note it reverses the "avoid front-end JavaScript" stance in "The
+     stack" above; say why that trade felt worth it (or didn't). -->
+
+For crit 10 I reworked the whole look with Material UI: the top bar is gone,
+navigation moved to a floating bottom bar, the content fills the screen in plain
+white or black, and a corner button toggles dark mode. That meant taking on a
+real front-end stack — React, MUI and Emotion — which is the opposite of the
+"avoid front-end JavaScript" decision I made at the start.
+
+The thing that kept it honest was the spec. My checks in `spec/` read the HTML
+the server sends, with no browser, so a client-only app would have quietly broken
+privacy and the published invariants — half the mark. So the app **server-renders**
+every page with MUI (`src/ui/render.tsx`) and the browser only hydrates on top for
+the instant view-switching, live friends list and theme toggle (`src/client`).
+The spec stayed green the whole way through, which is how I knew the redesign
+hadn't moved the contract. The costs I took on: a ~480 KB client bundle and more
+moving parts on the 256 MB machine (I avoided `@mui/icons-material` to keep it
+down). The access-control check I added this week (`spec/access.test.ts`) I
+rewrote to assert via status codes and `/api/state` rather than scraping markup,
+so it survives the new UI.
+
+<!-- EXPAND: server-side logging (the crit-10 spec line) is still unbuilt — note
+     it here once it's in, with the commit. -->
+
 ## What's next
 
 <!-- EXPAND for the final submission: what you'd change before the deadline. -->

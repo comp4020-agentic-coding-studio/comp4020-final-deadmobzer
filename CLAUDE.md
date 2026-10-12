@@ -37,9 +37,19 @@ wrong — fix it.
 - Schema changes are additive and idempotent (`CREATE TABLE IF NOT EXISTS` /
   `ALTER` guards), because the app must boot from an empty volume (CI runs it
   with a throwaway `/data`).
-- Keep the stack small: no frontend framework/build, no second service beside the
-  app. If a dependency is added, it must compile in the `Dockerfile` and fit the
-  256 MB machine.
+- The view layer is **React + Material UI, server-rendered** (`src/ui`, hydrated
+  by `src/client`). This is a deliberate reversal of the earlier "no frontend
+  framework" rule, made for crit 10's redesign (Material UI, a floating bottom
+  nav, full-screen light/dark). Two hard constraints make it safe rather than
+  reckless, and must hold:
+  - **Every GET route server-renders its full HTML.** The spec checks the raw
+    HTML the server sends (it runs no JS), so a client-only SPA would break the
+    shipped privacy/invariants checks. SSR lives in `src/ui/render.tsx`; the
+    client only hydrates and enhances (instant nav, live social, theme toggle).
+  - It must still **compile in the `Dockerfile` and fit the 256 MB machine**. No
+    second service beside the app. The client bundle is built by
+    `scripts/build.mjs` into `public/app.js` (gitignored); keep it lean (no
+    `@mui/icons-material`).
 
 ## When the agent gets it wrong
 

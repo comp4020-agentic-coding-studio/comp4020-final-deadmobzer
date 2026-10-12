@@ -1,4 +1,4 @@
-import { createServer } from "node:http";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { db } from "./db.ts";
@@ -28,7 +28,7 @@ import {
   notesFromYesterday,
   writeEntry,
 } from "./entries.ts";
-import { renderReadme } from "./readme.ts";
+import { readmeBodyHtml } from "./readme.ts";
 import { handleUpgrade, isOnline, sendTo } from "./realtime.ts";
 import {
   clearSessionCookie,
@@ -38,18 +38,18 @@ import {
   redirect,
   setSessionCookie,
 } from "./http.ts";
-import {
-  calendarPage,
-  dayPage,
-  homePage,
-  landingPage,
-} from "./views.ts";
+import { renderDocument } from "./ui/render.tsx";
+import type { Mode, PageData } from "./ui/types.ts";
 import { TZ, today } from "./time.ts";
 
 const PORT = Number(process.env.PORT ?? 8080);
 
 function currentUser(req: { headers: { cookie?: string } }): User | null {
   return userForToken(readCookie(req.headers.cookie, "sid"));
+}
+
+function themeMode(req: { headers: { cookie?: string } }): Mode {
+  return readCookie(req.headers.cookie, "theme") === "dark" ? "dark" : "light";
 }
 
 function friendsWithPresence(userId: number) {
@@ -64,6 +64,26 @@ function todayLabel(): string {
     day: "numeric",
     month: "long",
   }).format(new Date(Date.UTC(y, m - 1, d, 2)));
+}
+
+// A GET view: the hydrated client asks for just the route's data (x-data header),
+// everyone else gets the full server-rendered document.
+function sendPage(
+  req: IncomingMessage,
+  res: ServerResponse,
+  user: User | null,
+  mode: Mode,
+  page: PageData,
+): void {
+  if (req.headers["x-data"]) {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return void res.end(JSON.stringify({ mode, page }));
+  }
+  return void html(res, renderDocument({ user, mode, page }));
+}
+
+function landingHtml(mode: Mode, error?: string): string {
+  return renderDocument({ user: null, mode, page: { route: "landing", error } });
 }
 
 const MIME: Record<string, string> = {
@@ -90,12 +110,13 @@ const server = createServer(async (req, res) => {
       }
     }
 
-    // --- README, published in full (required by the brief/spec) ---
-    if (method === "GET" && (path === "/readme" || path === "/readme/")) {
-      return void html(res, renderReadme());
-    }
-
     const user = currentUser(req);
+    const mode = themeMode(req);
+
+    // --- README, published in full (required by the brief/spec), open to all ---
+    if (method === "GET" && (path === "/readme" || path === "/readme/")) {
+      return void sendPage(req, res, user, mode, { route: "about", html: readmeBodyHtml() });
+    }
 
     // --- auth routes (open) ---
     if (path === "/login" && method === "POST") {
@@ -105,7 +126,7 @@ const server = createServer(async (req, res) => {
         setSessionCookie(res, createSession(u.id));
         return void redirect(res, "/");
       } catch (e) {
-        return void html(res, landingPage(e instanceof AuthError ? e.message : "Sign in failed."), 401);
+        return void html(res, landingHtml(mode, e instanceof AuthError ? e.message : "Sign in failed."), 401);
       }
     }
     if (path === "/signup" && method === "POST") {
@@ -119,7 +140,7 @@ const server = createServer(async (req, res) => {
         setSessionCookie(res, createSession(u.id));
         return void redirect(res, "/");
       } catch (e) {
-        return void html(res, landingPage(e instanceof AuthError ? e.message : "Sign up failed."), 400);
+        return void html(res, landingHtml(mode, e instanceof AuthError ? e.message : "Sign up failed."), 400);
       }
     }
     if (path === "/logout" && method === "POST") {
@@ -130,25 +151,20 @@ const server = createServer(async (req, res) => {
 
     // --- everything below needs a session ---
     if (!user) {
-      if (path === "/" && method === "GET") return void html(res, landingPage());
+      if (path === "/" && method === "GET") return void html(res, landingHtml(mode));
       return void redirect(res, "/");
     }
 
     if (path === "/" && method === "GET") {
-      const task = taskFor(user.id);
-      return void html(
-        res,
-        homePage({
-          user,
-          task,
-          mine: myEntriesToday(user.id),
-          yesterday: notesFromYesterday(user.id),
-          friends: friendsWithPresence(user.id),
-          incoming: incomingRequests(user.id),
-          todayLabel: todayLabel(),
-          flash: url.searchParams.get("msg") ?? undefined,
-        }),
-      );
+      const mine = myEntriesToday(user.id);
+      return void sendPage(req, res, user, mode, {
+        route: "today",
+        task: taskFor(user.id),
+        mine: { self: mine.self, friend: mine.friend },
+        yesterday: notesFromYesterday(user.id),
+        todayLabel: todayLabel(),
+        flash: url.searchParams.get("msg") ?? undefined,
+      });
     }
 
     if (path === "/api/state" && method === "GET") {
@@ -172,14 +188,23 @@ const server = createServer(async (req, res) => {
       }
     }
 
+    if (path === "/friends" && method === "GET") {
+      return void sendPage(req, res, user, mode, {
+        route: "friends",
+        friends: friendsWithPresence(user.id),
+        incoming: incomingRequests(user.id),
+        flash: url.searchParams.get("msg") ?? undefined,
+      });
+    }
+
     if (path === "/friends/request" && method === "POST") {
       const form = await readFormBody(req);
       try {
         const to = sendRequest(user, form.get("username") ?? "");
         sendTo(to.id, { type: "friend_request", from: user.display_name });
-        return void redirect(res, "/?msg=" + encodeURIComponent("Request sent."));
+        return void redirect(res, "/friends?msg=" + encodeURIComponent("Request sent."));
       } catch (e) {
-        return void redirect(res, "/?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not send."));
+        return void redirect(res, "/friends?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not send."));
       }
     }
     if (path === "/friends/accept" && method === "POST") {
@@ -187,9 +212,9 @@ const server = createServer(async (req, res) => {
       try {
         const other = acceptRequest(user.id, Number(form.get("friendship_id")));
         sendTo(other.id, { type: "friend_accepted", by: user.display_name });
-        return void redirect(res, "/?msg=" + encodeURIComponent("You're now friends."));
+        return void redirect(res, "/friends?msg=" + encodeURIComponent("You're now friends."));
       } catch (e) {
-        return void redirect(res, "/?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not accept."));
+        return void redirect(res, "/friends?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not accept."));
       }
     }
     if (path === "/friends/decline" && method === "POST") {
@@ -199,16 +224,22 @@ const server = createServer(async (req, res) => {
       } catch {
         // ignore — the request was already gone
       }
-      return void redirect(res, "/");
+      return void redirect(res, "/friends");
     }
 
     if (path === "/calendar" && method === "GET") {
-      return void html(res, calendarPage(user, calendar(user.id)));
+      return void sendPage(req, res, user, mode, { route: "calendar", days: calendar(user.id) });
     }
     if (path === "/day" && method === "GET") {
       const day = url.searchParams.get("d") ?? "";
       if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return void redirect(res, "/calendar");
-      return void html(res, dayPage(user, day, dayDetail(user.id, day)));
+      const detail = dayDetail(user.id, day);
+      return void sendPage(req, res, user, mode, {
+        route: "day",
+        day,
+        self: detail.self,
+        notes: detail.notes,
+      });
     }
 
     res.writeHead(404, { "Content-Type": "text/plain" });
