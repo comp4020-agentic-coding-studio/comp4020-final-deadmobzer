@@ -5,6 +5,10 @@
 node_modules
 dist
 *.log
+
+# The raw rulebook PDFs / art zips (~227 MB). We ship only the extracted assets
+# under public/art and data/; never upload the source dump to the builder.
+Magnagothica Maleghast/
 .env
 .env.*
 .envrc
