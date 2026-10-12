@@ -24,6 +24,11 @@ interface GameView {
 export function Game({ gameId }: { gameId: string }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<Table | null>(null);
+  const handlersRef = useRef({
+    pickUnit: (_iid: string) => {},
+    pickTile: (_x: number, _y: number) => {},
+    hoverUnit: (_iid: string | null) => {},
+  });
   const [view, setView] = useState<GameView | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
@@ -48,13 +53,15 @@ export function Game({ gameId }: { gameId: string }) {
     return () => ws.close();
   }, [gameId, refetch]);
 
-  // mount the 3D table once
+  // mount the 3D table once. Its click handlers route through handlersRef, which
+  // is refreshed every render — otherwise they'd capture the first render's stale
+  // tryMove/selection and clicking a tile would do nothing.
   useEffect(() => {
     if (!mountRef.current || tableRef.current || !view) return;
     tableRef.current = new Table(mountRef.current, view.state, {
-      onPickUnit: (iid) => setSelected((cur) => (cur === iid ? null : iid)),
-      onPickTile: (x, y) => tryMove(x, y),
-      onHoverUnit: (iid) => setHover(iid),
+      onPickUnit: (iid) => handlersRef.current.pickUnit(iid),
+      onPickTile: (x, y) => handlersRef.current.pickTile(x, y),
+      onHoverUnit: (iid) => handlersRef.current.hoverUnit(iid),
     });
     return () => { tableRef.current?.dispose(); tableRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,6 +126,11 @@ export function Game({ gameId }: { gameId: string }) {
     try { await postJSON(`/api/game/${gameId}/chat`, { channel, body }); refetch(); }
     catch (e) { setError(String(e)); }
   }
+
+  // Refresh the handlers the 3D table calls, so clicks always use current state.
+  handlersRef.current.pickUnit = (iid) => setSelected((cur) => (cur === iid ? null : iid));
+  handlersRef.current.pickTile = (x, y) => tryMove(x, y);
+  handlersRef.current.hoverUnit = (iid) => setHover(iid);
 
   if (!view) return <div className="pad">{error ?? "Loading the table…"}</div>;
   const s = view.state;
