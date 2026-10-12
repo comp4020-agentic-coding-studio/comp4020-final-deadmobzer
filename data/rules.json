@@ -1,0 +1,105 @@
+{
+  "_source": "Magnagothica Maleghast rulebook (data/raw/, pages 8-22). Faithful subset for the digital 1v1 Duel.",
+  "mode": {
+    "name": "Duel",
+    "players": 2,
+    "mapSize": 8,
+    "unitSlots": 5,
+    "deployFromEdgeSpaces": 2,
+    "maxRounds": 6,
+    "drawAfterMaxRounds": true
+  },
+  "victory": "A side loses the instant its necromancer is slain. Otherwise a draw if round 6 ends with both necromancers alive.",
+  "initiative": "Each side rolls 1d6 (re-roll ties); winner chooses who acts first and deploys first.",
+  "turn": {
+    "activation": "alternating",
+    "perRound": "Each unit activates exactly once per round. On its turn a unit may MOVE and ACT in any order, or forgo ACT to MOVE twice. A round ends once all units have activated; the next round starts with the side that did not act last.",
+    "oneActPerTurn": true
+  },
+  "move": {
+    "orthogonalOnly": true,
+    "throughAllies": true,
+    "endOnAllyForbidden": true,
+    "blockedBy": ["enemy", "wall"],
+    "elevationEnterCost": 1,
+    "minOneSpace": true
+  },
+  "rolls": {
+    "die": "d6",
+    "takeHighest": true,
+    "dicePool": "Base 1 die. +XD / -XD adjust the pool; roll all, take the highest. If the pool would drop to 0 or below, roll 2 dice and take the LOWEST.",
+    "zeroPoolRollsTwoTakesLowest": true
+  },
+  "attack": {
+    "hit": "Final attack roll >= target DF scores a hit (hit damage + on-hit effects).",
+    "graze": "Below DF is a graze: deals 1 damage, inherits the damage type only (no armor-ignore, no effect die).",
+    "melee": "Melee attacks only target adjacent units.",
+    "ranged": "Ranged abilities have a minimum range (often cannot hit adjacent) and take -1D against targets in cover."
+  },
+  "effectDie": "Effects written effect (X+) trigger on a roll of X or higher. Only one effect die per ability, regardless of how many effects attach.",
+  "damageTypes": {
+    "physical": "Default. Reduced by PHYS and SUPER armor.",
+    "magical": "toxic, fire, curse, holy. Reduced by MAG and SUPER armor.",
+    "devil": "Its own category. Cannot be reduced, increased, or ignored. A unit reduced to 0 HP by devil damage is obliterated (no corpse, no SOUL, no on-slain triggers)."
+  },
+  "armor": {
+    "PHYS": "-1 to physical damage",
+    "MAG": "-1 to magical (toxic/fire/curse/holy) damage",
+    "SUPER": "-1 to all damage",
+    "noStack": true,
+    "pierce": "Piercing damage ignores armor (keeps its type)."
+  },
+  "tokens": {
+    "strength": "+1 damage; discard one after dealing damage.",
+    "weak": "-1 damage; discard one after dealing damage.",
+    "vitality": "-1 damage taken; discard one after taking damage.",
+    "vulnerable": "+1 damage taken; discard one after taking damage.",
+    "slow": "MOVE a max of 1 space; discard one after MOVEing.",
+    "speed": "MOVE +2 spaces; discard one after MOVEing.",
+    "cancels": [["strength", "weak"], ["vitality", "vulnerable"], ["slow", "speed"]],
+    "staticWhileHeld": "A token's effect applies as long as you hold at least one; multiples do not stack the effect, they just last longer. Spending is mandatory when the condition triggers."
+  },
+  "terrain": {
+    "wall": "Blocks line of sight, gives cover, obstructs. 2 HP, auto-hit when attacked, immune to effects.",
+    "elevated": "+1 to enter from ground. Gives cover to lower units. Elevated->lower attacks +1D; lower->elevated attacks -1D. Cannot be pushed/pulled up; can be pushed/pulled down.",
+    "hazard": "Starting a turn in, or entering, a hazard deals 1 damage ignoring armor.",
+    "adverse": "Costs +1 to exit.",
+    "stack": true
+  },
+  "cover": "Taking cover grants -1D to ranged attacks against you from past the cover line.",
+  "lineOfSight": "Corner-to-corner; blocked if the line touches a wall (even its edge/corner).",
+  "adjacency": "Within 1 space including diagonally.",
+  "soul": {
+    "gather": "Necromancers gain +1 SOUL at the start of each round from round 2. Max 6.",
+    "harvest": "+1 SOUL the first time any of your units is slain (not obliterated).",
+    "consume": "Spend SOUL for SOUL abilities; they do not use the ACT slot. One SOUL ability per unit turn.",
+    "max": 6
+  },
+  "bodyBlock": "If the necromancer is the primary target of a foe's ability and is adjacent to a minion, it may redirect the ability to that minion.",
+  "necromancer": "A unit like any other, but if slain you lose. Gets a base stat card + 1 trait, 1 ACT, 2 SOUL, with one extra choice each.",
+  "unitTypes": {
+    "thrall": { "slotCost": 0.5, "note": "2 per unit slot; may activate two at a time.", "limit": null },
+    "scion": { "slotCost": 1, "limit": 3 },
+    "freak": { "slotCost": 1, "limit": 2 },
+    "horror": { "slotCost": 1, "limit": 2 },
+    "hunter": { "slotCost": 1, "limit": 2 },
+    "tyrant": { "slotCost": 1, "limit": 1, "footprint": "2x2", "note": "Large: ignores elevation, affected by terrain once, can smash walls." }
+  },
+  "malice": {
+    "_note": "Dark-power budget for the Faithful loadout mode. Spend 1 at a time to upgrade a unit type (one upgrade per type, except Ultrahell) or gain a necromancer ACT/SOUL ability.",
+    "levels": [
+      { "name": "Spite", "darkPower": 0 },
+      { "name": "Loathing", "darkPower": 4 },
+      { "name": "Hatred", "darkPower": 7 },
+      { "name": "Hell", "darkPower": 10 },
+      { "name": "Ultrahell", "darkPower": 12, "note": "Units may choose two upgrades." }
+    ],
+    "recommendedDefault": "Loathing"
+  },
+  "playerPalette16": [
+    "#e6194b", "#3cb44b", "#ffe119", "#4363d8",
+    "#f58231", "#911eb4", "#42d4f4", "#f032e6",
+    "#bfef45", "#fabed4", "#469990", "#dcbeff",
+    "#9a6324", "#800000", "#808000", "#000075"
+  ]
+}

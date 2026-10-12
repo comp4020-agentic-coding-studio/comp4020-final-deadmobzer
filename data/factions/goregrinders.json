@@ -1,0 +1,159 @@
+{
+  "id": "goregrinders",
+  "name": "Goregrinders",
+  "blurb": "Brutal, ferocious necro-warriors and speed freaks who pay tithe to the Corpse Piler, a colossal devil squatting over the machine forges. They fuse their flesh with black-metal blades, devil-blood injectors and infernal engines — wielding unbelievable power while always teetering on the brink of igniting in their own blaze.",
+  "playstyle": "Aggressive melee.",
+  "accent": "#f07818",
+  "specialMechanic": { "name": "Blood Rage", "text": "If a unit with this trait is reduced to 0 HP, it is not slain but gains 1 strength and remains at 0 HP. If it takes any further damage at 0 HP, it is slain as normal." },
+  "specialTags": {
+    "Berserk": "After a berserk unit ACTs, it splashes (self) 1 damage, then discards a berserk token. If it damages no other character, it deals 1 to itself ignoring armor. Counts as both positive and negative.",
+    "Retaliation": "After any ability that damages this unit resolves, this unit deals 1 damage back to the ability's owner, even if slain.",
+    "Curseproof": "Immune to damage and effects from enemy curses."
+  },
+  "necromancer": {
+    "id": "warlord", "name": "Warlord", "type": "necromancer",
+    "mv": 4, "hp": 10, "df": 3, "arm": null,
+    "art": "units/goregrinders/warlord.png",
+    "traits": [
+      { "name": "Blood Rage", "text": "At 0 HP, not slain: gain 1 strength and stay at 0; further damage slays." },
+      { "name": "Fueled by Rage", "text": "Gain 1 berserk token at the start of your turn. You may spend berserk tokens as speed and vice versa." }
+    ],
+    "acts": [
+      { "name": "Superheated Chainblade", "tags": ["attack", "melee"], "range": "melee",
+        "text": "On hit: 1 damage and (4+): 1 fire damage again, (6+): 1 fire damage again.",
+        "effect": [
+          { "op": "attack", "damage": 1, "damageType": "physical" },
+          { "op": "effectDie", "threshold": 4, "then": [ { "op": "damage", "damage": 1, "damageType": "fire", "target": "hit" } ] }
+        ] }
+    ],
+    "souls": [
+      { "name": "Ignite", "soul": 1, "tags": ["ranged"], "range": [1, 3], "text": "Own or allied turn. Deal 1 piercing fire damage to self or a unit in range (cannot slay). Unit gains 1 berserk and 1 speed." },
+      { "name": "Glory Kill", "soul": 3, "tags": ["self"], "text": "Own or allied turn. Obliterate an adjacent unit at 1 HP or lower. Gain 2 strength, then step 2." }
+    ],
+    "bonusTraits": ["Nerve Twitch", "Blood Drinker", "Blood Rush"],
+    "actPool": ["Quench", "Frenzy Chain", "Furious Roar", "Apoplexy", "Pilebunker", "Saw-Toothed Slayer Axe", "Spine Devil Blade"],
+    "soulPool": ["Hellrider Kick (1)", "Overclock (1)", "Gorebather (2)", "Killing Spree (3)", "Blood Boil (4)", "Devil Impact (6)"]
+  },
+  "units": [
+    {
+      "id": "warhead", "name": "Warhead", "type": "thrall",
+      "mv": 4, "hp": 1, "df": 3, "arm": null,
+      "art": "units/goregrinders/warhead.png",
+      "traits": [
+        { "name": "Blood Rage", "text": "At 0 HP, not slain: gain 1 strength and stay at 0; further damage slays." },
+        { "name": "Thrall", "text": "2 of these units are worth 1 unit slot. Can be activated two at a time." }
+      ],
+      "acts": [
+        { "name": "Charge", "tags": ["self"], "range": "self",
+          "text": "MOVE as far as possible in a straight line, passing through units. Units passed through take 1 damage.",
+          "effect": [ { "op": "chargeLine", "damage": 1, "damageType": "physical" } ] },
+        { "name": "Cleave", "tags": ["melee", "attack"], "range": "melee",
+          "text": "On hit: 1 damage and 1 damage to another adjacent unit.",
+          "effect": [
+            { "op": "attack", "damage": 1, "damageType": "physical" },
+            { "op": "onHit", "then": [ { "op": "damage", "damage": 1, "damageType": "physical", "target": "otherAdjacent" } ] }
+          ] }
+      ],
+      "upgrades": [
+        { "name": "Bladed", "text": "Charge has a (5+) chance to grant retaliation until the start of its next turn." },
+        { "name": "Overclocked", "text": "At 1 HP or lower, gain free movement." },
+        { "name": "Lobotomized", "text": "Gain Curseproof." }
+      ]
+    },
+    {
+      "id": "painghoul", "name": "Pain Ghoul", "type": "freak",
+      "mv": 4, "hp": 4, "df": 3, "arm": null,
+      "art": "units/goregrinders/painghoul.png",
+      "traits": [ { "name": "Blood Rage", "text": "At 0 HP, not slain: gain 1 strength and stay at 0; further damage slays." } ],
+      "acts": [
+        { "name": "Pain Frenzy", "tags": ["curse", "ranged"], "range": [1, 3],
+          "text": "Unit gains 2 berserk or 2 speed.", "effect": [ { "op": "token", "token": "speed", "n": 2, "target": "ally" } ] },
+        { "name": "Cauterize", "tags": ["curse", "ranged"], "range": [1, 3],
+          "text": "Clear all negative tokens on self or a unit, then deal 1 piercing fire damage to them. This damage can't slay a unit.",
+          "effect": [ { "op": "clearNegativeTokens", "target": "ally" }, { "op": "damage", "damage": 1, "damageType": "fire", "pierce": true, "cannotSlay": true, "target": "ally" } ] },
+        { "name": "Meat Hook", "tags": ["pull", "ranged"], "range": [2, 3],
+          "text": "Pull unit 3.", "effect": [ { "op": "pull", "n": 3, "target": "choose" } ] }
+      ],
+      "upgrades": [
+        { "name": "Stim Haze", "text": "At 1 HP or lower, self and adjacent allies become curseproof." },
+        { "name": "Frenzy Hook", "text": "At 1 HP or lower, Meat Hook can pull up to three units." },
+        { "name": "Adrenalize", "text": "Allies gain 1 speed per negative token removed from Cauterize." }
+      ]
+    },
+    {
+      "id": "carnifex", "name": "Carnifex", "type": "scion",
+      "mv": 4, "hp": 4, "df": 3, "arm": null,
+      "art": "units/goregrinders/carnifex.png",
+      "traits": [ { "name": "Blood Rage", "text": "At 0 HP, not slain: gain 1 strength and stay at 0; further damage slays." } ],
+      "acts": [
+        { "name": "Rev", "tags": ["self"], "range": "self",
+          "text": "Gain 1 strength and speed, (4+) and retaliation until the start of this unit's next turn.",
+          "effect": [ { "op": "token", "token": "strength", "n": 1, "target": "self" }, { "op": "token", "token": "speed", "n": 1, "target": "self" } ] },
+        { "name": "Chainsaw", "tags": ["melee", "attack"], "range": "melee",
+          "text": "On hit: 1 damage, and (4+): 1 damage again, (6+): 1 damage again.",
+          "effect": [
+            { "op": "attack", "damage": 1, "damageType": "physical" },
+            { "op": "effectDie", "threshold": 4, "then": [ { "op": "damage", "damage": 1, "damageType": "physical", "target": "hit" } ] }
+          ] },
+        { "name": "Wild Slashes", "tags": ["self"], "range": "self",
+          "text": "MOVE as far as possible in a straight line. Then, all units adjacent to any space of this MOVE take 1 fire damage." }
+      ],
+      "upgrades": [
+        { "name": "Heavy Swing", "text": "May step 1 before and after using Chainsaw." },
+        { "name": "Rile", "text": "Rev grants one (5+) or two berserk." },
+        { "name": "Machineheart", "text": "At 1 HP or lower, gains super armor." }
+      ]
+    },
+    {
+      "id": "painwheel", "name": "Pain Wheel", "type": "horror",
+      "mv": 5, "hp": 4, "df": 3, "arm": null,
+      "art": "units/goregrinders/painwheel.png",
+      "traits": [
+        { "name": "Blood Rage", "text": "At 0 HP, not slain: gain 1 strength and stay at 0; further damage slays." },
+        { "name": "Hellwheel", "text": "May spend speed tokens as strength. May pass through units but not end its turn in their spaces." }
+      ],
+      "acts": [
+        { "name": "Exfoliate", "tags": ["melee", "attack"], "range": "melee",
+          "text": "On hit: 1 damage and (4+) 1 damage again, (6+) 1 damage again.",
+          "effect": [
+            { "op": "attack", "damage": 1, "damageType": "physical" },
+            { "op": "effectDie", "threshold": 4, "then": [ { "op": "damage", "damage": 1, "damageType": "physical", "target": "hit" } ] }
+          ] },
+        { "name": "Spin Out", "tags": ["self"], "range": "self",
+          "text": "MOVE as far as possible in a straight line. The first enemy unit passed through takes 1 fire damage. Then gain 2 speed.",
+          "effect": [ { "op": "chargeLine", "damage": 1, "damageType": "fire", "firstEnemyOnly": true }, { "op": "token", "token": "speed", "n": 2, "target": "self" } ] }
+      ],
+      "upgrades": [
+        { "name": "Barbed Wheel", "text": "Spin Out may pull a unit in range 3 one space before its MOVE." },
+        { "name": "Endless Screaming", "text": "Spin Out grants 1 berserk." },
+        { "name": "Bloody Teeth", "text": "At 0 HP, all damage gains pierce." }
+      ]
+    },
+    {
+      "id": "berserker", "name": "Berserker", "type": "tyrant", "large": true,
+      "mv": 4, "hp": 6, "df": 2, "arm": null,
+      "art": "units/goregrinders/berserker.png",
+      "traits": [
+        { "name": "Blood Rage", "text": "At 0 HP, not slain: gain 1 strength and stay at 0; further damage slays." },
+        { "name": "Steaming Rage", "text": "When taking damage, gain 1 berserk and 1 strength. Once per round." },
+        { "name": "Tyrant", "text": "2x2 unit. Large: ignores elevation, cannot take cover, affected by terrain once." }
+      ],
+      "acts": [
+        { "name": "Pulverize", "tags": ["self"], "range": "self",
+          "text": "Pull all units in range 2 one space towards this unit. Then splash (self): 1 fire damage and destroy all adjacent walls.",
+          "effect": [ { "op": "splash", "center": "self", "then": [ { "op": "damage", "damage": 1, "damageType": "fire" } ] } ] },
+        { "name": "Building Rage", "tags": ["self"], "range": "self",
+          "text": "Gain 1 strength and 1 berserk, (4+) then gain retaliation until end of this unit's next turn.",
+          "effect": [ { "op": "token", "token": "strength", "n": 1, "target": "self" } ] },
+        { "name": "Rip and Tear", "tags": ["melee", "attack"], "range": "melee",
+          "text": "On hit: 2 damage. Deal 1 damage again if this unit has 3 or less HP, then deal 1 damage again if it is at 1 HP or less.",
+          "effect": [ { "op": "attack", "damage": 2, "damageType": "physical" } ] }
+      ],
+      "upgrades": [
+        { "name": "Fuel Injectors", "text": "Rip and Tear obliterates units that it reduces to 0 HP." },
+        { "name": "Bifurcate", "text": "May step 2 before using Pulverize." },
+        { "name": "Overdrive", "text": "Building Rage always grants retaliation (no roll)." }
+      ]
+    }
+  ]
+}

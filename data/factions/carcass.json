@@ -1,0 +1,185 @@
+{
+  "id": "carcass",
+  "name": "C.A.R.C.A.S.S.",
+  "blurb": "A legendary private military company bound by pact to Carcenkarrion, the bone carapace devil. Their skeletons fuse and grow into weapon-laden constructs and reanimate marksmen — masters of power armor, formation tactics, gun kata and overwhelming firepower.",
+  "playstyle": "Ranged dominance.",
+  "accent": "#f000a8",
+  "specialMechanic": { "name": "Formation", "text": "While adjacent to an ally, gain +1D on attacks." },
+  "specialTags": {
+    "Reload": "Once used, a unit cannot use any ability with this tag until it reloads. To reload, sacrifice a MOVE.",
+    "Headshot": "An effect that triggers when the final attack roll is a 6."
+  },
+  "necromancer": {
+    "id": "operator", "name": "Operator", "type": "necromancer",
+    "mv": 4, "hp": 8, "df": 4, "arm": "PHYS",
+    "art": "units/carcass/operator.png",
+    "traits": [
+      { "name": "Formation", "text": "While adjacent to an ally, gain +1D on attacks." },
+      { "name": "Hot Clip", "text": "Once a round, reloading grants you 1 strength." }
+    ],
+    "acts": [
+      { "name": "Akimbo", "tags": ["attack", "ranged", "reload"], "range": [2, 4],
+        "text": "On hit: 2 damage. On hit (4+): one other foe in range takes 1 damage, (6+) one other foe in range takes 1 damage.",
+        "effect": [
+          { "op": "attack", "damage": 2, "damageType": "physical" },
+          { "op": "onHit", "then": [ { "op": "effectDie", "threshold": 4, "then": [ { "op": "damage", "damage": 1, "damageType": "physical", "target": "otherFoeInRange" } ] } ] },
+          { "op": "reload" }
+        ] }
+    ],
+    "souls": [
+      { "name": "Reload Slide", "soul": 1, "tags": ["self"], "text": "Own or allied turn. Step 1, then you or an adjacent ally reload." },
+      { "name": "Bullet Time", "soul": 3, "tags": ["self"], "text": "Own turn. Clear one (5+) or two negative tokens. Ranged attacks automatically miss you until the end of your next turn, and you are immune to splash and line damage for the duration." }
+    ],
+    "bonusTraits": ["Bone Wall", "Gun Kata", "Clutch Reload"],
+    "actPool": ["Grenade Jump", "Armor Lock", "Devil Bullet", "Superkick", "LV4 Living Cannon", "SG88 Two Barrel Shotgun", "Unholy Sixgun"],
+    "soulPool": ["Double Tap (1)", "Frag Bullet (1)", "Bullet Hustle (2)", "Overwatch (3)", "Bullet Sonata (4)", "S.T.G. (6)"]
+  },
+  "units": [
+    {
+      "id": "gunwight", "name": "Gunwight", "type": "thrall",
+      "mv": 2, "hp": 2, "df": 4, "arm": null,
+      "art": "units/carcass/gunwight.png",
+      "traits": [
+        { "name": "Formation", "text": "While adjacent to an ally, gain +1D on attacks." },
+        { "name": "Thrall", "text": "2 of these units are worth 1 unit slot. Can be activated two at a time." }
+      ],
+      "acts": [
+        { "name": "OL45", "tags": ["attack", "ranged", "reload"], "range": [2, 3],
+          "text": "On hit: 1 piercing damage. Headshot: inflict 1 vulnerable.",
+          "effect": [
+            { "op": "attack", "damage": 1, "damageType": "physical", "pierce": true },
+            { "op": "onHeadshot", "then": [ { "op": "token", "token": "vulnerable", "n": 1, "target": "hit" } ] },
+            { "op": "reload" }
+          ] },
+        { "name": "Baton", "tags": ["melee", "push"], "range": "melee",
+          "text": "Push 1 and (3+) inflict 1 vulnerable.",
+          "effect": [
+            { "op": "push", "n": 1, "target": "adjacentFoe" },
+            { "op": "effectDie", "threshold": 3, "then": [ { "op": "token", "token": "vulnerable", "n": 1, "target": "adjacentFoe" } ] }
+          ] }
+      ],
+      "upgrades": [
+        { "name": "Tactical Reload", "text": "Gain Headshot: reload and gain 1 strength." },
+        { "name": "Scavenge Ammo", "text": "May consume one adjacent corpse before or after ACTing to reload and gain 1 strength." },
+        { "name": "Brace", "text": "While in cover, attacks gain +1 max range and push 1 on hit." }
+      ]
+    },
+    {
+      "id": "ammo-goblin", "name": "Ammo Goblin", "type": "freak",
+      "mv": 3, "hp": 4, "df": 4, "arm": null,
+      "art": "units/carcass/ammo-goblin.png",
+      "traits": [ { "name": "Formation", "text": "While adjacent to an ally, gain +1D on attacks." } ],
+      "acts": [
+        { "name": "Regurgitate Ammo", "tags": ["ranged"], "range": [1, 2],
+          "text": "A unit in range reloads and gains one, (6+) two strength.",
+          "effect": [ { "op": "reload", "target": "ally" }, { "op": "token", "token": "strength", "n": 1, "target": "ally" } ] },
+        { "name": "Bone Shards", "tags": ["curse", "ranged"], "range": [1, 3],
+          "text": "Unit takes 1 damage after any ACT ability resolves that pushes or pulls them. Lasts until end of this unit's next turn or until it has taken 3 damage this way." },
+        { "name": "Destructive Glee", "tags": ["self", "splash"], "range": "self",
+          "text": "Step 1, then Splash (self): 1 fire damage, push 1, and inflict 1 vulnerable, then self is obliterated.",
+          "effect": [
+            { "op": "step", "n": 1 },
+            { "op": "splash", "center": "self", "then": [ { "op": "damage", "damage": 1, "damageType": "fire" }, { "op": "push", "n": 1 }, { "op": "token", "token": "vulnerable", "n": 1 } ] },
+            { "op": "obliterateSelf" }
+          ] }
+      ],
+      "upgrades": [
+        { "name": "Bone Dust Napalm", "text": "Destructive Glee's splash effect gains effect (4+): +1 fire damage, (6+): +1 vulnerable." },
+        { "name": "Vomit Bullets", "text": "Bone Shards gains effect: (4+) push 1, (6) push 1 again." },
+        { "name": "Scavenge Rounds", "text": "Regurgitate Ammo targets two different adjacent units and no longer grants strength." }
+      ]
+    },
+    {
+      "id": "enforcer", "name": "Enforcer", "type": "scion",
+      "mv": 3, "hp": 4, "df": 3, "arm": "PHYS",
+      "art": "units/carcass/enforcer.png",
+      "traits": [ { "name": "Formation", "text": "While adjacent to an ally, gain +1D on attacks." } ],
+      "acts": [
+        { "name": "Skull Crack", "tags": ["attack", "melee", "push"], "range": "melee",
+          "text": "On hit: 2 damage and push 1. Headshot: push 2.",
+          "effect": [
+            { "op": "attack", "damage": 2, "damageType": "physical" },
+            { "op": "onHit", "then": [ { "op": "push", "n": 1, "target": "hit" } ] },
+            { "op": "onHeadshot", "then": [ { "op": "push", "n": 1, "target": "hit" } ] }
+          ] },
+        { "name": "Flashbang", "tags": ["ranged", "reload", "splash"], "range": [2, 3],
+          "text": "1 fire damage and 1 vulnerable, then Splash (target): push 1 away from target.",
+          "effect": [
+            { "op": "damage", "damage": 1, "damageType": "fire", "target": "choose" },
+            { "op": "token", "token": "vulnerable", "n": 1, "target": "choose" },
+            { "op": "splash", "center": "target", "then": [ { "op": "push", "n": 1 } ] },
+            { "op": "reload" }
+          ] },
+        { "name": "Shieldwall", "tags": ["self"], "range": "self",
+          "text": "Until the start of this unit's next turn, this unit cannot MOVE, step, or be pushed or pulled, gains cover, and grants cover to adjacent allies from all directions." }
+      ],
+      "upgrades": [
+        { "name": "Shield Charge", "text": "Unit may step 1 before using Shieldwall, and Skull Crack gains splash (self) push foes 1." },
+        { "name": "Bulwark", "text": "While in cover, attacks gain +1 max range and push 1 on hit." },
+        { "name": "Napalm Injector", "text": "Flashbang deals 1 splash fire damage but gains charge and has no effect on its main target." }
+      ]
+    },
+    {
+      "id": "barrelform", "name": "Barrelform", "type": "hunter",
+      "mv": 2, "hp": 4, "df": 4, "arm": null,
+      "art": "units/carcass/barrelform.png",
+      "traits": [ { "name": "Formation", "text": "While adjacent to an ally, gain +1D on attacks." } ],
+      "acts": [
+        { "name": "Snipe", "tags": ["attack", "ranged", "reload"], "range": [2, 4],
+          "text": "On hit: 2 damage. Headshot: and inflict 1 vulnerable.",
+          "effect": [
+            { "op": "attack", "damage": 2, "damageType": "physical" },
+            { "op": "onHeadshot", "then": [ { "op": "token", "token": "vulnerable", "n": 1, "target": "hit" } ] },
+            { "op": "reload" }
+          ] },
+        { "name": "Transform to Gun", "tags": ["self"], "range": "self",
+          "text": "Unit becomes unable to MOVE or step, but ranged abilities gain +2 maximum range and ignore armor and cover. It can end this effect by sacrificing a MOVE, losing all associated effects." },
+        { "name": "Deathmark", "tags": ["curse", "ranged"], "range": [2, 4],
+          "text": "Inflict 2 vulnerable, (4+): 3 vulnerable, (6+): Remove any vitality first.",
+          "effect": [
+            { "op": "token", "token": "vulnerable", "n": 2, "target": "choose" },
+            { "op": "effectDie", "threshold": 4, "then": [ { "op": "token", "token": "vulnerable", "n": 1, "target": "choose" } ] }
+          ] }
+      ],
+      "upgrades": [
+        { "name": "Hot Chamber", "text": "Snipe gains +1D when this unit is in cover, and -1D when it is not." },
+        { "name": "Extended Barrel", "text": "Transform to Gun makes this unit immune to push and pull." },
+        { "name": "Caliber Up", "text": "Snipe gains push 1 and Headshot: push 2." }
+      ]
+    },
+    {
+      "id": "egis-weapon", "name": "EGIS Weapon", "type": "tyrant", "large": true,
+      "mv": 3, "hp": 6, "df": 2, "arm": "PHYS",
+      "art": "units/carcass/egis-weapon.png",
+      "traits": [
+        { "name": "Formation", "text": "While adjacent to an ally, gain +1D on attacks." },
+        { "name": "Siege Shield", "text": "May be used as a cover object by allies." },
+        { "name": "Large", "text": "2x2 unit. Ignores elevation, cannot take cover, affected by terrain only once." }
+      ],
+      "acts": [
+        { "name": "Juggernaut", "tags": ["self", "push"], "range": "self",
+          "text": "Step 1, then splash (self) push foes 1. (4+) push foes 2. May move into and destroy walls with this step.",
+          "effect": [
+            { "op": "step", "n": 1 },
+            { "op": "splash", "center": "self", "then": [ { "op": "push", "n": 1 } ] },
+            { "op": "effectDie", "threshold": 4, "then": [ { "op": "splash", "center": "self", "then": [ { "op": "push", "n": 1 } ] } ] }
+          ] },
+        { "name": "Mortar", "tags": ["attack", "ranged", "reload", "charge"], "range": [3, 4],
+          "text": "On hit: 1 damage then Splash: 1 fire damage. Headshot: +1 damage on main target.",
+          "effect": [
+            { "op": "attack", "damage": 1, "damageType": "physical" },
+            { "op": "onHit", "then": [ { "op": "splash", "center": "target", "then": [ { "op": "damage", "damage": 1, "damageType": "fire" } ] } ] },
+            { "op": "reload" }
+          ] },
+        { "name": "Catechism Devil Cannon", "tags": ["line", "reload"], "range": "self",
+          "text": "Line 5: 1 fire damage, and inflicts 1 vulnerable on the first unit in the line. Pierces through walls and can target through walls.",
+          "effect": [ { "op": "line", "len": 5, "then": [ { "op": "damage", "damage": 1, "damageType": "fire" } ] }, { "op": "reload" } ] }
+      ],
+      "upgrades": [
+        { "name": "Fortify", "text": "Juggernaut also clears all negative tokens." },
+        { "name": "Heavy Caliber Cannon", "text": "Catechism pushes all units in the line 1 space and destroys walls." },
+        { "name": "Gunner Pivot", "text": "When at least one ally is adjacent to this unit, Mortar ignores cover." }
+      ]
+    }
+  ]
+}
