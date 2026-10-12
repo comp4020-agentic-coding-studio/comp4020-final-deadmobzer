@@ -1,15 +1,15 @@
 import { WebSocket } from "ws";
 import { expect, inject, it } from "vitest";
-import { form, signup } from "./helpers.ts";
+import { api, signup, startGame } from "./helpers.ts";
 
-// The crit-9 contract: a change one person makes reaches every other open
-// session within about a second, with no reload. Relationship events are the
-// app's live surface (reflection content is deliberately sealed until the next
-// day — see docs/adr-001-realtime-scope.md), so we test a friend request.
+// The real-time contract: a change one person makes reaches every other open
+// session within about a second, with no reload. For the game that means both
+// game-state changes and chat reach everyone in the game room (players AND a
+// spectator), so we test a chat message landing on a spectator's socket.
 const baseUrl = inject("baseUrl");
 
-function wsUrl(): URL {
-  const u = new URL("/ws", baseUrl);
+function wsUrl(game?: string): URL {
+  const u = new URL(game ? `/ws?game=${game}` : "/ws", baseUrl);
   u.protocol = u.protocol === "https:" ? "wss:" : "ws:";
   return u;
 }
@@ -25,31 +25,29 @@ it("rejects an unauthenticated WebSocket", async () => {
   expect(code).toBe(401);
 });
 
-it("delivers a friend request to an open session within a second", async () => {
-  const sender = await signup(baseUrl);
-  const recipient = await signup(baseUrl);
+it("a chat message reaches a spectator's game-room socket within a second", async () => {
+  const { a, gameId } = await startGame(baseUrl);
+  const spectator = await signup(baseUrl);
 
-  const ws = new WebSocket(wsUrl(), { headers: { cookie: "sid=" + recipient.sid } });
+  const ws = new WebSocket(wsUrl(gameId), { headers: { cookie: "sid=" + spectator.sid } });
   await new Promise<void>((resolve, reject) => {
     ws.on("open", () => resolve());
     ws.on("error", reject);
   });
 
-  const event = new Promise<{ type: string; from: string }>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("no event within 1s")), 1000);
+  const event = new Promise<{ type: string; channel?: string }>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("no chat event within 1s")), 1000);
     ws.on("message", (data) => {
-      clearTimeout(timer);
-      resolve(JSON.parse(data.toString()));
+      const ev = JSON.parse(data.toString());
+      if (ev.type === "chat") { clearTimeout(timer); resolve(ev); }
     });
   });
 
-  const res = await fetch(new URL("/friends/request", baseUrl), form(sender.sid, {
-    username: recipient.username,
-  }));
-  expect(res.status).toBe(303);
+  const res = await api(baseUrl, a.sid, `/api/game/${gameId}/chat`, { channel: "player", body: "en garde" });
+  expect(res.status).toBe(200);
 
   const ev = await event;
-  expect(ev.type).toBe("friend_request");
-  expect(ev.from).toBe(sender.display_name);
+  expect(ev.type).toBe("chat");
+  expect(ev.channel).toBe("player");
   ws.close();
 });

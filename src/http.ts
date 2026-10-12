@@ -22,15 +22,43 @@ export function clearSessionCookie(res: ServerResponse): void {
   res.setHeader("Set-Cookie", "sid=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0");
 }
 
-export async function readFormBody(req: IncomingMessage): Promise<URLSearchParams> {
+async function readRawBody(req: IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > 64 * 1024) throw new Error("body too large");
+    if (size > 256 * 1024) throw new Error("body too large");
     chunks.push(chunk as Buffer);
   }
-  return new URLSearchParams(Buffer.concat(chunks).toString("utf8"));
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+export async function readFormBody(req: IncomingMessage): Promise<URLSearchParams> {
+  return new URLSearchParams(await readRawBody(req));
+}
+
+// Parse a JSON request body; returns {} on empty/invalid so handlers can validate.
+export async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
+  const raw = await readRawBody(req);
+  if (!raw) return {};
+  try {
+    const v = JSON.parse(raw);
+    return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function json(res: ServerResponse, body: unknown, status = 200): void {
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  res.end(JSON.stringify(body));
+}
+
+// HTML-escape user content for safe interpolation into server-sent HTML.
+// No user text is ever rendered as markup (see CLAUDE.md: no script injection).
+export function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
 export function html(res: ServerResponse, body: string, status = 200): void {

@@ -1,47 +1,29 @@
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { db } from "./db.ts";
 import {
-  AuthError,
-  createSession,
-  destroySession,
-  login,
-  signup,
-  userForToken,
-  type User,
+  AuthError, createSession, destroySession, login, signup, userForToken, type User,
 } from "./auth.ts";
 import {
-  acceptRequest,
-  declineRequest,
-  FriendError,
-  friendsOf,
-  incomingRequests,
-  sendRequest,
+  acceptRequest, declineRequest, FriendError, friendsOf, incomingRequests, sendRequest,
 } from "./friends.ts";
-import { taskFor } from "./daily.ts";
-import {
-  calendar,
-  dayDetail,
-  EntryError,
-  myEntriesToday,
-  notesFromYesterday,
-  writeEntry,
-} from "./entries.ts";
 import { readmeBodyHtml } from "./readme.ts";
-import { handleUpgrade, isOnline, sendTo } from "./realtime.ts";
+import { handleUpgrade, isOnline, sendTo, broadcastGame, audienceCount } from "./realtime.ts";
 import {
-  clearSessionCookie,
-  html,
-  readCookie,
-  readFormBody,
-  redirect,
-  setSessionCookie,
+  clearSessionCookie, escapeHtml, html, json, readCookie, readFormBody, readJsonBody,
+  redirect, setSessionCookie,
 } from "./http.ts";
-import { renderDocument } from "./serverview.ts";
-import type { Mode, PageData } from "./ui/types.ts";
+import { landing, page, aboutPage } from "./serverview.ts";
 import { audit } from "./audit.ts";
-import { TZ, today } from "./time.ts";
+import { today, TZ } from "./time.ts";
+import { FACTIONS, PLAYER_PALETTE } from "./game/data.ts";
+import { validateLoadout, saveLoadout, getLoadout, LoadoutError, type Mode } from "./loadouts.ts";
+import { createLobby, joinLobby, quickJoin, openLobbies, LobbyError } from "./lobbies.ts";
+import { gameView, act, recentOpponents, GameError } from "./games.ts";
+import { postMessage, messagesFor, ChatError, type Channel } from "./chat.ts";
+import { getProfile, setAvatar, ProfileError } from "./profile.ts";
+import type { Action } from "./game/types.ts";
 
 const PORT = Number(process.env.PORT ?? 8080);
 
@@ -49,101 +31,110 @@ function currentUser(req: { headers: { cookie?: string } }): User | null {
   return userForToken(readCookie(req.headers.cookie, "sid"));
 }
 
-function themeMode(req: { headers: { cookie?: string } }): Mode {
-  return readCookie(req.headers.cookie, "theme") === "dark" ? "dark" : "light";
-}
-
-function friendsWithPresence(userId: number) {
-  return friendsOf(userId).map((f) => ({ ...f, online: isOnline(f.id) }));
-}
-
-function todayLabel(): string {
-  const [y, m, d] = today().split("-").map(Number);
-  return new Intl.DateTimeFormat("en-AU", {
-    timeZone: TZ,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(new Date(Date.UTC(y, m - 1, d, 2)));
-}
-
-// A GET view: the hydrated client asks for just the route's data (x-data header),
-// everyone else gets the full server-rendered document.
-function sendPage(
-  req: IncomingMessage,
-  res: ServerResponse,
-  user: User | null,
-  mode: Mode,
-  page: PageData,
-): void {
-  if (req.headers["x-data"]) {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    return void res.end(JSON.stringify({ mode, page }));
-  }
-  return void html(res, renderDocument({ user, mode, page }));
-}
-
-function landingHtml(mode: Mode, error?: string): string {
-  return renderDocument({ user: null, mode, page: { route: "landing", error } });
+// A strict CSP on every response: scripts only from our own origin, never inline,
+// so even a missed escape can't execute injected script (see CLAUDE.md).
+function securityHeaders(res: ServerResponse): void {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'",
+  );
+  res.setHeader("X-Content-Type-Options", "nosniff");
 }
 
 const MIME: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".webp": "image/webp",
+  ".woff2": "font/woff2",
+  ".glb": "model/gltf-binary",
+  ".gltf": "model/gltf+json",
+  ".json": "application/json",
 };
+
+async function serveStatic(res: ServerResponse, rel: string): Promise<void> {
+  if (rel.includes("..")) return void res.writeHead(404).end();
+  try {
+    const file = await readFile(new URL(`../public/${rel}`, import.meta.url));
+    res.writeHead(200, { "Content-Type": MIME[extname(rel)] ?? "application/octet-stream" });
+    res.end(file);
+  } catch {
+    res.writeHead(404).end("not found");
+  }
+}
+
+// Resolve a saved-or-inline loadout for an action, validating server-side. If the
+// request carries a House, it's validated and saved as the default for that mode.
+function resolveLoadout(userId: number, body: Record<string, unknown>) {
+  const mode = (body.mode === "faithful" ? "faithful" : "fixed") as Mode;
+  if (body.house) {
+    const l = validateLoadout(mode, String(body.house), String(body.colour ?? ""),
+      Array.isArray(body.units) ? (body.units as { defId: string }[]) : []);
+    saveLoadout(userId, l);
+    return l;
+  }
+  const saved = getLoadout(userId, mode);
+  if (!saved) throw new LoadoutError("No saved loadout for this mode — build one first.");
+  return saved;
+}
+
+function msg(e: unknown): string {
+  if (e instanceof LoadoutError || e instanceof LobbyError || e instanceof GameError) return e.message;
+  return "failed";
+}
+
+// Chat messages with bodies + names HTML-escaped for safe client rendering.
+function messagesForEscaped(id: string, channel: Channel) {
+  return messagesFor(id, channel).map((m) => ({
+    ...m, displayName: escapeHtml(m.displayName), body: escapeHtml(m.body),
+  }));
+}
 
 const server = createServer(async (req, res) => {
   try {
+    securityHeaders(res);
     const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
     const path = url.pathname;
     const method = req.method ?? "GET";
 
-    // --- static assets ---
-    if (method === "GET" && path.startsWith("/static/")) {
-      const name = path.slice("/static/".length);
-      if (name.includes("..")) return void res.writeHead(404).end();
-      try {
-        const file = await readFile(new URL(`../public/${name}`, import.meta.url));
-        res.writeHead(200, { "Content-Type": MIME[extname(name)] ?? "application/octet-stream" });
-        return void res.end(file);
-      } catch {
-        return void res.writeHead(404).end("not found");
+    // --- static roots ---
+    for (const prefix of ["/static/", "/art/", "/fonts/", "/models/"]) {
+      if (method === "GET" && path.startsWith(prefix)) {
+        const root = prefix === "/static/" ? "" : prefix.slice(1);
+        return void (await serveStatic(res, root + path.slice(prefix.length)));
       }
     }
 
     const user = currentUser(req);
-    const mode = themeMode(req);
 
-    // --- README, published in full (required by the brief/spec), open to all ---
+    // --- README, published in full (required by the spec), open to all ---
     if (method === "GET" && (path === "/readme" || path === "/readme/")) {
-      return void sendPage(req, res, user, mode, { route: "about", html: readmeBodyHtml() });
+      return void html(res, aboutPage(readmeBodyHtml()));
     }
 
-    // --- auth routes (open) ---
+    // --- auth (open) ---
     if (path === "/login" && method === "POST") {
-      const form = await readFormBody(req);
+      const f = await readFormBody(req);
       try {
-        const u = login(form.get("username") ?? "", form.get("password") ?? "");
+        const u = login(f.get("username") ?? "", f.get("password") ?? "");
         setSessionCookie(res, createSession(u.id));
         audit(u.username, "login");
         return void redirect(res, "/");
       } catch (e) {
-        return void html(res, landingHtml(mode, e instanceof AuthError ? e.message : "Sign in failed."), 401);
+        return void html(res, landing(e instanceof AuthError ? e.message : "Sign in failed."), 401);
       }
     }
     if (path === "/signup" && method === "POST") {
-      const form = await readFormBody(req);
+      const f = await readFormBody(req);
       try {
-        const u = signup(
-          form.get("username") ?? "",
-          form.get("password") ?? "",
-          form.get("display_name") ?? "",
-        );
+        const u = signup(f.get("username") ?? "", f.get("password") ?? "", f.get("display_name") ?? "");
         setSessionCookie(res, createSession(u.id));
         audit(u.username, "signup");
         return void redirect(res, "/");
       } catch (e) {
-        return void html(res, landingHtml(mode, e instanceof AuthError ? e.message : "Sign up failed."), 400);
+        return void html(res, landing(e instanceof AuthError ? e.message : "Sign up failed."), 400);
       }
     }
     if (path === "/logout" && method === "POST") {
@@ -153,104 +144,167 @@ const server = createServer(async (req, res) => {
       return void redirect(res, "/");
     }
 
+    // --- open API: faction data (for the loadout builder / hover inspector) ---
+    if (path === "/api/factions" && method === "GET") {
+      return void json(res, {
+        palette: PLAYER_PALETTE,
+        factions: Object.values(FACTIONS).map((f) => ({
+          id: f.id, name: f.name, blurb: f.blurb, playstyle: f.playstyle, accent: f.accent,
+          necromancer: f.necromancer, units: f.units,
+        })),
+      });
+    }
+
     // --- everything below needs a session ---
     if (!user) {
-      if (path === "/" && method === "GET") return void html(res, landingHtml(mode));
+      if (path === "/" && method === "GET") return void html(res, landing());
+      if (path.startsWith("/api/")) return void json(res, { error: "sign in" }, 401);
       return void redirect(res, "/");
     }
 
+    // ---- HTML pages (minimal shell; the 3D client comes later) ----
     if (path === "/" && method === "GET") {
-      const mine = myEntriesToday(user.id);
-      return void sendPage(req, res, user, mode, {
-        route: "today",
-        task: taskFor(user.id),
-        mine: { self: mine.self, friend: mine.friend },
-        yesterday: notesFromYesterday(user.id),
-        todayLabel: todayLabel(),
-        flash: url.searchParams.get("msg") ?? undefined,
-      });
+      const p = getProfile(user.id)!;
+      return void html(res, page("Home", `
+        <h1>Welcome, ${escapeHtml(user.display_name)}</h1>
+        <div class="card"><p>Rating (ELO): <strong>${p.elo}</strong></p>
+          <p><a href="/play">Find a match</a> · <a href="/profile">Profile</a> ·
+             <a href="/friends">Friends</a></p>
+          <form method="post" action="/logout"><button>Sign out</button></form></div>`));
     }
-
-    if (path === "/api/state" && method === "GET") {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      return void res.end(
-        JSON.stringify({
-          friends: friendsWithPresence(user.id),
-          incoming: incomingRequests(user.id),
-        }),
-      );
+    if (path === "/play" && method === "GET") return void html(res, playPage());
+    if (path === "/profile" && method === "GET") {
+      const p = getProfile(user.id)!;
+      return void html(res, page("Profile", `
+        <h1>${escapeHtml(p.display_name)}</h1>
+        <div class="card"><p>Username: <code>${escapeHtml(p.username)}</code></p>
+          <p>ELO: <strong>${p.elo}</strong></p>
+          <p>Avatar: ${p.avatarHouse ? `${escapeHtml(p.avatarHouse)}/${escapeHtml(p.avatarUnit ?? "")}` : "not set"}</p></div>`));
     }
-
-    if (path === "/entry" && method === "POST") {
-      const form = await readFormBody(req);
-      const kind = form.get("kind") === "friend" ? "friend" : "self";
-      try {
-        writeEntry(user.id, kind, form.get("body") ?? "");
-        audit(user.username, "entry.save", { kind });
-        return void redirect(res, "/?msg=" + encodeURIComponent("Saved."));
-      } catch (e) {
-        return void redirect(res, "/?msg=" + encodeURIComponent(e instanceof EntryError ? e.message : "Could not save."));
-      }
-    }
-
     if (path === "/friends" && method === "GET") {
-      return void sendPage(req, res, user, mode, {
-        route: "friends",
-        friends: friendsWithPresence(user.id),
-        incoming: incomingRequests(user.id),
-        flash: url.searchParams.get("msg") ?? undefined,
-      });
+      const friends = friendsOf(user.id)
+        .map((f) => `<li>${escapeHtml(f.display_name)} ${isOnline(f.id) ? "(online)" : ""}</li>`).join("");
+      const incoming = incomingRequests(user.id)
+        .map((r) => `<li>${escapeHtml(r.display_name)}</li>`).join("");
+      const recent = recentOpponents(user.id)
+        .map((o) => `<li>${escapeHtml(o.display_name)} <code>${escapeHtml(o.username)}</code></li>`).join("");
+      return void html(res, page("Friends", `
+        <h1>Friends</h1>
+        <div class="card"><h2>Your friends</h2><ul>${friends || "<li>None yet.</li>"}</ul></div>
+        <div class="card"><h2>Incoming requests</h2><ul>${incoming || "<li>None.</li>"}</ul></div>
+        <div class="card"><h2>Recent opponents</h2><ul>${recent || "<li>No games yet.</li>"}</ul></div>`));
     }
 
-    if (path === "/friends/request" && method === "POST") {
-      const form = await readFormBody(req);
+    // ---- JSON API ----
+    if (path === "/api/profile" && method === "GET") return void json(res, getProfile(user.id));
+    if (path === "/api/profile/avatar" && method === "POST") {
+      const b = await readJsonBody(req);
+      try { setAvatar(user.id, String(b.house), String(b.unit), String(b.colour)); return void json(res, { ok: true }); }
+      catch (e) { return void json(res, { error: e instanceof ProfileError ? e.message : "bad avatar" }, 400); }
+    }
+    if (path === "/api/loadout" && method === "GET") {
+      const mode = (url.searchParams.get("mode") === "faithful" ? "faithful" : "fixed") as Mode;
+      return void json(res, getLoadout(user.id, mode));
+    }
+    if (path === "/api/loadout" && method === "POST") {
+      const b = await readJsonBody(req);
       try {
-        const to = sendRequest(user, form.get("username") ?? "");
+        const l = validateLoadout((b.mode === "faithful" ? "faithful" : "fixed") as Mode,
+          String(b.house), String(b.colour ?? ""), Array.isArray(b.units) ? (b.units as { defId: string }[]) : []);
+        saveLoadout(user.id, l);
+        return void json(res, { ok: true, loadout: l });
+      } catch (e) { return void json(res, { error: e instanceof LoadoutError ? e.message : "bad loadout" }, 400); }
+    }
+
+    if (path === "/api/lobby/create" && method === "POST") {
+      const b = await readJsonBody(req);
+      try {
+        const l = resolveLoadout(user.id, b);
+        const code = createLobby(user.id, l.mode, b.visibility === "private" ? "private" : "public", l);
+        return void json(res, { code });
+      } catch (e) { return void json(res, { error: msg(e) }, 400); }
+    }
+    if (path === "/api/lobby/join" && method === "POST") {
+      const b = await readJsonBody(req);
+      try {
+        const l = resolveLoadout(user.id, b);
+        return void json(res, joinLobby(String(b.code ?? ""), user.id, l));
+      } catch (e) { return void json(res, { error: msg(e) }, 400); }
+    }
+    if (path === "/api/quickjoin" && method === "POST") {
+      const b = await readJsonBody(req);
+      try {
+        const l = resolveLoadout(user.id, b);
+        return void json(res, quickJoin(user.id, l.mode, l));
+      } catch (e) { return void json(res, { error: msg(e) }, 400); }
+    }
+    if (path === "/api/lobbies" && method === "GET") {
+      const m = url.searchParams.get("mode");
+      return void json(res, { lobbies: openLobbies(m === "faithful" || m === "fixed" ? m : undefined) });
+    }
+
+    // friends (JSON)
+    if (path === "/api/friends/request" && method === "POST") {
+      const b = await readJsonBody(req);
+      try {
+        const to = sendRequest(user, String(b.username ?? ""));
         sendTo(to.id, { type: "friend_request", from: user.display_name });
         audit(user.username, "friend.request", { to: to.username });
-        return void redirect(res, "/friends?msg=" + encodeURIComponent("Request sent."));
-      } catch (e) {
-        return void redirect(res, "/friends?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not send."));
-      }
+        return void json(res, { ok: true });
+      } catch (e) { return void json(res, { error: e instanceof FriendError ? e.message : "failed" }, 400); }
     }
-    if (path === "/friends/accept" && method === "POST") {
-      const form = await readFormBody(req);
+    if (path === "/api/friends/accept" && method === "POST") {
+      const b = await readJsonBody(req);
       try {
-        const other = acceptRequest(user.id, Number(form.get("friendship_id")));
-        sendTo(other.id, { type: "friend_accepted", by: user.display_name });
-        audit(user.username, "friend.accept", { with: other.username });
-        return void redirect(res, "/friends?msg=" + encodeURIComponent("You're now friends."));
-      } catch (e) {
-        return void redirect(res, "/friends?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not accept."));
-      }
+        const o = acceptRequest(user.id, Number(b.friendship_id));
+        sendTo(o.id, { type: "friend_accepted", by: user.display_name });
+        audit(user.username, "friend.accept", { with: o.username });
+        return void json(res, { ok: true });
+      } catch (e) { return void json(res, { error: e instanceof FriendError ? e.message : "failed" }, 400); }
     }
-    if (path === "/friends/decline" && method === "POST") {
-      const form = await readFormBody(req);
-      const friendshipId = Number(form.get("friendship_id"));
-      try {
-        declineRequest(user.id, friendshipId);
-        audit(user.username, "friend.decline", { friendship_id: friendshipId });
-      } catch {
-        // ignore — the request was already gone
-      }
-      return void redirect(res, "/friends");
+    if (path === "/api/friends/decline" && method === "POST") {
+      const b = await readJsonBody(req);
+      try { declineRequest(user.id, Number(b.friendship_id)); } catch { /* already gone */ }
+      return void json(res, { ok: true });
+    }
+    if (path === "/api/recent-opponents" && method === "GET") {
+      return void json(res, { opponents: recentOpponents(user.id) });
     }
 
-    if (path === "/calendar" && method === "GET") {
-      return void sendPage(req, res, user, mode, { route: "calendar", days: calendar(user.id) });
-    }
-    if (path === "/day" && method === "GET") {
-      const day = url.searchParams.get("d") ?? "";
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return void redirect(res, "/calendar");
-      const detail = dayDetail(user.id, day);
-      return void sendPage(req, res, user, mode, {
-        route: "day",
-        day,
-        self: detail.self,
-        notes: detail.notes,
-      });
+    // games: /api/game/<id>, /api/game/<id>/action, /api/game/<id>/chat
+    const gameMatch = /^\/api\/game\/([A-Za-z0-9_-]+)(\/action|\/chat)?$/.exec(path);
+    if (gameMatch) {
+      const id = gameMatch[1];
+      const sub = gameMatch[2];
+      if (!sub && method === "GET") {
+        const v = gameView(id, user.id);
+        if (!v) return void json(res, { error: "no such game" }, 404);
+        return void json(res, {
+          role: v.role, state: v.state, audience: audienceCount(id),
+          chat: { player: messagesForEscaped(id, "player"), audience: messagesForEscaped(id, "audience") },
+        });
+      }
+      if (sub === "/action" && method === "POST") {
+        const b = await readJsonBody(req);
+        const r = act(id, user.id, b.action as Action);
+        if (!r.ok) return void json(res, { error: r.error }, 403);
+        broadcastGame(id, { type: "game", gameId: id });
+        return void json(res, { ok: true });
+      }
+      if (sub === "/chat" && method === "POST") {
+        const b = await readJsonBody(req);
+        const channel: Channel = b.channel === "player" ? "player" : "audience";
+        try {
+          postMessage(id, user, channel, String(b.body ?? ""));
+          broadcastGame(id, { type: "chat", gameId: id, channel });
+          return void json(res, { ok: true });
+        } catch (e) {
+          return void json(res, { error: e instanceof ChatError || e instanceof GameError ? e.message : "failed" }, 400);
+        }
+      }
     }
 
+    if (path.startsWith("/api/")) return void json(res, { error: "not found" }, 404);
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("not found");
   } catch (err) {
@@ -259,6 +313,22 @@ const server = createServer(async (req, res) => {
     res.end("something went wrong");
   }
 });
+
+function playPage(): string {
+  return page("Play", `
+    <h1>Find a match</h1>
+    <p>Pick a mode and a House, then quick-join, create a lobby code, or join one.
+       This backend-first build drives the game over the JSON API; the 3D table
+       comes next.</p>
+    <div class="card"><h2>Modes</h2><ul>
+      <li><strong>Fixed roster</strong> — your House's necromancer + its five units.</li>
+      <li><strong>Faithful</strong> — build a Black Mass within the slot budget, with Malice upgrades.</li>
+    </ul>
+    <p>API: <code>GET /api/factions</code>, then <code>POST /api/quickjoin</code> /
+       <code>/api/lobby/create</code> / <code>/api/lobby/join</code> with a loadout;
+       <code>GET /api/game/:id</code>, <code>POST /api/game/:id/action</code>,
+       <code>POST /api/game/:id/chat</code>.</p></div>`);
+}
 
 server.on("upgrade", (req, socket, head) => {
   if (new URL(req.url ?? "/", "http://localhost").pathname === "/ws") {
@@ -270,7 +340,7 @@ server.on("upgrade", (req, socket, head) => {
 
 server.on("error", (e) => console.error("server error:", e));
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`a small daily listening on 0.0.0.0:${PORT} (day ${today()} ${TZ})`);
+  console.log(`Maleghast Online listening on 0.0.0.0:${PORT} (day ${today()} ${TZ})`);
 });
 
 // Fly sends SIGTERM/SIGINT on every redeploy and when the idle machine stops.

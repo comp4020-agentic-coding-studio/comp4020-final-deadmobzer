@@ -14,10 +14,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@emotion/cache": "^11.14.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/material": "^9.5.0",
     "better-sqlite3": "^11.10.0",
     "marked": "^14.1.4",
     "react": "^19.3.0",

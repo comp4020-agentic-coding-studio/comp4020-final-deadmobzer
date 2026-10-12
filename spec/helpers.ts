@@ -43,3 +43,30 @@ export async function get(baseUrl: string, path: string, sid?: string): Promise<
     headers: sid ? { cookie: "sid=" + sid } : {},
   });
 }
+
+// A JSON API call with a session cookie.
+export async function api(
+  baseUrl: string, sid: string, path: string, body?: unknown, method = "POST",
+): Promise<Response> {
+  return fetch(new URL(path, baseUrl), {
+    method,
+    redirect: "manual",
+    headers: { "content-type": "application/json", cookie: "sid=" + sid },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
+// Start a fresh game between two new users via the lobby flow; returns ids + sids.
+export async function startGame(baseUrl: string): Promise<{
+  a: TestUser; b: TestUser; gameId: string; palette: string[];
+}> {
+  const a = await signup(baseUrl);
+  const b = await signup(baseUrl);
+  const facs = await (await fetch(new URL("/api/factions", baseUrl))).json();
+  const palette = facs.palette as string[];
+  const create = await (await api(baseUrl, a.sid, "/api/lobby/create",
+    { mode: "fixed", visibility: "private", house: "carcass", colour: palette[0], units: [] })).json();
+  const join = await (await api(baseUrl, b.sid, "/api/lobby/join",
+    { code: create.code, mode: "fixed", house: "goregrinders", colour: palette[3], units: [] })).json();
+  return { a, b, gameId: join.gameId, palette };
+}

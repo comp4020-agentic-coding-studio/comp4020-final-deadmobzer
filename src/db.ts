@@ -40,39 +40,72 @@ db.exec(`
     UNIQUE (requester_id, addressee_id)
   );
 
-  -- One row marks a day's prompts/matching as generated: the idempotency lock
-  -- that makes ensureAssignments(day) safe to call from any request.
-  CREATE TABLE IF NOT EXISTS daily_runs (
-    day        TEXT PRIMARY KEY,
-    created_at TEXT NOT NULL
+  -- A saved default loadout per user per mode (faithful | fixed).
+  CREATE TABLE IF NOT EXISTS loadouts (
+    id         INTEGER PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id),
+    mode       TEXT NOT NULL CHECK (mode IN ('faithful', 'fixed')),
+    house      TEXT NOT NULL,
+    colour     TEXT NOT NULL,
+    units_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (user_id, mode)
   );
 
-  -- One row per user per day: their self prompt, and (if they were matched to
-  -- one) the friend they write about plus that prompt.
-  CREATE TABLE IF NOT EXISTS daily_tasks (
-    id                 INTEGER PRIMARY KEY,
-    day                TEXT NOT NULL,
-    user_id            INTEGER NOT NULL REFERENCES users(id),
-    self_prompt_text   TEXT NOT NULL,
-    friend_target_id   INTEGER REFERENCES users(id),
-    friend_prompt_text TEXT,
-    UNIQUE (day, user_id)
+  -- A lobby. The id is also the shareable join code. host_loadout_json captures
+  -- the host's chosen Black Mass; the guest's is captured when they join.
+  CREATE TABLE IF NOT EXISTS lobbies (
+    id                 TEXT PRIMARY KEY,
+    host_id            INTEGER NOT NULL REFERENCES users(id),
+    mode               TEXT NOT NULL CHECK (mode IN ('faithful', 'fixed')),
+    visibility         TEXT NOT NULL CHECK (visibility IN ('public', 'private')),
+    status             TEXT NOT NULL CHECK (status IN ('open', 'started', 'closed')),
+    host_loadout_json  TEXT NOT NULL,
+    guest_id           INTEGER REFERENCES users(id),
+    guest_loadout_json TEXT,
+    game_id            TEXT,
+    created_at         TEXT NOT NULL
   );
 
-  -- The written answers. A 'self' entry has target_id NULL; a 'friend' entry's
-  -- target_id is who it's about. UNIQUE keeps it to one of each kind per day.
-  CREATE TABLE IF NOT EXISTS entries (
-    id          INTEGER PRIMARY KEY,
-    day         TEXT NOT NULL,
-    author_id   INTEGER NOT NULL REFERENCES users(id),
-    kind        TEXT NOT NULL CHECK (kind IN ('self', 'friend')),
-    target_id   INTEGER REFERENCES users(id),
-    prompt_text TEXT NOT NULL,
-    body        TEXT NOT NULL,
-    created_at  TEXT NOT NULL,
-    UNIQUE (day, author_id, kind)
+  -- A game. The full GameState is serialized to state_json so a game survives a
+  -- restart/redeploy; p0/p1 are the two participants (for access + recent opps).
+  CREATE TABLE IF NOT EXISTS games (
+    id         TEXT PRIMARY KEY,
+    mode       TEXT NOT NULL,
+    p0_id      INTEGER NOT NULL REFERENCES users(id),
+    p1_id      INTEGER NOT NULL REFERENCES users(id),
+    status     TEXT NOT NULL CHECK (status IN ('active', 'over')),
+    winner     INTEGER,
+    ranked     INTEGER NOT NULL DEFAULT 0,
+    state_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
   );
 
-  CREATE INDEX IF NOT EXISTS idx_entries_target ON entries(target_id, day);
-  CREATE INDEX IF NOT EXISTS idx_entries_author ON entries(author_id, kind, day);
+  -- In-game chat. channel is 'player' (the two participants) or 'audience'
+  -- (spectators). Body is stored raw and HTML-escaped on output (no injection).
+  CREATE TABLE IF NOT EXISTS chat_messages (
+    id           INTEGER PRIMARY KEY,
+    game_id      TEXT NOT NULL REFERENCES games(id),
+    channel      TEXT NOT NULL CHECK (channel IN ('player', 'audience')),
+    user_id      INTEGER NOT NULL REFERENCES users(id),
+    display_name TEXT NOT NULL,
+    body         TEXT NOT NULL,
+    created_at   TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_games_players ON games(p0_id, p1_id);
+  CREATE INDEX IF NOT EXISTS idx_chat_game ON chat_messages(game_id, channel, id);
 `);
+
+// Idempotent column adds (users predates the game columns).
+function ensureColumn(table: string, column: string, decl: string): void {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${decl}`);
+  }
+}
+ensureColumn("users", "elo", "elo INTEGER NOT NULL DEFAULT 1200");
+ensureColumn("users", "avatar_house", "avatar_house TEXT");
+ensureColumn("users", "avatar_unit", "avatar_unit TEXT");
+ensureColumn("users", "colour", "colour TEXT");

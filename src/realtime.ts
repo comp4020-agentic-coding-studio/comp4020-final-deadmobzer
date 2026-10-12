@@ -4,18 +4,26 @@ import { WebSocket, WebSocketServer } from "ws";
 import { userForToken } from "./auth.ts";
 import { readCookie } from "./http.ts";
 
-// The real-time layer. Relationship events (friend requests and acceptances)
-// and presence travel live; reflection content deliberately does not — a note
-// stays sealed until the next day (see docs/adr-001-realtime-scope.md).
+// The real-time layer. Two kinds of subscription travel over /ws:
+//  - per-user events: friend requests/acceptances and presence.
+//  - game rooms: everyone viewing a game (players + spectators) gets live state
+//    updates and chat within ~1s, so no one has to reload.
+// Connect to /ws for user events, or /ws?game=<id> to also join that game room.
+
 export type LiveEvent =
   | { type: "friend_request"; from: string }
   | { type: "friend_accepted"; by: string }
-  | { type: "presence"; online: string[] };
+  | { type: "presence"; online: string[] }
+  | { type: "game"; gameId: string }                                  // state changed; refetch
+  | { type: "chat"; gameId: string; channel: "player" | "audience" }  // new message; refetch
+  | { type: "audience"; gameId: string; count: number };
 
 const wss = new WebSocketServer({ noServer: true });
 
-// userId -> open sockets for that user (a person may have several tabs/devices).
+// userId -> open sockets (a person may have several tabs/devices).
 const sockets = new Map<number, Set<WebSocket>>();
+// gameId -> open sockets watching that game.
+const rooms = new Map<string, Set<WebSocket>>();
 
 export function handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer): void {
   const user = userForToken(readCookie(req.headers.cookie, "sid"));
@@ -24,23 +32,54 @@ export function handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer
     socket.destroy();
     return;
   }
+  const gameId = new URL(req.url ?? "/", "http://localhost").searchParams.get("game");
+
   wss.handleUpgrade(req, socket, head, (ws) => {
     const set = sockets.get(user.id) ?? new Set<WebSocket>();
     set.add(ws);
     sockets.set(user.id, set);
     broadcastPresenceToFriends(user.id);
 
+    let room: Set<WebSocket> | undefined;
+    if (gameId) {
+      room = rooms.get(gameId) ?? new Set<WebSocket>();
+      room.add(ws);
+      rooms.set(gameId, room);
+      broadcastAudience(gameId);
+    }
+
     ws.on("close", () => {
       set.delete(ws);
       if (set.size === 0) sockets.delete(user.id);
       broadcastPresenceToFriends(user.id);
+      if (gameId && room) {
+        room.delete(ws);
+        if (room.size === 0) rooms.delete(gameId);
+        else broadcastAudience(gameId);
+      }
     });
     // The client never needs to send anything; ignore inbound frames.
   });
 }
 
 export function sendTo(userId: number, event: LiveEvent): void {
-  const set = sockets.get(userId);
+  send(sockets.get(userId), event);
+}
+
+// Broadcast to everyone watching a game (players + spectators).
+export function broadcastGame(gameId: string, event: LiveEvent): void {
+  send(rooms.get(gameId), event);
+}
+
+export function audienceCount(gameId: string): number {
+  return rooms.get(gameId)?.size ?? 0;
+}
+
+function broadcastAudience(gameId: string): void {
+  broadcastGame(gameId, { type: "audience", gameId, count: audienceCount(gameId) });
+}
+
+function send(set: Set<WebSocket> | undefined, event: LiveEvent): void {
   if (!set) return;
   const data = JSON.stringify(event);
   for (const ws of set) if (ws.readyState === WebSocket.OPEN) ws.send(data);
