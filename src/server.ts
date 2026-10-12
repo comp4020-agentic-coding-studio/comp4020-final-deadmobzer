@@ -17,7 +17,7 @@ import {
 import { landing, page, aboutPage, appShell } from "./serverview.ts";
 import { audit } from "./audit.ts";
 import { today, TZ } from "./time.ts";
-import { FACTIONS, PLAYER_PALETTE } from "./game/data.ts";
+import { FACTIONS, PLAYER_PALETTE, allUnitDefs } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, LoadoutError, type Mode } from "./loadouts.ts";
 import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
 import { gameView, act, recentOpponents, activeGames, GameError } from "./games.ts";
@@ -176,25 +176,39 @@ const server = createServer(async (req, res) => {
     if (path === "/play" && method === "GET") return void html(res, appShell("Play"));
     if (path.startsWith("/g/") && method === "GET") return void html(res, appShell("Table"));
     if (path === "/profile" && method === "GET") {
-      const p = getProfile(user.id)!;
-      return void html(res, page("Profile", `
-        <h1>${escapeHtml(p.display_name)}</h1>
-        <div class="card"><p>Username: <code>${escapeHtml(p.username)}</code></p>
-          <p>ELO: <strong>${p.elo}</strong></p>
-          <p>Avatar: ${p.avatarHouse ? `${escapeHtml(p.avatarHouse)}/${escapeHtml(p.avatarUnit ?? "")}` : "not set"}</p></div>`));
+      return void html(res, profilePage(user));
+    }
+    if (path === "/profile/avatar" && method === "POST") {
+      const f = await readFormBody(req);
+      const [house, unit] = (f.get("avatar") ?? ":").split(":");
+      try { setAvatar(user.id, house, unit, f.get("colour") ?? ""); } catch { /* ignore invalid */ }
+      return void redirect(res, "/profile");
     }
     if (path === "/friends" && method === "GET") {
-      const friends = friendsOf(user.id)
-        .map((f) => `<li>${escapeHtml(f.display_name)} ${isOnline(f.id) ? "(online)" : ""}</li>`).join("");
-      const incoming = incomingRequests(user.id)
-        .map((r) => `<li>${escapeHtml(r.display_name)}</li>`).join("");
-      const recent = recentOpponents(user.id)
-        .map((o) => `<li>${escapeHtml(o.display_name)} <code>${escapeHtml(o.username)}</code></li>`).join("");
-      return void html(res, page("Friends", `
-        <h1>Friends</h1>
-        <div class="card"><h2>Your friends</h2><ul>${friends || "<li>None yet.</li>"}</ul></div>
-        <div class="card"><h2>Incoming requests</h2><ul>${incoming || "<li>None.</li>"}</ul></div>
-        <div class="card"><h2>Recent opponents</h2><ul>${recent || "<li>No games yet.</li>"}</ul></div>`));
+      return void html(res, friendsPage(user, url.searchParams.get("msg") ?? undefined));
+    }
+    if (path === "/friends/request" && method === "POST") {
+      const f = await readFormBody(req);
+      try {
+        const to = sendRequest(user, f.get("username") ?? "");
+        sendTo(to.id, { type: "friend_request", from: user.display_name });
+        audit(user.username, "friend.request", { to: to.username });
+        return void redirect(res, "/friends?msg=" + encodeURIComponent("Request sent."));
+      } catch (e) { return void redirect(res, "/friends?msg=" + encodeURIComponent(e instanceof FriendError ? e.message : "Could not send.")); }
+    }
+    if (path === "/friends/accept" && method === "POST") {
+      const f = await readFormBody(req);
+      try {
+        const o = acceptRequest(user.id, Number(f.get("friendship_id")));
+        sendTo(o.id, { type: "friend_accepted", by: user.display_name });
+        audit(user.username, "friend.accept", { with: o.username });
+      } catch { /* ignore */ }
+      return void redirect(res, "/friends");
+    }
+    if (path === "/friends/decline" && method === "POST") {
+      const f = await readFormBody(req);
+      try { declineRequest(user.id, Number(f.get("friendship_id"))); } catch { /* ignore */ }
+      return void redirect(res, "/friends");
     }
 
     // ---- JSON API ----
@@ -322,6 +336,69 @@ const server = createServer(async (req, res) => {
     res.end("something went wrong");
   }
 });
+
+// ---- server-rendered social pages (CSP-safe: plain form POSTs, no inline JS) ----
+
+function profilePage(user: User): string {
+  const p = getProfile(user.id)!;
+  const avatarOptions = Object.values(FACTIONS).flatMap((f) =>
+    allUnitDefs(f.id).map((u) => {
+      const val = `${f.id}:${u.id}`;
+      const sel = p.avatarHouse === f.id && p.avatarUnit === u.id ? " selected" : "";
+      return `<option value="${val}"${sel}>${escapeHtml(f.name)} — ${escapeHtml(u.name)}</option>`;
+    })).join("");
+  const swatches = PLAYER_PALETTE.map((c, i) => {
+    const checked = p.colour === c || (!p.colour && i === 0) ? " checked" : "";
+    return `<label class="sw"><input type="radio" name="colour" value="${c}"${checked}>` +
+      `<span style="background:${escapeHtml(c)}"></span></label>`;
+  }).join("");
+  const current = p.avatarHouse && p.avatarUnit
+    ? `<img class="avatar" src="/art/portraits/${escapeHtml(p.avatarHouse)}/${escapeHtml(p.avatarUnit)}.png" alt="avatar"` +
+      (p.colour ? ` style="box-shadow:0 0 0 4px ${escapeHtml(p.colour)}"` : "") + ">"
+    : "<p>No avatar set yet.</p>";
+  return page("Profile", `
+    <h1>${escapeHtml(p.display_name)}</h1>
+    <div class="card">
+      <p>Username: <code>${escapeHtml(p.username)}</code> · Rating (ELO): <strong>${p.elo}</strong></p>
+      ${current}
+    </div>
+    <div class="card">
+      <h2>Choose your avatar</h2>
+      <form method="post" action="/profile/avatar">
+        <label>Portrait</label>
+        <select name="avatar">${avatarOptions}</select>
+        <label>Colour (also tints your pawns)</label>
+        <div class="swatches">${swatches}</div>
+        <p><button type="submit">Save</button></p>
+      </form>
+    </div>`);
+}
+
+function friendsPage(user: User, msg?: string): string {
+  const friends = friendsOf(user.id)
+    .map((f) => `<li>${escapeHtml(f.display_name)} ${isOnline(f.id) ? "· <em>online</em>" : ""}</li>`).join("");
+  const incoming = incomingRequests(user.id).map((r) =>
+    `<li>${escapeHtml(r.display_name)}
+      <form method="post" action="/friends/accept" style="display:inline">
+        <input type="hidden" name="friendship_id" value="${r.friendship_id}"><button>Accept</button></form>
+      <form method="post" action="/friends/decline" style="display:inline">
+        <input type="hidden" name="friendship_id" value="${r.friendship_id}"><button>Decline</button></form>
+    </li>`).join("");
+  const recent = recentOpponents(user.id).map((o) =>
+    `<li>${escapeHtml(o.display_name)} <code>${escapeHtml(o.username)}</code>
+      <form method="post" action="/friends/request" style="display:inline">
+        <input type="hidden" name="username" value="${escapeHtml(o.username)}"><button>Add friend</button></form>
+    </li>`).join("");
+  return page("Friends", `
+    <h1>Friends</h1>
+    ${msg ? `<p class="err">${escapeHtml(msg)}</p>` : ""}
+    <div class="card"><h2>Add a friend</h2>
+      <form method="post" action="/friends/request">
+        <input name="username" placeholder="their username"><button>Send request</button></form></div>
+    <div class="card"><h2>Your friends</h2><ul>${friends || "<li>None yet.</li>"}</ul></div>
+    <div class="card"><h2>Incoming requests</h2><ul>${incoming || "<li>None.</li>"}</ul></div>
+    <div class="card"><h2>Recent opponents</h2><ul>${recent || "<li>No games yet.</li>"}</ul></div>`);
+}
 
 server.on("upgrade", (req, socket, head) => {
   if (new URL(req.url ?? "/", "http://localhost").pathname === "/ws") {

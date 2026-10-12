@@ -28,6 +28,13 @@ const STYLE = `
   button:hover{background:var(--blood)}
   .err{color:var(--blood);font-weight:bold}
   code{background:#eee;padding:.1em .3em}
+  .avatar{width:120px;height:120px;object-fit:cover;border-radius:50%;border:2px solid var(--line)}
+  .swatches{display:flex;flex-wrap:wrap;gap:6px;margin:.3em 0}
+  .sw{cursor:pointer}
+  .sw input{position:absolute;opacity:0}
+  .sw span{display:inline-block;width:26px;height:26px;border-radius:50%;border:2px solid #000}
+  .sw input:checked + span{outline:3px solid var(--blood)}
+  form{margin:.3em 0}
 `;
 
 export function page(title: string, innerHtml: string): string {
