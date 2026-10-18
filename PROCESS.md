@@ -20,6 +20,25 @@ warband on an 8×8 grid and fight until a necromancer falls. This is multi-user 
 construction — the whole point is a live opponent across a shared board — and it let
 me push on what the agent could do with an unusual, rules-dense task.
 
+The pivot changed how I briefed the agent, not just what I asked it to build. For
+the diary I'd kept context thin and written most of the structure myself; here I
+went the other way and handed the agent a **large, messy asset corpus up front** —
+the 58 MB rulebook PDF, the full unit-art archive, and the designer's own balance
+and patch-note text files — on the bet that a faithful recreation needed the real
+source material in the loop, not my paraphrase of it. That bet is also why
+extraction became its own first phase ([`a716ace`](../../commit/a716ace)) rather
+than something the agent reached for mid-build: dumping that much raw material into
+context on every turn would have been slow and imprecise, so the assets existed to
+be swept once into `data/`, then set aside.
+
+Rebuilding this much of an app from scratch in one week is also not something I
+wanted to direct turn-by-turn, so for the first time this project I worked in
+**Plan Mode**: I had the agent read the extracted rules and propose the phased
+build order (engine → backend → UI → 3D → docs) before it wrote any application
+code, pushed back on the ordering twice, and only let it start once the plan held
+together end to end. The phase-numbered commits in the log are that plan, executed
+one approved step at a time.
+
 ## What good means, and how it shaped the build
 
 I define good here as **a fair, legible, live duel against a real person, faithful
@@ -92,21 +111,17 @@ is what the test talks to.
 
 ## What's next
 
-The game is now playable end to end and deployed: a Three.js table (faction art as
+The game is playable end to end and deployed: a Three.js table (faction art as
 standees, orbit camera, lighting and reflections, dice that roll on the board, a
 battle log + player/audience chat, a hover stat inspector), both lobby modes with a
 faithful Black Mass builder (Malice + dark-power upgrades), spectating, friends,
-avatars and ELO — over the server-authoritative core, green at 40 tests. The client
-is pure presentation, exactly as planned.
-
-Since then I've closed most of those: the rulebook **fonts are self-hosted** across
-every page; the board generates **terrain** (walls, an elevated plateau with
-stairs, hazards, adverse ground) the engine honours — cost-aware movement, hazard
-damage, cover and high-ground dice; and **upgrades apply mechanically** via a
-flag/patch system (cover bonus, push-immunity, obliterate-on-kill, super armour and
-pierce at low HP, extra push/damage, starting tokens).
+avatars and ELO, terrain the engine honours (walls, an elevated plateau with
+stairs, hazards, adverse ground — cost-aware movement, cover, high-ground dice),
+and upgrades that apply mechanically via a flag/patch system — over the
+server-authoritative core, green across 40+ tests. The client is pure
+presentation, exactly as planned.
 
 The honest remainder: upgrades whose faithful effect needs a subsystem I haven't
 built (plague, Doom, Miracle, mutation, stance, berserk, corpses) attach and show
-but apply only the expressible part — those subsystems are the next push, then
+but apply only the expressible part. Those subsystems are the next push, then
 terrain *models* and a voice pass on these documents.

@@ -109,28 +109,31 @@ export function Game({ gameId }: { gameId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, pendingAbility, view?.state.activeSide, view?.state.round]);
 
+  // A 409 means the game moved under us (see src/games.ts act() /
+  // docs/adr-005-concurrent-actions.md) — our view of the board is stale, so
+  // the fix is to refetch the real state, not retry blindly against it.
+  async function runAction(action: unknown) {
+    try {
+      await postJSON(`/api/game/${gameId}/action`, { action });
+      setSelected(null); refetch();
+    } catch (e) {
+      setError(String(e));
+      refetch();
+    }
+  }
   async function tryMove(x: number, y: number) {
     if (!myTurn || !selectedUnit || selectedUnit.owner !== myseat) return;
-    try {
-      await postJSON(`/api/game/${gameId}/action`, { action: { kind: "move", iid: selectedUnit.iid, to: { x, y } } });
-      setSelected(null); refetch();
-    } catch (e) { setError(String(e)); }
+    await runAction({ kind: "move", iid: selectedUnit.iid, to: { x, y } });
   }
   async function useAbility(ability: Ability, targetIid?: string) {
     if (!myTurn || !selectedUnit) return;
     const target = targetIid
       ? view!.state.units.find((u) => u.iid === targetIid)?.pos
       : undefined;
-    try {
-      await postJSON(`/api/game/${gameId}/action`, {
-        action: { kind: "act", iid: selectedUnit.iid, ability: ability.name, target },
-      });
-      setSelected(null); refetch();
-    } catch (e) { setError(String(e)); }
+    await runAction({ kind: "act", iid: selectedUnit.iid, ability: ability.name, target });
   }
   async function endTurn() {
-    try { await postJSON(`/api/game/${gameId}/action`, { action: { kind: "endTurn" } }); refetch(); }
-    catch (e) { setError(String(e)); }
+    await runAction({ kind: "endTurn" });
   }
   async function leave() {
     // participants forfeit on leave so the opponent isn't stranded; spectators just go

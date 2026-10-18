@@ -1,6 +1,7 @@
 import { createServer, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
+import { randomBytes } from "node:crypto";
 import { db } from "./db.ts";
 import {
   AuthError, createSession, destroySession, login, signup, userForToken, type User,
@@ -15,7 +16,7 @@ import {
   redirect, setSessionCookie,
 } from "./http.ts";
 import { landing, page, aboutPage, appShell } from "./serverview.ts";
-import { audit } from "./audit.ts";
+import { audit, withRequestId } from "./audit.ts";
 import { today, TZ } from "./time.ts";
 import { FACTIONS, PLAYER_PALETTE, allUnitDefs } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, maliceLevels, LoadoutError, type Mode } from "./loadouts.ts";
@@ -94,14 +95,22 @@ function messagesForEscaped(id: string, channel: Channel) {
   }));
 }
 
-const server = createServer(async (req, res) => {
+// Every log line produced while handling a request — the entry line below and
+// any audit() calls made anywhere on the call path — carries this same short
+// id (see src/audit.ts), so `flyctl logs | grep req=<id>` replays one request's
+// whole trace, which is what week 10's lecture asks a production app to support.
+function newRequestId(): string {
+  return randomBytes(4).toString("hex");
+}
+
+const server = createServer((req, res) => withRequestId(newRequestId(), async () => {
   try {
     securityHeaders(res);
     const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
     const path = url.pathname;
     const method = req.method ?? "GET";
 
-    // --- static roots ---
+    // --- static roots (not logged: high-volume, never an audit-worthy event) ---
     for (const prefix of ["/static/", "/art/", "/fonts/", "/models/"]) {
       if (method === "GET" && path.startsWith(prefix)) {
         const root = prefix === "/static/" ? "" : prefix.slice(1);
@@ -109,6 +118,8 @@ const server = createServer(async (req, res) => {
       }
     }
 
+    console.log(`req ${method} ${path}`);
+    res.once("finish", () => console.log(`req ${method} ${path} -> ${res.statusCode}`));
     const user = currentUser(req);
 
     // --- README, published in full (required by the spec), open to all ---
@@ -330,7 +341,7 @@ const server = createServer(async (req, res) => {
       if (sub === "/action" && method === "POST") {
         const b = await readJsonBody(req);
         const r = act(id, user.id, b.action as Action);
-        if (!r.ok) return void json(res, { error: r.error }, 403);
+        if (!r.ok) return void json(res, { error: r.error }, r.conflict ? 409 : 403);
         broadcastGame(id, { type: "game", gameId: id });
         return void json(res, { ok: true });
       }
@@ -355,7 +366,7 @@ const server = createServer(async (req, res) => {
     if (!res.headersSent) res.writeHead(500, { "Content-Type": "text/plain" });
     res.end("something went wrong");
   }
-});
+}));
 
 // ---- server-rendered social pages (CSP-safe: plain form POSTs, no inline JS) ----
 

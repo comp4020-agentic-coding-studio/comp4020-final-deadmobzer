@@ -19,7 +19,7 @@ export type Role = "p0" | "p1" | "spectator";
 interface GameRow {
   id: string; mode: string; p0_id: number; p1_id: number;
   status: string; winner: number | null; ranked: number;
-  state_json: string; created_at: string; updated_at: string;
+  state_json: string; version: number; created_at: string; updated_at: string;
 }
 
 function rowFor(id: string): GameRow | undefined {
@@ -28,6 +28,22 @@ function rowFor(id: string): GameRow | undefined {
 
 function newId(): string {
   return randomBytes(9).toString("base64url");
+}
+
+// The compare-and-swap write shared by act() and leaveGame() (see
+// docs/adr-005-concurrent-actions.md): the write only lands if the row's
+// version still matches readVersion — what this caller saw when it decided
+// what to write. Exported so spec/concurrency.test.ts can exercise the guard
+// directly: two writes built from the same read version, one lands, the other
+// reports the conflict instead of silently losing it.
+export function writeIfCurrent(
+  id: string, readVersion: number, status: "active" | "over", winner: number | null, state: GameState,
+): boolean {
+  const write = db.prepare(
+    `UPDATE games SET state_json = ?, status = ?, winner = ?, version = version + 1, updated_at = ?
+       WHERE id = ? AND version = ?`,
+  ).run(JSON.stringify(state), status, winner, nowISO(), id, readVersion);
+  return write.changes > 0;
 }
 
 // Create and persist a new game from two loadouts. Initiative is rolled here
@@ -103,7 +119,17 @@ export function targetsFor(id: string, userId: number, iid: string, ability: str
 // Apply a player's action. Rejects spectators and anyone acting for the other
 // side; the engine rejects acting out of turn / illegal moves. Persists + runs
 // ELO on game over. Returns the updated (viewer-agnostic) state on success.
-export function act(id: string, userId: number, action: Action): { ok: boolean; error?: string; state?: GameState } {
+//
+// Concurrency (docs/adr-005-concurrent-actions.md): better-sqlite3 is synchronous
+// and this function never awaits between its read and its write, so today, in
+// this single Fly machine (`ha=false`), each call already applies atomically —
+// nothing else can run between rowFor(id) and the UPDATE below. But that
+// atomicity is a property of the DB driver and the deployment, not something
+// enforced here; an async driver, a queue, or a second machine would silently
+// reintroduce a lost-update with no test to catch it. The version check below
+// makes the atomicity structural instead of incidental: the write is
+// conditioned on the row's version not having moved since this call read it.
+export function act(id: string, userId: number, action: Action): { ok: boolean; error?: string; state?: GameState; conflict?: boolean } {
   const row = rowFor(id);
   if (!row) return { ok: false, error: "no such game" };
   if (row.status === "over") return { ok: false, error: "game is over" };
@@ -119,9 +145,10 @@ export function act(id: string, userId: number, action: Action): { ok: boolean; 
   const winnerUserId = result.state.winner === null ? null
     : result.state.winner === 0 ? row.p0_id : row.p1_id;
 
-  db.prepare(
-    `UPDATE games SET state_json = ?, status = ?, winner = ?, updated_at = ? WHERE id = ?`,
-  ).run(JSON.stringify(result.state), over ? "over" : "active", winnerUserId, nowISO(), id);
+  if (!writeIfCurrent(id, row.version, over ? "over" : "active", winnerUserId, result.state)) {
+    audit(usernameOf(userId), "game.action.conflict", { game: id, kind: action.kind });
+    return { ok: false, error: "the game moved under you — refetch and retry", conflict: true };
+  }
 
   audit(usernameOf(userId), "game.action", { game: id, kind: action.kind });
 
@@ -159,8 +186,10 @@ export function leaveGame(id: string, userId: number): boolean {
   state.log.push({ round: state.round, side: null, actor: "system",
     text: `${usernameOf(userId)} left — side ${winnerSide + 1} wins by forfeit.` });
   const winnerUser = winnerSide === 0 ? row.p0_id : row.p1_id;
-  db.prepare("UPDATE games SET state_json = ?, status = 'over', winner = ?, updated_at = ? WHERE id = ?")
-    .run(JSON.stringify(state), winnerUser, nowISO(), id);
+  // Same version guard as act() (see its comment): structural, not a fix for an
+  // observed bug. If it ever did fire — the game no longer being the one we
+  // read — re-read and retry rather than overwrite whatever happened meanwhile.
+  if (!writeIfCurrent(id, row.version, "over", winnerUser, state)) return leaveGame(id, userId);
   audit(usernameOf(userId), "game.leave", { game: id });
   if (row.ranked) applyRankedResult(row.p0_id, row.p1_id, winnerUser);
   return true;

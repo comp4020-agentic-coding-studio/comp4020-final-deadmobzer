@@ -69,6 +69,9 @@ db.exec(`
 
   -- A game. The full GameState is serialized to state_json so a game survives a
   -- restart/redeploy; p0/p1 are the two participants (for access + recent opps).
+  -- version is the optimistic-concurrency token (see docs/adr-005-concurrent-actions.md):
+  -- every write is conditioned on WHERE id = ? AND version = ?, so two
+  -- near-simultaneous actions on the same game can't silently overwrite one another.
   CREATE TABLE IF NOT EXISTS games (
     id         TEXT PRIMARY KEY,
     mode       TEXT NOT NULL,
@@ -78,6 +81,7 @@ db.exec(`
     winner     INTEGER,
     ranked     INTEGER NOT NULL DEFAULT 0,
     state_json TEXT NOT NULL,
+    version    INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -109,3 +113,4 @@ ensureColumn("users", "elo", "elo INTEGER NOT NULL DEFAULT 1200");
 ensureColumn("users", "avatar_house", "avatar_house TEXT");
 ensureColumn("users", "avatar_unit", "avatar_unit TEXT");
 ensureColumn("users", "colour", "colour TEXT");
+ensureColumn("games", "version", "version INTEGER NOT NULL DEFAULT 0");
