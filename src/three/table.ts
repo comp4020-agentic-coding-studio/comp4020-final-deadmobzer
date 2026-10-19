@@ -364,6 +364,35 @@ export class Table {
         d.mesh.rotation.x += (0 - d.mesh.rotation.x) * 0.2; d.mesh.rotation.z += (0 - d.mesh.rotation.z) * 0.2; }
       d.mesh.position.x += d.vx; d.mesh.position.z += d.vz; d.vx *= 0.96; d.vz *= 0.96;
     }
+    // pairwise collision: cheap sphere-sphere separation + a soft velocity swap, so
+    // up to 4 simultaneously-rolled dice push apart instead of clipping through each
+    // other. Not a physics engine — just enough to read as dice bumping on a table.
+    const COLLIDE_DIAM = 0.65; // ~ two 0.6 cubes' faces starting to touch
+    for (let i = 0; i < this.dice.length; i++) {
+      for (let j = i + 1; j < this.dice.length; j++) {
+        const a = this.dice[i], b = this.dice[j];
+        const dx = b.mesh.position.x - a.mesh.position.x;
+        const dy = b.mesh.position.y - a.mesh.position.y;
+        const dz = b.mesh.position.z - a.mesh.position.z;
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (dist === 0 || dist >= COLLIDE_DIAM) continue; // 0 = degenerate overlap, skip for a frame
+        const nx = dx / dist, ny = dy / dist, nz = dz / dist;
+        // split the overlap evenly, mostly along the floor plane; only let the
+        // vertical component act when a die is meaningfully above another, so this
+        // doesn't fight the floor-snap settle logic above.
+        const push = (COLLIDE_DIAM - dist) * 0.5;
+        const vBias = Math.abs(dy) > 0.15 ? 0.3 : 0.02;
+        a.mesh.position.x -= nx * push; a.mesh.position.z -= nz * push; a.mesh.position.y -= ny * push * vBias;
+        b.mesh.position.x += nx * push; b.mesh.position.z += nz * push; b.mesh.position.y += ny * push * vBias;
+        // soft, slightly-elastic bounce: each die takes most of the other's drift and
+        // keeps a little of its own, then damps — same damping style as the `*= 0.96`
+        // drift above, just a bit firmer since this can re-apply every frame while
+        // two dice are still overlapping.
+        const avx = a.vx, avz = a.vz, bvx = b.vx, bvz = b.vz;
+        a.vx = (avx * 0.4 + bvx * 0.6) * 0.9; a.vz = (avz * 0.4 + bvz * 0.6) * 0.9;
+        b.vx = (bvx * 0.4 + avx * 0.6) * 0.9; b.vz = (bvz * 0.4 + avz * 0.6) * 0.9;
+      }
+    }
     this.dice = this.dice.filter((d) => { if (d.dead <= 0) { this.scene.remove(d.mesh); return false; } return true; });
   }
 

@@ -59,8 +59,10 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
 .gameover { background: var(--panel); border: 2px solid var(--blood); border-radius: 4px;
   padding: 14px; text-align: center; }
 .gameover h2 { margin: 0 0 10px; color: var(--blood); }
-.panel { background: var(--panel); border: 1px solid #2a2a30; border-radius: 4px; padding: 10px; }
+.panel { background: var(--panel); border: 1px solid #2a2a30; border-radius: 4px; padding: 10px;
+  animation: panel-in .15s ease-out; }
 .panel.ghost { opacity: .8; }
+@keyframes panel-in { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
 .panel h3 { margin: 0 0 6px; color: var(--blood); }
 .stat { display: flex; flex-wrap: wrap; gap: 8px; font-size: .9rem; }
 .stat .type { width: 100%; color: #999; text-transform: capitalize; }
@@ -87,3 +89,17 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
   .game { grid-template-columns: 1fr; grid-template-rows: 55vh 45vh; }
   .hud { border-left: none; border-top: 1px solid #000; }
 }
+
+/* Dismissible overlay modal (e.g. an in-game "?" How to Play button). Reuses the
+   existing palette tokens (--panel/--blood/--paper/--line) rather than inventing
+   new colours — see the :root block at the top of this file. */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .7);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: var(--panel); color: var(--paper); border: 1px solid var(--blood);
+  border-radius: 4px; padding: 20px 24px; max-width: 640px; width: 90%;
+  max-height: 85vh; overflow-y: auto; position: relative; }
+.modal h1, .modal h2, .modal h3 { margin-top: 0; }
+.modal-close { position: absolute; top: 10px; right: 10px; background: var(--ink);
+  color: var(--paper); border: 1px solid #333; border-radius: 3px; width: 2em; height: 2em;
+  line-height: 1; cursor: pointer; font-family: var(--label); }
+.modal-close:hover { background: var(--blood); border-color: var(--blood); }

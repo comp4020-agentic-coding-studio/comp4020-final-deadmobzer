@@ -37,6 +37,8 @@ export function Game({ gameId }: { gameId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [pendingAbility, setPendingAbility] = useState<Ability | null>(null);
   const [targetable, setTargetable] = useState<string[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
+  const hoverClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const refetch = useCallback(async () => {
     try { setView(await getJSON<GameView>(`/api/game/${gameId}`)); }
@@ -159,7 +161,15 @@ export function Game({ gameId }: { gameId: string }) {
     setSelected((cur) => (cur === iid ? null : iid));
   };
   handlersRef.current.pickTile = (x, y) => { if (!pendingAbility) tryMove(x, y); };
-  handlersRef.current.hoverUnit = (iid) => setHover(iid);
+  // Debounce hover-out only: a cursor sweeping from one standee to the next
+  // reports a brief `null` in between, which without buffering flickers the
+  // hover panel off and back on every frame. Clearing waits a beat in case a
+  // new unit is hovered in that window; picking up a unit is still instant.
+  handlersRef.current.hoverUnit = (iid) => {
+    if (hoverClearRef.current) { clearTimeout(hoverClearRef.current); hoverClearRef.current = null; }
+    if (iid) setHover(iid);
+    else hoverClearRef.current = setTimeout(() => setHover(null), 120);
+  };
 
   if (!view) return <div className="pad">{error ?? "Loading the table…"}</div>;
   const s = view.state;
@@ -174,10 +184,22 @@ export function Game({ gameId }: { gameId: string }) {
             ? (s.winner === null ? "Draw" : `Side ${s.winner + 1} wins`)
             : myTurn ? "Your turn" : `Side ${s.activeSide + 1}'s turn`}
           {" · "}<span>{view.role}</span> · 👁 {view.audience}
-          <button className="leave" onClick={leave}>
-            {view.role === "spectator" ? "Stop watching" : "Leave"}
-          </button>
+          <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+            <button onClick={() => setShowHelp(true)} title="How to play">?</button>
+            <button className="leave" onClick={leave}>
+              {view.role === "spectator" ? "Stop watching" : "Leave"}
+            </button>
+          </span>
         </div>
+
+        {showHelp && (
+          <div className="modal-overlay" onClick={() => setShowHelp(false)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setShowHelp(false)}>×</button>
+              <HelpContent />
+            </div>
+          </div>
+        )}
 
         {s.phase === "over" && (
           <div className="gameover">
@@ -268,6 +290,25 @@ function ChatBox({ placeholder, onSend }: { placeholder: string; onSend: (body: 
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }} />
       <button onClick={submit}>Send</button>
+    </div>
+  );
+}
+
+// condensed quick-reference for the in-game "?" button; the full writeup lives
+// at /how-to-play/ (src/serverview.ts) and is linked below, not duplicated here.
+function HelpContent() {
+  return (
+    <div>
+      <h2>Quick reference</h2>
+      <ul>
+        <li><strong>Turns</strong> — sides alternate activating one unit each; a unit may MOVE and ACT once per round.</li>
+        <li><strong>Hit vs graze</strong> — roll against the target's DF: meet or beat it to hit, otherwise it grazes for reduced effect.</li>
+        <li><strong>Armour</strong> — PHYS blocks physical, MAG blocks magic/elemental, SUPER blocks everything except devil damage; pierce ignores armour.</li>
+        <li><strong>Tokens</strong> — strength/weak adjust damage dealt, vitality/vulnerable adjust damage taken, slow/speed adjust MV, berserk splashes on your next ACT, doom detonates at round 4's end.</li>
+        <li><strong>Deploy</strong> — place your units within 2 rows of your own board edge before the match starts.</li>
+        <li><strong>Win</strong> — slay the enemy necromancer, or have more remaining HP when round 6 ends.</li>
+      </ul>
+      <p><a href="/how-to-play/" target="_blank" rel="noreferrer">Full rules →</a></p>
     </div>
   );
 }
