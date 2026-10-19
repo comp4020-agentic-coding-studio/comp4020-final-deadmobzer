@@ -10,6 +10,7 @@ export interface TableUnit {
   iid: string; owner: 0 | 1; name: string; art: string;
   pos: { x: number; y: number };
   hp: number; maxHp: number; alive: boolean; isNecromancer: boolean;
+  activatedThisRound: boolean;
 }
 export interface TerrainCell {
   wall?: { hp: number }; elevated?: boolean; hazard?: boolean; adverse?: boolean; stairs?: boolean;
@@ -175,8 +176,17 @@ export class Table {
         this.scene.add(g);
       }
       // animate movement: remember the target; the render loop lerps toward it.
-      const plane = g.userData.billboard;
-      g.userData = { iid: u.iid, billboard: plane, tx: u.pos.x, tz: u.pos.y };
+      const { billboard, ringMat, ringColour } = g.userData as {
+        billboard: THREE.Mesh; ringMat: THREE.MeshStandardMaterial; ringColour: THREE.Color;
+      };
+      g.userData = { iid: u.iid, billboard, ringMat, ringColour, tx: u.pos.x, tz: u.pos.y };
+      // grey out an already-moved unit's ring so the board reads who's left to act.
+      if (ringMat) {
+        const c = u.activatedThisRound ? ringColour.clone().multiplyScalar(0.35) : ringColour;
+        ringMat.color.copy(c);
+        ringMat.emissive.copy(c);
+        ringMat.emissiveIntensity = u.activatedThisRound ? 0.1 : 0.4;
+      }
     }
     // remove standees for units no longer present/alive
     for (const [iid, g] of this.standees) {
@@ -241,14 +251,14 @@ export class Table {
       mat.map = tex; mat.needsUpdate = true;
     });
     g.add(plane);
-    // a thin ring in the full team colour to read ownership from above
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(r * 1.2, 0.04, 8, 24),
-      new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.4 }),
-    );
+    // a thin ring in the full team colour to read ownership from above; darkened
+    // (sync()) once the unit has activated this round, so a glance at the board
+    // shows who's left to act.
+    const ringMat = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.4 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 1.2, 0.04, 8, 24), ringMat);
     ring.rotation.x = Math.PI / 2; ring.position.y = 0.06;
     g.add(ring);
-    g.userData = { iid: u.iid, billboard: plane };
+    g.userData = { iid: u.iid, billboard: plane, ringMat, ringColour: col };
     return g;
   }
 

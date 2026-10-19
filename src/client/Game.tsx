@@ -9,6 +9,7 @@ interface Unit {
   mv: number; hp: number; maxHp: number; df: number; arm: string | null;
   pos: { x: number; y: number }; tokens: Record<string, number>;
   acts: Ability[]; alive: boolean; isNecromancer: boolean; upgrade?: string;
+  activatedThisRound: boolean;
 }
 interface State extends TableState {
   phase: string; round: number; activeSide: 0 | 1; winner: 0 | 1 | null;
