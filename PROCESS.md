@@ -122,6 +122,7 @@ server-authoritative core, green across 40+ tests. The client is pure
 presentation, exactly as planned.
 
 The honest remainder: upgrades whose faithful effect needs a subsystem I haven't
-built (plague, Doom, Miracle, mutation, stance, berserk, corpses) attach and show
-but apply only the expressible part. Those subsystems are the next push, then
-terrain *models* and a voice pass on these documents.
+built (plague, Doom, Miracle, mutation, stance) attach and show but apply only
+the expressible part — corpses and berserk have since landed (`spec/rules.test.ts`).
+Those remaining subsystems are the next push, then terrain *models* and a voice
+pass on these documents.

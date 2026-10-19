@@ -165,3 +165,33 @@ describe("turn flow + win", () => {
     expect(s.winner).toBe(0);
   });
 });
+
+describe("berserk (goregrinders specialTags.Berserk)", () => {
+  it("after a berserk unit ACTs, it splashes 1 to adjacent units and discards the token", () => {
+    const s = g(); autoDeploy(s);
+    const carnifex = s.units.find((u) => u.defId === "carnifex")!;
+    carnifex.tokens.berserk = 1;
+    const foe = s.units.find((u) => u.owner !== carnifex.owner && !u.isNecromancer)!;
+    foe.pos = { x: carnifex.pos.x + 1, y: carnifex.pos.y };
+    const hp0 = foe.hp;
+    s.activeSide = carnifex.owner;
+    const r = applyAction(s, carnifex.owner, { kind: "act", iid: carnifex.iid, ability: "Rev" });
+    expect(r.ok).toBe(true);
+    expect(foe.hp).toBe(hp0 - 1);
+    expect(carnifex.tokens.berserk ?? 0).toBe(0);
+  });
+  it("if the splash damages nobody, the berserk unit instead takes 1 damage itself", () => {
+    const s = g(); autoDeploy(s);
+    const carnifex = s.units.find((u) => u.defId === "carnifex")!;
+    carnifex.tokens.berserk = 1;
+    // move every other unit far away so nothing is adjacent
+    for (const u of s.units) if (u.iid !== carnifex.iid) u.pos = { x: 0, y: 0 };
+    carnifex.pos = { x: s.mapSize - 1, y: s.mapSize - 1 };
+    const hp0 = carnifex.hp;
+    s.activeSide = carnifex.owner;
+    const r = applyAction(s, carnifex.owner, { kind: "act", iid: carnifex.iid, ability: "Rev" });
+    expect(r.ok).toBe(true);
+    expect(carnifex.hp).toBe(hp0 - 1);
+    expect(carnifex.tokens.berserk ?? 0).toBe(0);
+  });
+});

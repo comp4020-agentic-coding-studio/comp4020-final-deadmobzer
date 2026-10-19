@@ -124,6 +124,28 @@ function onSlain(s: GameState, u: Unit) {
 }
 const RULES_SOUL_MAX = 6;
 
+// Berserk (data/factions/goregrinders.json specialTags.Berserk): after a berserk
+// unit ACTs, it splashes (self) 1 damage, then discards a berserk token. If that
+// splash damages no other character, it deals 1 to itself instead, ignoring
+// armor. Runs after any ACT, not just abilities that grant berserk themselves.
+function applyBerserkAfterAct(s: GameState, u: Unit) {
+  if (!u.alive || tok(u, "berserk") <= 0) return;
+  let anyDamaged = false;
+  for (const o of s.units) {
+    if (o.iid === u.iid || !o.alive || !adjacent(o.pos, u.pos)) continue;
+    const dealt = dealDamage(s, o, 1, "physical");
+    if (dealt > 0) {
+      anyDamaged = true;
+      log(s, { side: u.owner, actor: u.name, text: `${u.name}'s berserk rage splashes ${o.name} for ${dealt}.` });
+    }
+  }
+  spendToken(u, "berserk");
+  if (!anyDamaged && u.alive) {
+    const dealt = dealDamage(s, u, 1, "physical", { pierce: true });
+    if (dealt > 0) log(s, { side: u.owner, actor: u.name, text: `${u.name}'s unspent rage turns inward for ${dealt}.` });
+  }
+}
+
 function checkWin(s: GameState, slainUnit: Unit) {
   if (slainUnit.isNecromancer) {
     s.winner = other(slainUnit.owner);
@@ -584,6 +606,7 @@ export function applyAction(s: GameState, side: 0 | 1, action: Action): ApplyRes
       const err = validateAndResolveAct(s, u, ability, action.target);
       if (err) return { ok: false, error: err, state: s };
       if (ability.tags.includes("reload")) u.reloaded[ability.name] = false;
+      applyBerserkAfterAct(s, u);
       u.activatedThisRound = true;
       endTurn(s);
       return { ok: true, state: s };

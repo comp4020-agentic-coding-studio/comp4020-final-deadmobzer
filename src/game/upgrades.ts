@@ -2,8 +2,10 @@
 // mechanical flag the engine honours, or patches one of the unit's abilities
 // (extra damage / push / range / effects). Upgrades whose faithful effect needs a
 // subsystem the engine doesn't model yet (plague, Doom, Miracle, mutation, stance,
-// berserk, corpses, deathburst) still attach to the unit and show in the inspector,
-// and apply whatever part IS expressible — nothing is silently dropped.
+// corpses, deathburst) still attach to the unit and show in the inspector, and
+// apply whatever part IS expressible — nothing is silently dropped. Berserk itself
+// is now mechanical (see applyBerserkAfterAct in engine.ts): abilities that grant
+// berserk tokens pay off with the splash-and-discard the rulebook describes.
 
 import type { EffectOp, Unit } from "./types.ts";
 
