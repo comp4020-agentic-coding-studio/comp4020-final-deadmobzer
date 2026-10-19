@@ -2,10 +2,27 @@
 // limits, Malice dark-power budget, and valid upgrade choices. Asserted over the
 // loadout API so the UI can't smuggle an illegal army into a game.
 import { expect, inject, it, describe } from "vitest";
-import { api, signup } from "./helpers.ts";
+import { api, get, signup } from "./helpers.ts";
 
 const baseUrl = inject("baseUrl");
 const save = (sid: string, body: unknown) => api(baseUrl, sid, "/api/loadout", body);
+
+// GET /api/factions is the same data a client-side faithful-mode builder needs to
+// replicate validateLoadout()'s slot-budget math — it must ship the raw slot-cost/
+// limit table and the overall slot budget, not just palette/malice/factions, so a
+// client never has to hardcode numbers that belong in data/rules.json.
+describe("GET /api/factions exposes roster-budget data", () => {
+  it("includes unitTypes (slot costs + limits) and unitSlots (the overall budget)", async () => {
+    const res = await get(baseUrl, "/api/factions");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    // These numbers come straight from data/rules.json's unitTypes/mode.unitSlots.
+    expect(body.unitTypes.thrall.slotCost).toBe(0.5);
+    expect(body.unitTypes.thrall.limit).toBe(null);
+    expect(body.unitTypes.tyrant.limit).toBe(1);
+    expect(body.unitSlots).toBe(5);
+  });
+});
 
 describe("faithful loadout validation", () => {
   it("accepts a roster within the slot budget", async () => {

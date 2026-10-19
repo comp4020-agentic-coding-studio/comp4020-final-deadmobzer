@@ -5,7 +5,11 @@ interface Upgrade { name: string; text: string }
 interface UnitDef { id: string; name: string; type: string; upgrades?: Upgrade[] }
 interface FactionDef { id: string; name: string; blurb: string; playstyle: string; accent: string; units: UnitDef[] }
 interface MaliceLevel { name: string; darkPower: number }
-interface Factions { palette: string[]; malice: MaliceLevel[]; factions: FactionDef[] }
+interface UnitTypeInfo { slotCost: number; limit: number | null }
+interface Factions {
+  palette: string[]; malice: MaliceLevel[]; factions: FactionDef[];
+  unitTypes: Record<string, UnitTypeInfo>; unitSlots: number;
+}
 
 type Mode = "fixed" | "faithful";
 
@@ -42,6 +46,22 @@ export function Lobby() {
 
   const darkPower = data?.malice.find((m) => m.name === malice)?.darkPower ?? 0;
   const spent = Object.values(upgrades).filter(Boolean).length;
+  const unitSlots = data?.unitSlots ?? 5;
+  const unitTypes = data?.unitTypes ?? {};
+
+  // Same budget math as src/loadouts.ts's validateLoadout(), mirrored client-side
+  // so the builder can't even offer an illegal pick — the server still re-checks.
+  const slotsUsed = picked.reduce((sum, id) => {
+    const type = faction?.units.find((u) => u.id === id)?.type;
+    return sum + (type ? unitTypes[type]?.slotCost ?? 1 : 1);
+  }, 0);
+  function countOf(defId: string): number { return picked.filter((p) => p === defId).length; }
+  function canAdd(u: UnitDef): boolean {
+    const info = unitTypes[u.type];
+    if (info?.limit != null && countOf(u.id) >= info.limit) return false;
+    const cost = info?.slotCost ?? 1;
+    return slotsUsed + cost <= unitSlots;
+  }
 
   async function go(kind: "quickjoin" | "create" | "join") {
     setError(null);
@@ -86,7 +106,7 @@ export function Lobby() {
 
   return (
     <div className="pad lobby">
-      <h1>Find a match</h1>
+      <h1>Find a match <a href="/how-to-play/" target="_blank" rel="noreferrer" style={{ fontSize: "1rem" }}>(How to play)</a></h1>
       <div className="row">
         <label>Mode</label>
         <select value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
@@ -120,21 +140,28 @@ export function Lobby() {
             <span className="blurb">spent {spent}/{darkPower}</span>
           </div>
           <div className="row">
-            <label>Units (slot budget 5)</label>
+            <label>Units (slot budget {slotsUsed}/{unitSlots})</label>
             <div className="units">
               {faction.units.map((u) => {
-                const n = picked.filter((p) => p === u.id).length;
+                const n = countOf(u.id);
                 const inRoster = n > 0;
+                const limit = unitTypes[u.type]?.limit;
+                const atLimit = limit != null && n >= limit;
+                const upgradeBudgetFull = spent >= darkPower && !upgrades[u.id];
                 return (
                   <div key={u.id} className="unitpick">
-                    <span>{u.name} <em>{u.type}</em> ×{n}</span>
-                    <button onClick={() => setPicked([...picked, u.id])}>+</button>
-                    <button onClick={() => { const i = picked.indexOf(u.id); if (i >= 0) setPicked(picked.filter((_, j) => j !== i)); }}>−</button>
+                    <span>{u.name} <em>{u.type}</em> ×{n}{limit != null ? ` (max ${limit})` : ""}</span>
+                    <button disabled={!canAdd(u)} onClick={() => setPicked([...picked, u.id])}>+</button>
+                    <button disabled={n === 0} onClick={() => { const i = picked.indexOf(u.id); if (i >= 0) setPicked(picked.filter((_, j) => j !== i)); }}>−</button>
                     {inRoster && darkPower > 0 && u.upgrades && (
                       <select value={upgrades[u.id] ?? ""} title={u.upgrades.find((x) => x.name === upgrades[u.id])?.text}
                         onChange={(e) => setUpgrades({ ...upgrades, [u.id]: e.target.value })}>
                         <option value="">no upgrade</option>
-                        {u.upgrades.map((up) => <option key={up.name} value={up.name}>{up.name}</option>)}
+                        {u.upgrades.map((up) => (
+                          <option key={up.name} value={up.name} disabled={upgradeBudgetFull && upgrades[u.id] !== up.name}>
+                            {up.name}
+                          </option>
+                        ))}
                       </select>
                     )}
                   </div>

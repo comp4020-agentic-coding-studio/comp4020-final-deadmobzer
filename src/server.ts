@@ -15,10 +15,10 @@ import {
   clearSessionCookie, escapeHtml, html, json, readCookie, readFormBody, readJsonBody,
   redirect, setSessionCookie,
 } from "./http.ts";
-import { landing, page, aboutPage, appShell } from "./serverview.ts";
+import { landing, page, aboutPage, appShell, howToPlay } from "./serverview.ts";
 import { audit, withRequestId } from "./audit.ts";
 import { today, TZ } from "./time.ts";
-import { FACTIONS, PLAYER_PALETTE, allUnitDefs } from "./game/data.ts";
+import { FACTIONS, PLAYER_PALETTE, UNIT_SLOTS, RULES, allUnitDefs } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, maliceLevels, LoadoutError, type Mode } from "./loadouts.ts";
 import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
 import { gameView, act, movesFor, targetsFor, leaveGame, recentOpponents, activeGames, GameError } from "./games.ts";
@@ -127,6 +127,11 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
       return void html(res, aboutPage(readmeBodyHtml()));
     }
 
+    // --- How to Play: a concise rules primer, open to all (no auth needed) ---
+    if (method === "GET" && (path === "/how-to-play" || path === "/how-to-play/")) {
+      return void html(res, howToPlay());
+    }
+
     // --- auth (open) ---
     if (path === "/login" && method === "POST") {
       const f = await readFormBody(req);
@@ -162,6 +167,10 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
       return void json(res, {
         palette: PLAYER_PALETTE,
         malice: maliceLevels(),
+        // Slot-cost/limit table + overall budget, so a client-side faithful-mode
+        // builder can replicate validateLoadout()'s math without hardcoding numbers.
+        unitTypes: RULES.unitTypes,
+        unitSlots: UNIT_SLOTS,
         factions: Object.values(FACTIONS).map((f) => ({
           id: f.id, name: f.name, blurb: f.blurb, playstyle: f.playstyle, accent: f.accent,
           necromancer: f.necromancer, units: f.units,
