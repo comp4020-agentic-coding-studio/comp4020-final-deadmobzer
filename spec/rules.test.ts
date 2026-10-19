@@ -195,3 +195,18 @@ describe("berserk (goregrinders specialTags.Berserk)", () => {
     expect(carnifex.tokens.berserk ?? 0).toBe(0);
   });
 });
+
+describe("doom (deadsouls specialMechanic)", () => {
+  it("a Doomed unit takes 4 devil damage at the end of round 4, undoomed units don't", () => {
+    const s = g(); autoDeploy(s);
+    const doomed = s.units.find((u) => u.owner === 1 && !u.isNecromancer)!;
+    const clean = s.units.find((u) => u.owner === 1 && !u.isNecromancer && u.iid !== doomed.iid)!;
+    doomed.tokens.doom = 1;
+    const doomedHp0 = doomed.hp, cleanHp0 = clean.hp;
+    s.round = 4;
+    // forfeit every remaining activation this round to trigger the end-of-round-4 check
+    while (s.round === 4) applyAction(s, s.activeSide, { kind: "endTurn" });
+    expect(doomed.hp).toBe(Math.max(0, doomedHp0 - 4));
+    expect(clean.hp).toBe(cleanHp0);
+  });
+});

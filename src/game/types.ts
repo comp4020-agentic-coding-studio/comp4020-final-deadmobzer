@@ -7,7 +7,7 @@ import type { Rng } from "./prng.ts";
 export type DamageType = "physical" | "fire" | "toxic" | "curse" | "holy" | "devil";
 export type Armor = "PHYS" | "MAG" | "SUPER" | null;
 export type TokenType =
-  | "strength" | "weak" | "vitality" | "vulnerable" | "slow" | "speed" | "berserk";
+  | "strength" | "weak" | "vitality" | "vulnerable" | "slow" | "speed" | "berserk" | "doom";
 export type UnitType =
   | "thrall" | "freak" | "scion" | "horror" | "hunter" | "tyrant" | "necromancer";
 

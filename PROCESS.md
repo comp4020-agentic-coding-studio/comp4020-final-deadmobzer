@@ -122,7 +122,10 @@ server-authoritative core, green across 40+ tests. The client is pure
 presentation, exactly as planned.
 
 The honest remainder: upgrades whose faithful effect needs a subsystem I haven't
-built (plague, Doom, Miracle, mutation, stance) attach and show but apply only
-the expressible part — corpses and berserk have since landed (`spec/rules.test.ts`).
-Those remaining subsystems are the next push, then terrain *models* and a voice
-pass on these documents.
+built (plague, Miracle, mutation, stance) attach and show but apply only the
+expressible part — corpses, berserk, and Doom's end-of-round-4 devil damage have
+since landed (`spec/rules.test.ts`). Doom itself is still partial: a unit can only
+clear it today by the round-4 check firing, since clearing it early by slaying
+another unit needs attacker-tracking the engine doesn't have yet — not silently
+dropped, just not there. Those remaining subsystems are the next push, then
+terrain *models* and a voice pass on these documents.

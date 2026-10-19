@@ -521,11 +521,28 @@ export function autoDeploy(s: GameState) {
 
 // ---------- turn flow ----------
 
+// Doom (data/factions/deadsouls.json specialMechanic): any unit with at least one
+// Doom token takes 4 devil damage at the end of round 4. Devil damage can't be
+// reduced, increased or ignored (dealDamage handles that), and can obliterate.
+// Clearing a Doom token by slaying another unit needs attacker-vs-victim tracking
+// the engine doesn't have yet, so Doom only accumulates today — it never clears
+// early. That's the honest remainder, not silently dropped (PROCESS.md).
+function applyDoomAtEndOfRound(s: GameState) {
+  if (s.round !== 4) return;
+  for (const u of s.units) {
+    if (u.alive && tok(u, "doom") > 0) {
+      dealDamage(s, u, 4, "devil");
+      log(s, { side: null, actor: u.name, text: `${u.name}'s Doom comes due: 4 devil damage.` });
+    }
+  }
+}
+
 function endTurn(s: GameState) {
   s.soulUsedThisTurn = false;
   // round advances once everyone has activated
   const allDone = s.units.filter((u) => u.alive).every((u) => u.activatedThisRound);
   if (allDone) {
+    applyDoomAtEndOfRound(s);
     s.round += 1;
     for (const u of s.units) { u.activatedThisRound = false; }
     // SOUL Gather from round 2
