@@ -1,0 +1,58 @@
+# Prompt log
+
+`PROCESS.md` is the polished, word-capped (900–1100 words) narrative for
+submission. This file is the uncapped trace of what was actually asked for and
+what landed in response — the raw material `PROCESS.md` is distilled from.
+Newest entries at the bottom.
+
+---
+
+**Prompt:** Continue through `PROCESS.md`'s "What's next" plan (plague,
+Miracle, mutation, stance subsystems) and add manual deployment placement so
+players choose unit starting positions before a match begins.
+**Response:** Dispatched as a background agent (engine subsystems + manual
+deploy backend). In progress — see task #4/#5 in the session task list.
+
+**Prompt:** Remake the Black Mass builder to enforce limits client-side.
+**Response:** `src/client/Lobby.tsx` now mirrors `src/loadouts.ts`'s
+`validateLoadout()` slot-budget math client-side (slot costs, per-type limits,
+Malice/upgrade budget), fed by a new `unitTypes`/`unitSlots` block on
+`GET /api/factions` (`src/server.ts`). Covered by `spec/loadout.test.ts`.
+
+**Prompt:** Add a "how to play" section and dice collision.
+**Response:** Added a server-rendered `/how-to-play/` primer (`src/serverview.ts`,
+linked from the navbar and the lobby), an in-game "?" quick-reference modal
+(`src/client/Game.tsx`, `public/app.css`), and pairwise sphere-sphere collision
++ soft velocity swap for simultaneously-rolled dice (`src/three/table.ts`).
+
+**Prompt:** Smoother UI/animation buffers to prevent flickering; develop an
+automated testing suite to test all possible scenarios.
+**Response:** Added a hover debounce (120ms clear-delay) in `src/client/Game.tsx`
+so sweeping the cursor across standees doesn't flicker the hover panel. Expanded
+`spec/` with `auth.test.ts`, `friends.test.ts`, `gameplay.test.ts`,
+`howtoplay.test.ts`, `lobbies.test.ts`, `profile.test.ts` (56 new tests).
+Diagnosed and fixed a better-sqlite3/Node native teardown race that crashed the
+dev server under concurrent vitest load, by serializing spec-file execution
+(`fileParallelism: false` in `vitest.config.ts`). Full suite: 110/110 passing.
+
+**Prompt:** "fan out subagenents to look into creating an automated testing
+suite that opens 2 browser windows and records a mock game with mocked user
+intereaction"
+**Response:** Fanned out two parallel research agents: (1) approach research —
+recommended Playwright with a gated `window.__testHooks` client hook (so
+Three.js-canvas clicks are deterministic instead of fragile pixel-raycasting),
+a new top-level `e2e/` directory with its own `playwright.config.ts`, and a
+`test:e2e` npm script kept deliberately out of `pnpm check`; (2) feasibility
+spike — confirmed Playwright installs and runs cleanly in this environment
+(headless Chromium, multi-context isolation, `.webm` video recording all
+verified), added as a devDependency. Implementation not yet started — see
+task #10.
+
+**Prompt:** "remember to note all prompts into process, and add relevant
+commits when changes are made. ask for reasoning if it is appropriate"
+**Response:** Saved as a standing instruction (memory: this file's own
+creation, plus a `feedback` memory). Asked the user how to reconcile this with
+`PROCESS.md`'s 900–1100 word cap, since it was already over; they chose a
+separate uncapped log file — this file. Going forward: every explicit user
+prompt gets an entry here, and changes land in their own commits as they're
+made rather than batched.
