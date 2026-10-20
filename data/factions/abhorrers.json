@@ -42,7 +42,10 @@
           "effect": [ { "op": "damage", "damage": 1, "damageType": "holy", "target": "choose" } ] },
         { "name": "Excoriate", "tags": ["attack", "melee"], "range": "melee",
           "text": "On hit: 1 damage, and Stance (Odd): splash (self) 1 holy damage, (Even): gain 1 vitality.",
-          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
+          "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" },
+            { "op": "onHit", "then": [ { "op": "stance",
+              "odd": [ { "op": "splash", "center": "self", "then": [ { "op": "damage", "damage": 1, "damageType": "holy" } ] } ],
+              "even": [ { "op": "token", "token": "vitality", "n": 1, "target": "self" } ] } ] } ] }
       ],
       "upgrades": [
         { "name": "Holy Blood", "text": "Mea Culpa creates one or (4+) two hazards in free adjacent spaces." },

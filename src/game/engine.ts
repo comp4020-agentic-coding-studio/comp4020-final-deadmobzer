@@ -8,7 +8,7 @@ import type {
   SidePlayer, TerrainCell, TokenType, Unit,
 } from "./types.ts";
 import { makeRng, rollD6, rollPool, type Rng } from "./prng.ts";
-import { allUnitDefs, faction, MAP_SIZE, MAX_ROUNDS } from "./data.ts";
+import { allUnitDefs, faction, MAP_SIZE, MAX_ROUNDS, RULES } from "./data.ts";
 import { applyUpgrade } from "./upgrades.ts";
 
 // ---------- helpers ----------
@@ -99,7 +99,26 @@ export function dealDamage(
   return dmg;
 }
 
+// Miracle (data/factions/abhorrers.json specialMechanic): a unit affected by a
+// Miracle has a 5+ effect chance to instantly return to life at 1 hp at the end
+// of any turn it is slain, clearing all tokens. "End of any turn" (not
+// immediately) needs a pending-revive subsystem the engine doesn't have, so this
+// checks the miracle flag and rolls right when the unit would be slain — close
+// enough to "its own slaying turn" for the common case (a unit dying on the
+// attacker's turn), but a miracle unit slain earlier in a round that *could*
+// still revive "at the end of any turn" before its own next activation isn't
+// retried later. Not silently dropped — see the comment atop upgrades.ts.
 function slay(s: GameState, u: Unit) {
+  if (u.flags?.miracle) {
+    const roll = rollD6(s.rng);
+    if (roll >= 5) {
+      u.hp = 1;
+      u.tokens = {};
+      log(s, { side: null, actor: u.name, dice: [roll], text: `${u.name}'s Miracle triggers (rolled ${roll}) — returns to life at 1 hp.` });
+      return;
+    }
+    log(s, { side: null, actor: u.name, dice: [roll], text: `${u.name}'s Miracle fails (rolled ${roll}).` });
+  }
   u.hp = 0;
   u.alive = false;
   s.corpses.push({ x: u.pos.x, y: u.pos.y });   // a slain unit leaves a corpse marker
@@ -144,6 +163,23 @@ function applyBerserkAfterAct(s: GameState, u: Unit) {
     const dealt = dealDamage(s, u, 1, "physical", { pierce: true });
     if (dealt > 0) log(s, { side: u.owner, actor: u.name, text: `${u.name}'s unspent rage turns inward for ${dealt}.` });
   }
+}
+
+// Plague (data/factions/gargamox.json specialMechanic): a unit affected by
+// plague takes 1 toxic damage at the end of its turn, then discards a plague
+// token. The rulebook says that damage "can't be reduced or ignored by any
+// means" — the same strength of wording used for devil damage — so this
+// bypasses armor *and* vitality/vulnerable, floored at 1 hp (cannotSlay).
+// Gargamox units don't take plague damage or remove plague tokens (they're the
+// ones spreading it). Runs at the end of every unit's own activation (move,
+// act, or a forfeited/"pass" turn) — the rulebook's "end of its turn", not end
+// of round.
+function applyPlagueAfterTurn(s: GameState, u: Unit) {
+  if (!u.alive || tok(u, "plague") <= 0 || u.house === "gargamox") return;
+  const dealt = Math.min(1, Math.max(0, u.hp - 1));
+  u.hp -= dealt;
+  spendToken(u, "plague");
+  if (dealt > 0) log(s, { side: null, actor: u.name, text: `${u.name}'s plague festers for ${dealt}.` });
 }
 
 function checkWin(s: GameState, slainUnit: Unit) {
@@ -352,6 +388,18 @@ function resolveOp(ctx: Ctx, op: EffectOp) {
     }
     case "onHit": if (ctx.hit) resolveEffects(ctx, op.then as EffectOp[]); break;
     case "onHeadshot": if (ctx.lastRoll === 6) resolveEffects(ctx, op.then as EffectOp[]); break;
+    // Stance (abhorrers.json specialTags.Stance): "an ability with stance gains
+    // different effects on odd, even, or special numbered rounds." This covers
+    // the common odd/even branch (e.g. Excoriate); the "special numbered round"
+    // variant some upgrades add on top (Taste the Lash's "round 4+: both",
+    // Witness's "round 4+: 2 holy instead", Punisher/Heart Destroyer's "round
+    // 3+: obliterate") is a per-ability override of this base branch that the
+    // upgrade handlers don't model — see upgrades.ts header comment.
+    case "stance": {
+      const branch = s.round % 2 === 1 ? (op.odd as EffectOp[] | undefined) : (op.even as EffectOp[] | undefined);
+      resolveEffects(ctx, branch);
+      break;
+    }
     case "reload": {
       const who = op.target === "ally" ? ctx.target : actor;
       if (who) for (const k of Object.keys(who.reloaded)) who.reloaded[k] = true;
@@ -446,6 +494,16 @@ function makeUnit(owner: 0 | 1, house: string, defId: string, upgrade?: string):
     alive: true,
     isNecromancer: def.type === "necromancer",
   };
+  // Miracle (data/factions/abhorrers.json specialMechanic): units with a trait
+  // literally named "Miracle" get the revive-on-slay flag (see slay()). Units
+  // that explicitly lack it (e.g. "Holy Vessel", "Miraculous Flesh") are
+  // unaffected — they don't carry that trait name.
+  if (def.traits.some((t) => t.name === "Miracle")) u.flags = { ...u.flags, miracle: true };
+  // Mutation (data/factions/igorri.json specialTags.Mutate): "Warpflesh" starts
+  // combat with 4 mutation tokens. The tokens themselves are generic (TokenType
+  // "mutation") and granted elsewhere via the normal `token` effect op; this is
+  // the one static starting grant named in the data.
+  if (def.traits.some((t) => t.name === "Warpflesh")) u.tokens.mutation = 4;
   if (upgrade) applyUpgrade(u, upgrade);
   return u;
 }
@@ -573,16 +631,41 @@ export function applyAction(s: GameState, side: 0 | 1, action: Action): ApplyRes
   if (s.phase === "over") return { ok: false, error: "game is over", state: s };
 
   if (action.kind === "deploy") {
-    // v1 uses autoDeploy; manual deploy accepted but validated minimally.
     if (s.phase !== "deploy") return { ok: false, error: "not in deploy phase", state: s };
+    // data/rules.json deployFromEdgeSpaces: each side may only deploy within N
+    // rows of its own board edge. Side 0's edge is y=0 (rows [0, N-1]); side 1's
+    // edge is y=mapSize-1 (rows [mapSize-N, mapSize-1]).
+    const edge = RULES.mode.deployFromEdgeSpaces as number;
+    const inEdgeBand = (p: Pos) => side === 0 ? p.y >= 0 && p.y < edge : p.y >= s.mapSize - edge && p.y < s.mapSize;
+    // Validate the whole batch atomically: resolve every target position first,
+    // check it against bounds/edge-band/other-targets-in-this-batch/already-
+    // placed units, and only mutate state once the whole batch is legal.
+    const resolved: { u: Unit; pos: Pos }[] = [];
     for (const pl of action.placements) {
       const u = unit(s, pl.iid);
       if (!u || u.owner !== side) return { ok: false, error: "not your unit", state: s };
       if (!inBounds(pl.pos)) return { ok: false, error: "out of bounds", state: s };
-      u.pos = pl.pos;
+      if (!inEdgeBand(pl.pos)) return { ok: false, error: "must deploy within your edge zone", state: s };
+      resolved.push({ u, pos: pl.pos });
     }
-    s.players[side].deployed = true;
-    if (s.players[0].deployed && s.players[1].deployed) { s.phase = "playing"; }
+    const occupied = new Set(
+      s.units.filter((u) => u.pos.x >= 0 && !resolved.some((r) => r.u.iid === u.iid))
+        .map((u) => key(u.pos)),
+    );
+    for (const { pos } of resolved) {
+      const k = key(pos);
+      if (occupied.has(k)) return { ok: false, error: "space already occupied", state: s };
+      occupied.add(k);
+    }
+    for (const { u, pos } of resolved) u.pos = pos;
+    // deployed flips once every one of this side's units has a real position —
+    // deployment can be incremental (one placements batch per unit, or all at
+    // once), so this isn't set unconditionally after any deploy action.
+    s.players[side].deployed = s.units.filter((u) => u.owner === side).every((u) => u.pos.x >= 0);
+    if (s.players[0].deployed && s.players[1].deployed) {
+      s.phase = "playing";
+      log(s, { side: null, actor: "system", text: "Both sides deployed. Fight!" });
+    }
     return { ok: true, state: s };
   }
 
@@ -606,6 +689,7 @@ export function applyAction(s: GameState, side: 0 | 1, action: Action): ApplyRes
         const dealt = dealDamage(s, u, 1, "physical", { pierce: true });
         if (dealt) log(s, { side: null, actor: u.name, text: `${u.name} takes ${dealt} from a hazard.` });
       }
+      applyPlagueAfterTurn(s, u);
       u.activatedThisRound = true;
       endTurn(s);
       return { ok: true, state: s };
@@ -624,6 +708,7 @@ export function applyAction(s: GameState, side: 0 | 1, action: Action): ApplyRes
       if (err) return { ok: false, error: err, state: s };
       if (ability.tags.includes("reload")) u.reloaded[ability.name] = false;
       applyBerserkAfterAct(s, u);
+      applyPlagueAfterTurn(s, u);
       u.activatedThisRound = true;
       endTurn(s);
       return { ok: true, state: s };
@@ -631,7 +716,7 @@ export function applyAction(s: GameState, side: 0 | 1, action: Action): ApplyRes
     case "endTurn": {
       // pass: the active side forfeits remaining activations this cycle
       const next = s.units.find((u) => u.alive && u.owner === side && !u.activatedThisRound);
-      if (next) next.activatedThisRound = true;
+      if (next) { applyPlagueAfterTurn(s, next); next.activatedThisRound = true; }
       endTurn(s);
       return { ok: true, state: s };
     }

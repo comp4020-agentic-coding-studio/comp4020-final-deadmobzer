@@ -56,7 +56,13 @@ export async function api(
   });
 }
 
-// Start a fresh game between two new users via the lobby flow; returns ids + sids.
+// Start a fresh game between two new users via the lobby flow, then deploy both
+// sides so the game reaches "playing" — createGameRecord no longer auto-deploys
+// (src/games.ts), games start in the engine's default "deploy" phase and the
+// client (or a test) places units via the "deploy" action. This mirrors
+// autoDeploy's old row-filling (src/game/engine.ts): side 0 fills y=0 then y=1,
+// side 1 fills y=mapSize-1 then y=mapSize-2, by column index — within the
+// deployFromEdgeSpaces=2 band the engine now enforces.
 export async function startGame(baseUrl: string): Promise<{
   a: TestUser; b: TestUser; gameId: string; palette: string[];
 }> {
@@ -68,5 +74,24 @@ export async function startGame(baseUrl: string): Promise<{
     { mode: "fixed", visibility: "private", house: "carcass", colour: palette[0], units: [] })).json();
   const join = await (await api(baseUrl, b.sid, "/api/lobby/join",
     { code: create.code, mode: "fixed", house: "goregrinders", colour: palette[3], units: [] })).json();
-  return { a, b, gameId: join.gameId, palette };
+  const gameId = join.gameId as string;
+  await deployBothSides(baseUrl, a.sid, b.sid, gameId);
+  return { a, b, gameId, palette };
+}
+
+// Deploy every unit for both sides of a game still in "deploy" phase, one
+// placements batch (the engine loops over the array) per side, each within its
+// own edge band.
+export async function deployBothSides(baseUrl: string, aSid: string, bSid: string, gameId: string): Promise<void> {
+  const view = await (await get(baseUrl, `/api/game/${gameId}`, aSid)).json();
+  const { mapSize, units } = view.state as { mapSize: number; units: { iid: string; owner: 0 | 1 }[] };
+  for (const [side, sid] of [[0, aSid], [1, bSid]] as const) {
+    const mine = units.filter((u) => u.owner === side);
+    const placements = mine.map((u, i) => ({
+      iid: u.iid,
+      pos: { x: i % mapSize, y: side === 0 ? (i < mapSize ? 0 : 1) : (i < mapSize ? mapSize - 1 : mapSize - 2) },
+    }));
+    const res = await api(baseUrl, sid, `/api/game/${gameId}/action`, { action: { kind: "deploy", placements } });
+    if (!res.ok) throw new Error(`deploy failed for side ${side} (${res.status})`);
+  }
 }

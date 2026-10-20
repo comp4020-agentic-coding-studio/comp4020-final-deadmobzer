@@ -1,11 +1,29 @@
 // Applying a chosen upgrade to a unit at game creation. Each upgrade either sets a
 // mechanical flag the engine honours, or patches one of the unit's abilities
 // (extra damage / push / range / effects). Upgrades whose faithful effect needs a
-// subsystem the engine doesn't model yet (plague, Doom, Miracle, mutation, stance,
-// corpses, deathburst) still attach to the unit and show in the inspector, and
-// apply whatever part IS expressible — nothing is silently dropped. Berserk itself
-// is now mechanical (see applyBerserkAfterAct in engine.ts): abilities that grant
-// berserk tokens pay off with the splash-and-discard the rulebook describes.
+// subsystem the engine doesn't model yet still attach to the unit and show in the
+// inspector, and apply whatever part IS expressible — nothing is silently
+// dropped. Berserk, Doom, Plague, Miracle and the common odd/even branch of
+// Stance are now mechanical (see applyBerserkAfterAct, applyDoomAtEndOfRound,
+// applyPlagueAfterTurn, the `miracle` flag check in slay(), and the `stance`
+// effect op, all in engine.ts). Mutation tokens are generic (TokenType
+// "mutation") and the one static grant named in the data (Homonculus's
+// Warpflesh: starts with 4) is wired in makeUnit; mutation's "discard in place
+// of any other token, or stand in as a copy of one" substitution rule needs the
+// engine to know, at the moment a token would be discarded, which token type the
+// caller actually wanted spent and whether the player chooses to substitute —
+// that's a player-choice prompt the engine has no hook for, so mutation tokens
+// accumulate and display but are never auto-substituted. The honest remainder
+// still standing: Doom only accumulates, it never clears early by slaying
+// another unit (needs attacker-vs-victim tracking); Miracle's "at the end of
+// any turn it is slain" revive check fires immediately at the point of slaying
+// rather than waiting for a true end-of-turn pass, so a unit slain mid-opponent's-
+// turn that could still revive later that same turn is resolved early instead;
+// and the "special numbered round" stance overrides some upgrades add on top of
+// the base odd/even branch (Taste the Lash, Witness, Punisher, Heart Destroyer)
+// are applied unconditionally rather than gated to their stated round, since
+// round-gating a *handler's* patch would require the handler to close over the
+// live round number at resolve time, not just mutate the ability once at setup.
 
 import type { EffectOp, Unit } from "./types.ts";
 

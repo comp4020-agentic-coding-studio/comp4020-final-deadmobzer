@@ -166,6 +166,56 @@ describe("turn flow + win", () => {
   });
 });
 
+describe("deploy phase (manual deployment)", () => {
+  // createGame starts in "deploy" phase with every unit at the unplaced
+  // sentinel pos {x:-1,y:-1} — nothing calls autoDeploy here.
+  it("rejects a placement outside the deploying side's edge band", () => {
+    const s = g();
+    const mine = s.units.filter((u) => u.owner === 0);
+    // deployFromEdgeSpaces is 2, so side 0's band is y in [0,1]; y=2 is outside it.
+    const r = applyAction(s, 0, { kind: "deploy", placements: [{ iid: mine[0].iid, pos: { x: 0, y: 2 } }] });
+    expect(r.ok).toBe(false);
+    expect(mine[0].pos.x).toBe(-1);
+  });
+  it("rejects a batch with overlapping placements, applying none of it", () => {
+    const s = g();
+    const mine = s.units.filter((u) => u.owner === 0);
+    const r = applyAction(s, 0, { kind: "deploy", placements: [
+      { iid: mine[0].iid, pos: { x: 0, y: 0 } },
+      { iid: mine[1].iid, pos: { x: 0, y: 0 } },
+    ] });
+    expect(r.ok).toBe(false);
+    expect(mine[0].pos.x).toBe(-1);
+    expect(mine[1].pos.x).toBe(-1);
+  });
+  it("phase only flips to playing once both sides have placed every unit", () => {
+    const s = g();
+    const mine = s.units.filter((u) => u.owner === 0);
+    const theirs = s.units.filter((u) => u.owner === 1);
+    // side 0 places only its first unit — still incomplete
+    const partial = applyAction(s, 0, { kind: "deploy", placements: [{ iid: mine[0].iid, pos: { x: 0, y: 0 } }] });
+    expect(partial.ok).toBe(true);
+    expect(s.phase).toBe("deploy");
+    expect(s.players[0].deployed).toBe(false);
+    // side 0 places the rest
+    const rest = mine.slice(1).map((u, i) => ({ iid: u.iid, pos: { x: i + 1, y: 0 } }));
+    applyAction(s, 0, { kind: "deploy", placements: rest });
+    expect(s.players[0].deployed).toBe(true);
+    expect(s.phase).toBe("deploy");   // side 1 hasn't deployed yet
+    // side 1 places everything at once
+    const theirPlacements = theirs.map((u, i) => ({ iid: u.iid, pos: { x: i, y: s.mapSize - 1 } }));
+    applyAction(s, 1, { kind: "deploy", placements: theirPlacements });
+    expect(s.players[1].deployed).toBe(true);
+    expect(s.phase).toBe("playing");
+  });
+  it("move, act, soul and endTurn actions are rejected while still in deploy phase", () => {
+    const s = g();
+    const mine = s.units.filter((u) => u.owner === 0)[0];
+    expect(applyAction(s, 0, { kind: "move", iid: mine.iid, to: { x: 0, y: 0 } }).ok).toBe(false);
+    expect(applyAction(s, 0, { kind: "endTurn" }).ok).toBe(false);
+  });
+});
+
 describe("berserk (goregrinders specialTags.Berserk)", () => {
   it("after a berserk unit ACTs, it splashes 1 to adjacent units and discards the token", () => {
     const s = g(); autoDeploy(s);
@@ -208,5 +258,114 @@ describe("doom (deadsouls specialMechanic)", () => {
     while (s.round === 4) applyAction(s, s.activeSide, { kind: "endTurn" });
     expect(doomed.hp).toBe(Math.max(0, doomedHp0 - 4));
     expect(clean.hp).toBe(cleanHp0);
+  });
+});
+
+describe("plague (gargamox specialMechanic)", () => {
+  const LC: Loadout = { userId: 1, house: "carcass", colour: "#e6194b",
+    units: [{ defId: "gunwight" }, { defId: "enforcer" }, { defId: "barrelform" }] };
+  const LG: Loadout = { userId: 2, house: "gargamox", colour: "#4363d8",
+    units: [{ defId: "scum" }, { defId: "leech" }, { defId: "rotten" }] };
+  const pg = (): GameState => createGame(LC, LG, 42, 0);
+
+  it("a plagued unit takes 1 toxic damage at the end of its own turn, and discards the token", () => {
+    const s = pg(); autoDeploy(s);
+    const u = s.units.find((x) => x.owner === 0 && !x.isNecromancer)!;
+    u.tokens.plague = 1;
+    s.activeSide = u.owner;
+    const to = legalMoves(s, u.iid)[0];
+    const hp0 = u.hp;
+    const r = applyAction(s, u.owner, { kind: "move", iid: u.iid, to });
+    expect(r.ok).toBe(true);
+    expect(u.hp).toBe(hp0 - 1);
+    expect(u.tokens.plague ?? 0).toBe(0);
+  });
+  it("plague can't slay (floors at 1 hp), and Gargamox units are immune to their own plague", () => {
+    const s = pg(); autoDeploy(s);
+    const low = s.units.find((x) => x.owner === 0 && !x.isNecromancer)!;
+    low.hp = 1; low.tokens.plague = 1;
+    s.activeSide = low.owner;
+    applyAction(s, low.owner, { kind: "move", iid: low.iid, to: legalMoves(s, low.iid)[0] });
+    expect(low.hp).toBe(1);
+    expect(low.alive).toBe(true);
+
+    const gar = s.units.find((x) => x.owner === 1 && !x.isNecromancer)!;
+    gar.tokens.plague = 1;
+    s.activeSide = gar.owner;
+    const hp0 = gar.hp;
+    applyAction(s, gar.owner, { kind: "move", iid: gar.iid, to: legalMoves(s, gar.iid)[0] });
+    expect(gar.hp).toBe(hp0);
+    expect(gar.tokens.plague).toBe(1);   // Gargamox units don't remove plague tokens either
+  });
+});
+
+describe("miracle (abhorrers specialMechanic)", () => {
+  const LH: Loadout = { userId: 1, house: "abhorrers", colour: "#e6194b",
+    units: [{ defId: "penitent" }, { defId: "antipriest" }] };
+  const LO: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8",
+    units: [{ defId: "warhead" }, { defId: "carnifex" }] };
+
+  it("a unit with the Miracle trait can return to life at 1 hp, tokens cleared, on a 5+ roll", () => {
+    // seed 3 rolls a 5+ on the miracle check for this matchup/order (verified empirically)
+    const s = createGame(LH, LO, 3, 0);
+    autoDeploy(s);
+    const penitent = s.units.find((u) => u.defId === "penitent")!;
+    penitent.tokens.strength = 2;
+    dealDamage(s, penitent, 999, "physical");
+    expect(penitent.alive).toBe(true);
+    expect(penitent.hp).toBe(1);
+    expect(penitent.tokens.strength ?? 0).toBe(0);
+  });
+  it("on a failed roll the unit is slain as normal", () => {
+    // seed 1 rolls below 5 on the miracle check for this matchup/order
+    const s = createGame(LH, LO, 1, 0);
+    autoDeploy(s);
+    const penitent = s.units.find((u) => u.defId === "penitent")!;
+    dealDamage(s, penitent, 999, "physical");
+    expect(penitent.alive).toBe(false);
+  });
+});
+
+describe("mutation (igorri specialTags.Mutate)", () => {
+  it("Warpflesh (Homonculus) starts combat with 4 mutation tokens; other units don't", () => {
+    const l: Loadout = { userId: 1, house: "igorri", colour: "#e6194b",
+      units: [{ defId: "homonculus" }, { defId: "stitch" }] };
+    const s = createGame(l, LB, 42, 0);
+    const homonculus = s.units.find((u) => u.defId === "homonculus")!;
+    const stitch = s.units.find((u) => u.defId === "stitch")!;
+    expect(homonculus.tokens.mutation).toBe(4);
+    expect(stitch.tokens.mutation ?? 0).toBe(0);
+  });
+});
+
+describe("stance (abhorrers specialTags.Stance)", () => {
+  const LH: Loadout = { userId: 1, house: "abhorrers", colour: "#e6194b",
+    units: [{ defId: "penitent" }, { defId: "antipriest" }] };
+  const LO: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8",
+    units: [{ defId: "warhead" }, { defId: "carnifex" }] };
+
+  it("on an odd round, Excoriate's on-hit stance branch splashes 1 holy to adjacent units", () => {
+    const s = createGame(LH, LO, 1, 0);
+    autoDeploy(s);
+    s.round = 1;
+    const penitent = s.units.find((u) => u.defId === "penitent")!;
+    const foe = s.units.find((u) => u.owner !== penitent.owner && !u.isNecromancer)!;
+    foe.pos = { x: penitent.pos.x + 1, y: penitent.pos.y };
+    s.activeSide = penitent.owner;
+    const r = applyAction(s, penitent.owner, { kind: "act", iid: penitent.iid, ability: "Excoriate", target: foe.pos });
+    expect(r.ok).toBe(true);
+    expect(s.log.some((l) => /Penitent deals \d to \w+/.test(l.text))).toBe(true);
+  });
+  it("on an even round, Excoriate's on-hit stance branch grants vitality instead", () => {
+    const s = createGame(LH, LO, 1, 0);
+    autoDeploy(s);
+    s.round = 2;
+    const penitent = s.units.find((u) => u.defId === "penitent")!;
+    const foe = s.units.find((u) => u.owner !== penitent.owner && !u.isNecromancer)!;
+    foe.pos = { x: penitent.pos.x + 1, y: penitent.pos.y };
+    s.activeSide = penitent.owner;
+    const r = applyAction(s, penitent.owner, { kind: "act", iid: penitent.iid, ability: "Excoriate", target: foe.pos });
+    expect(r.ok).toBe(true);
+    expect(penitent.tokens.vitality).toBe(1);
   });
 });

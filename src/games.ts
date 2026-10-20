@@ -1,7 +1,7 @@
 import { db } from "./db.ts";
 import { nowISO } from "./time.ts";
 import { randomBytes } from "node:crypto";
-import { applyAction, autoDeploy, createGame, viewFor, legalMoves, legalTargets, type Loadout } from "./game/engine.ts";
+import { applyAction, createGame, viewFor, legalMoves, legalTargets, type Loadout } from "./game/engine.ts";
 import type { Action, GameState, Pos } from "./game/types.ts";
 import { applyRankedResult } from "./elo.ts";
 import { audit } from "./audit.ts";
@@ -52,7 +52,8 @@ export function createGameRecord(a: Loadout, b: Loadout, mode: string, ranked: b
   const seed = randomBytes(4).readUInt32LE(0);
   const firstSide = (randomBytes(1)[0] & 1) as 0 | 1;
   const state = createGame(a, b, seed, firstSide);
-  autoDeploy(state); // v1: auto-deploy to opposite edges, straight into play
+  // Games start in createGame's default "deploy" phase; players place their own
+  // units via the "deploy" action (applyAction in engine.ts), not auto-deployed.
   const id = newId();
   db.prepare(
     `INSERT INTO games (id, mode, p0_id, p1_id, status, winner, ranked, state_json, created_at, updated_at)

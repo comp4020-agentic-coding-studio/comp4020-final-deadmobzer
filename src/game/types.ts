@@ -7,7 +7,8 @@ import type { Rng } from "./prng.ts";
 export type DamageType = "physical" | "fire" | "toxic" | "curse" | "holy" | "devil";
 export type Armor = "PHYS" | "MAG" | "SUPER" | null;
 export type TokenType =
-  | "strength" | "weak" | "vitality" | "vulnerable" | "slow" | "speed" | "berserk" | "doom";
+  | "strength" | "weak" | "vitality" | "vulnerable" | "slow" | "speed" | "berserk" | "doom"
+  | "plague" | "mutation";
 export type UnitType =
   | "thrall" | "freak" | "scion" | "horror" | "hunter" | "tyrant" | "necromancer";
 
@@ -74,6 +75,7 @@ export interface UnitFlags {
   pierceAtLowHp?: boolean;          // its damage pierces at <=1 HP
   curseproof?: boolean;             // immune to enemy curses (flagged)
   coverAttackBonus?: boolean;       // +1D on attacks while in cover
+  miracle?: boolean;                // abhorrers.json specialMechanic "Miracle": 5+ chance to revive at 1 hp when slain
 }
 
 export type Phase = "deploy" | "playing" | "over";
