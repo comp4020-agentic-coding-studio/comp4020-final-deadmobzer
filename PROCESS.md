@@ -121,11 +121,17 @@ and upgrades that apply mechanically via a flag/patch system — over the
 server-authoritative core, green across 40+ tests. The client is pure
 presentation, exactly as planned.
 
-The honest remainder: upgrades whose faithful effect needs a subsystem I haven't
-built (plague, Miracle, mutation, stance) attach and show but apply only the
-expressible part — corpses, berserk, and Doom's end-of-round-4 devil damage have
-since landed (`spec/rules.test.ts`). Doom itself is still partial: a unit can only
-clear it today by the round-4 check firing, since clearing it early by slaying
-another unit needs attacker-tracking the engine doesn't have yet — not silently
-dropped, just not there. Those remaining subsystems are the next push, then
-terrain *models* and a voice pass on these documents.
+Corpses, berserk, Doom's end-of-round-4 devil damage, and now Plague, Miracle,
+Mutation and Stance have all landed mechanically (`spec/rules.test.ts`), and
+games no longer auto-deploy — each side places its own units server-side via a
+validated "deploy" action. Doom itself is still partial: a unit can only clear
+it today by the round-4 check firing, since clearing it early by slaying
+another unit needs attacker-tracking the engine doesn't have yet. Mutation's
+token-substitution rule (discard in place of, or stand in as a copy of,
+another token) needs a player-choice prompt the engine has no hook for, so
+mutation tokens accumulate but aren't auto-substituted. Stance's per-ability
+"special numbered round" overrides apply unconditionally rather than gated to
+their stated round. None of this is silently dropped — see `upgrades.ts`'s
+header. The next push is the client-side deployment UI (the board has no way
+yet to place units from the browser), then terrain *models* and a voice pass
+on these documents.

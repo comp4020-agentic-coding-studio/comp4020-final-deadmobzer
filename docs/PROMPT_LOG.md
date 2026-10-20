@@ -56,3 +56,22 @@ creation, plus a `feedback` memory). Asked the user how to reconcile this with
 separate uncapped log file — this file. Going forward: every explicit user
 prompt gets an entry here, and changes land in their own commits as they're
 made rather than batched.
+
+**Prompt:** Continue through `PROCESS.md`'s "What's next" plan (plague,
+Miracle, mutation, stance subsystems) and add manual deployment placement so
+players choose unit starting positions before a match begins.
+**Response:** Background agent (`ae89765f625277b9e`) implemented all four
+subsystems in `src/game/engine.ts`/`upgrades.ts`/`types.ts` (Plague, Miracle,
+Mutation, Stance — see commit `a1ae3e6`) plus the manual-deploy backend
+(`src/games.ts` no longer auto-deploys; `applyAction`'s `"deploy"` branch
+validates placements atomically against the edge-band/occupancy rules). Its
+own verification only ran `spec/rules.test.ts` (pure engine); integrating it
+surfaced that the full `pnpm check` suite failed with `deploy failed (403)` —
+not a bug in the agent's code, but because the local dev server had been
+started as a plain `node src/server.ts` (no `--watch`) at some point earlier in
+the session and so was silently serving pre-agent code the whole time. Killed
+and restarted it as `pnpm dev` (`node --watch`) with `DATA_DIR=/tmp/maleghast-data`
+so it live-reloads going forward; full suite then passed 121/121. Committed as
+`a1ae3e6`. Manual-deployment client UI (task #5) is next — the client
+(`Game.tsx`) has no "deploy" phase UI yet, so a freshly created game currently
+has no way to place units from the browser.
