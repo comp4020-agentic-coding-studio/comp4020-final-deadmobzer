@@ -75,3 +75,22 @@ so it live-reloads going forward; full suite then passed 121/121. Committed as
 `a1ae3e6`. Manual-deployment client UI (task #5) is next — the client
 (`Game.tsx`) has no "deploy" phase UI yet, so a freshly created game currently
 has no way to place units from the browser.
+
+Follow-up (same prompt, client half): dispatched a second background agent
+(`ade8ab5d849e43623`) for the client UI. It added a "deploy" phase to
+`Game.tsx` (a bench of not-yet-placed units; click one, then a highlighted
+edge-band tile, to POST a `deploy` action), gave `table.ts`'s `highlightTiles`
+a `"deploy"` (green) kind reusing the existing move/target mechanism, rendered
+unplaced units off-board on a per-side bench instead of overlapping at the
+unplaced sentinel, and found + fixed a real raycast-priority bug the bench
+exposed (click/hover now compare actual ray-intersection distances instead of
+always preferring a unit hit over a tile hit — bench standees could otherwise
+sit nearer the camera than a tile the player meant to click).
+`src/server.ts`'s `/api/factions` now also returns `deployFromEdgeSpaces` so
+the client mirrors the engine's edge-band rule instead of duplicating the
+number. Verified: `pnpm typecheck` clean, full `pnpm check` 121/121, `pnpm
+build`'s purity assertion holds, and a throwaway two-browser-context
+Playwright smoke test (real mouse clicks only, no test hooks, deleted after)
+drove both sides through deployment to `"playing"`. Committed as `8311ec0`.
+Both halves of this prompt (engine subsystems + manual deployment, backend and
+client) are now fully landed.
