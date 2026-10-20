@@ -94,3 +94,30 @@ Playwright smoke test (real mouse clicks only, no test hooks, deleted after)
 drove both sides through deployment to `"playing"`. Committed as `8311ec0`.
 Both halves of this prompt (engine subsystems + manual deployment, backend and
 client) are now fully landed.
+
+**Prompt (follow-up, task #10, driven by PROCESS.md's "What's next"):** build
+the permanent two-browser E2E suite that the earlier research/feasibility
+agents only spiked.
+**Response:** Two background-agent attempts died early from transient API
+connectivity errors (`ENOTIMP`, then `ConnectionRefused`) before writing any
+files beyond installing `@playwright/test`; a third attempt succeeded. It
+built `e2e/` (`playwright.config.ts`, `helpers.ts`, `game.spec.ts`) as a
+second harness, deliberately kept out of `pnpm check`: two real headless-
+Chromium browser contexts stand in for two players, each signs up and logs in
+through the real `/signup` form, creates/joins a real lobby, deploys via the
+real bench buttons plus a new `window.__testHooks` escape hatch
+(`src/client/Game.tsx`, inert unless `?testHooks=1` is on the URL — forwards
+into the same `pickUnit`/`pickTile` handlers a real canvas click calls, so it
+never bypasses the server-authoritative action POST), and plays real turns
+until a dice roll or HP change appears in server-fetched state. Along the
+way it found and fixed a real environment blocker, not an app bug: headless
+Chromium in this sandbox has no usable Vulkan ICD for the usual SwiftShader
+software-rasterizer recipe, so WebGL (needed for the Three.js table) never
+initialized; routing ANGLE through the host's real Mesa/iris OpenGL driver
+instead (`--use-gl=angle --use-angle=gl --no-sandbox`) got it working in
+genuine headless mode. I independently re-ran everything before committing
+rather than trusting the agent's self-report: `pnpm test:e2e` passes (6s, two
+valid `.webm` videos), full `pnpm check` still 121/121 (zero regressions),
+`pnpm typecheck` clean, `pnpm build`'s purity assertion holds. Added a
+CLAUDE.md section explaining the split from `pnpm check` and how to run it
+locally. Committed as `e83e2d4`.

@@ -134,6 +134,8 @@ stand in as a copy of, another token) needs a player-choice prompt the engine
 has no hook for, so mutation tokens accumulate but aren't auto-substituted.
 Stance's per-ability "special numbered round" overrides apply unconditionally
 rather than gated to their stated round. None of this is silently dropped —
-see `upgrades.ts`'s header. The next push is terrain *models* (the engine
-already honours terrain mechanically), a permanent two-browser Playwright
-smoke suite (task #10), and a voice pass on these documents.
+see `upgrades.ts`'s header. A permanent two-browser Playwright suite now
+covers the full sign-up → lobby → deploy → combat loop against a real
+browser (`e2e/`, kept outside `pnpm check` on purpose — see CLAUDE.md). The
+next push is terrain *models* (the engine already honours terrain
+mechanically) and a voice pass on these documents.
