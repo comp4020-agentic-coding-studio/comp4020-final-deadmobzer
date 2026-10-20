@@ -24,6 +24,38 @@ interface GameView {
   chat: { player: ChatMsg[]; audience: ChatMsg[] };
 }
 
+// e2e/ test-only escape hatch (see e2e/playwright.config.ts). Most of the HUD
+// (bench buttons, ability buttons, End turn) is plain DOM and a real Playwright
+// click already lands on it reliably. The one part of the screen that isn't
+// addressable DOM is the Three.js canvas itself: picking a unit standee or a
+// board tile only exists as a raycast hit inside src/three/table.ts, which a
+// test would otherwise have to reproduce by scanning screen pixels — fragile,
+// and (per the manual-deploy smoke-test caveat left in docs/PROMPT_LOG.md)
+// actively wrong near the bench standees that render off the left/right screen
+// edges during deploy. So the hook exposes exactly the two things Table
+// reports back from a real click (onPickUnit/onPickTile) by game coordinate
+// instead of pixel — nothing more. Both forward straight into the same
+// handlersRef.current.pickUnit/pickTile a canvas click calls, which is what
+// ultimately drives tryMove/tryDeploy/useAbility -> runAction's POST to
+// /api/game/:id/action. It is a deterministic stand-in for "click this pixel,"
+// not a shortcut around the server-authoritative action flow.
+export interface TestHooks {
+  pickUnit(iid: string): void;
+  pickTile(x: number, y: number): void;
+}
+declare global {
+  interface Window { __testHooks?: TestHooks }
+}
+// Gated behind an explicit query param rather than a build-time flag: this app
+// has one client bundle for dev and prod (scripts/build.mjs doesn't produce a
+// separate "test" build), so a NODE_ENV check baked in at bundle time can't
+// distinguish a test run from production the way it can on the server
+// (src/server.ts / Dockerfile set NODE_ENV there). `?testHooks=1` keeps the
+// hook inert — and `window.__testHooks` unset — on every normal page load.
+function testHooksRequested(): boolean {
+  return typeof window !== "undefined" && new URLSearchParams(location.search).get("testHooks") === "1";
+}
+
 export function Game({ gameId }: { gameId: string }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<Table | null>(null);
@@ -88,6 +120,21 @@ export function Game({ gameId }: { gameId: string }) {
     }
     return tiles;
   }
+
+  // Install the test-hook escape hatch once, only when explicitly requested
+  // (see testHooksRequested above) — thin forwarders onto handlersRef, which
+  // is kept pointed at the latest render's pickUnit/pickTile closures the same
+  // way the 3D table's own click listener is (see the comment above
+  // handlersRef's declaration), so a call made long after mount still runs
+  // against current state.
+  useEffect(() => {
+    if (!testHooksRequested()) return;
+    window.__testHooks = {
+      pickUnit: (iid) => handlersRef.current.pickUnit(iid),
+      pickTile: (x, y) => handlersRef.current.pickTile(x, y),
+    };
+    return () => { delete window.__testHooks; };
+  }, []);
 
   // initial load + live socket
   useEffect(() => {

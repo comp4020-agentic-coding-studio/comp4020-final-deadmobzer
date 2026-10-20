@@ -2,6 +2,12 @@ node_modules/
 dist/
 *.log
 
+# e2e/ (Playwright) run artifacts: videos, traces, HTML report — reviewable
+# locally but not meant to be committed (see e2e/playwright.config.ts).
+/e2e/test-results/
+/e2e/playwright-report/
+/playwright/.cache/
+
 # built client bundle (produced by `pnpm build` from src/client/)
 public/app.js
 

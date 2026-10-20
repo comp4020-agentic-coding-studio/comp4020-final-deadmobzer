@@ -62,3 +62,25 @@ source of truth. See `docs/style-guide.md` and
 - When the agent gets it wrong, put the correction in the harness — a new `spec/`
   check, a rule here, or a thrown-away attempt recorded in `PROCESS.md`. A fix with
   no trace in the harness or the commits didn't really happen.
+
+## The e2e/ suite is separate from `pnpm check`, on purpose
+
+`e2e/` is a second, independent harness: real headless-Chromium browser contexts
+(Playwright) driving two simultaneous "players" through sign-up, lobby,
+deployment, and real combat turns, with `.webm` video recording on. It is **not**
+part of `pnpm check` and never should be — `spec/` is what gates every commit
+because it's fast and deterministic (plain HTTP/WS against the running app,
+no browser); `e2e/` is tens of seconds per run and occasionally flaky in ways
+that have nothing to do with correctness (a slow paint, a dropped animation
+frame), so forcing it into the same gate would make the fast signal noisy.
+Run it with `pnpm test:e2e` — see `e2e/playwright.config.ts` for the full
+rationale and how to start a dev server for it locally (`DATA_DIR=<tmp path>
+pnpm dev`, since the default `/data` needs root).
+
+The one thing `e2e/` needed from the app itself is `window.__testHooks`
+(`src/client/Game.tsx`), a small gated escape hatch (`?testHooks=1`) so a test
+can pick a unit or a board tile by game coordinate instead of raycasting
+screen pixels against the Three.js canvas. It forwards straight into the same
+click handlers a real canvas click uses, so it never bypasses the
+server-authoritative `tryDeploy`/`runAction` POST path — it's a deterministic
+stand-in for "click this pixel," not a shortcut.
