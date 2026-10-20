@@ -71,6 +71,9 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
 .acts button { font-size: .85rem; padding: .35em .6em; }
 .acts button.on { background: #f0c030; color: #111; border-color: #f0c030; }
 .targeting { font-family: var(--body); font-size: .85rem; color: #f0c030; margin: 6px 0 0; }
+.panel.deploy .blurb { color: #bbb; font-style: italic; font-size: .85rem; margin: 0 0 8px; }
+.bench { display: flex; flex-wrap: wrap; gap: 6px; }
+.bench button.on { background: #30c060; color: #111; border-color: #30c060; }
 .link { background: none; border: none; color: var(--blood); padding: 0; text-transform: none;
   text-decoration: underline; cursor: pointer; font-family: var(--body); }
 .endturn { background: var(--blood); border-color: var(--blood); font-weight: bold; }

@@ -164,14 +164,29 @@ export class Table {
   // Build or update standees to match the state.
   sync(state: TableState): void {
     const seen = new Set<string>();
+    const benchIndex: Partial<Record<0 | 1, number>> = {};
     for (const u of state.units) {
       if (!u.alive) continue;
       seen.add(u.iid);
       const colour = state.players[u.owner]?.colour ?? "#cccccc";
+      // Not yet placed (deploy phase's {x:-1,y:-1} sentinel, src/game/engine.ts
+      // createGame): don't render it on the board (it isn't a real tile — every
+      // unplaced unit from both sides shares that one coordinate), stack it on a
+      // "bench" just off the grid instead, one column outside each side's own
+      // edge so it reads as "this side's unplaced units."
+      let tx: number, tz: number;
+      if (u.pos.x < 0 || u.pos.y < 0) {
+        const idx = benchIndex[u.owner] ?? 0;
+        benchIndex[u.owner] = idx + 1;
+        const bench = this.benchPosition(u.owner, idx);
+        tx = bench.x; tz = bench.y;
+      } else {
+        tx = u.pos.x; tz = u.pos.y;
+      }
       let g = this.standees.get(u.iid);
       if (!g) {
         g = this.makeStandee(u, colour);
-        g.position.set(u.pos.x, 0, u.pos.y);
+        g.position.set(tx, 0, tz);
         this.standees.set(u.iid, g);
         this.scene.add(g);
       }
@@ -179,7 +194,7 @@ export class Table {
       const { billboard, ringMat, ringColour } = g.userData as {
         billboard: THREE.Mesh; ringMat: THREE.MeshStandardMaterial; ringColour: THREE.Color;
       };
-      g.userData = { iid: u.iid, billboard, ringMat, ringColour, tx: u.pos.x, tz: u.pos.y };
+      g.userData = { iid: u.iid, billboard, ringMat, ringColour, tx, tz };
       // grey out an already-moved unit's ring so the board reads who's left to act.
       if (ringMat) {
         const c = u.activatedThisRound ? ringColour.clone().multiplyScalar(0.35) : ringColour;
@@ -193,6 +208,13 @@ export class Table {
       if (!seen.has(iid)) { this.scene.remove(g); this.standees.delete(iid); }
     }
     this.syncCorpses(state.corpses ?? []);
+  }
+
+  // One column outside the board on each side's own edge (x=-2 for side 0,
+  // x=size+1 for side 1), stacked down the z axis — keeps unplaced units
+  // visible and clearly off-board without overlapping the grid or each other.
+  private benchPosition(owner: 0 | 1, idx: number): { x: number; y: number } {
+    return { x: owner === 0 ? -2 : this.size + 1, y: idx * 1.15 };
   }
 
   private corpseMeshes: THREE.Mesh[] = [];
@@ -263,11 +285,12 @@ export class Table {
   }
 
   // kind "move" (red) highlights reachable tiles; "target" (amber) highlights
-  // valid ability targets. Each call clears the previous highlights.
-  highlightTiles(tiles: { x: number; y: number }[], kind: "move" | "target" = "move"): void {
+  // valid ability targets; "deploy" (green) highlights legal empty tiles in the
+  // deploying side's edge band. Each call clears the previous highlights.
+  highlightTiles(tiles: { x: number; y: number }[], kind: "move" | "target" | "deploy" = "move"): void {
     for (const h of this.highlights) this.scene.remove(h);
     this.highlights = [];
-    const colour = kind === "target" ? 0xf0c030 : 0xf00000;
+    const colour = kind === "target" ? 0xf0c030 : kind === "deploy" ? 0x30c060 : 0xf00000;
     const mat = new THREE.MeshStandardMaterial({ color: colour, transparent: true, opacity: 0.45, emissive: colour, emissiveIntensity: 0.5 });
     const h = kind === "target" ? 0.9 : 0.04;
     for (const t of tiles) {
@@ -287,14 +310,19 @@ export class Table {
   private onClick = (e: MouseEvent): void => {
     this.setPointer(e);
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    // units first
+    // Compare actual intersection distances rather than unconditionally
+    // preferring a unit hit: once unplaced units sit off-board on the deploy
+    // "bench" (sync()), their standee planes can sit in the same screen-space
+    // ray as a far tile the player meant to click, and whichever is physically
+    // nearer the camera should win — which is also correct for the ordinary
+    // case of a unit standing on the tile you click (the standee is nearer).
     const unitHit = this.raycaster.intersectObjects([...this.standees.values()], true)[0];
-    if (unitHit) {
+    const tileHit = this.raycaster.intersectObjects(this.tileMeshes)[0];
+    if (unitHit && (!tileHit || unitHit.distance <= tileHit.distance)) {
       let o: THREE.Object3D | null = unitHit.object;
       while (o && !o.userData?.iid) o = o.parent;
       if (o?.userData?.iid) { this.handlers.onPickUnit?.(o.userData.iid); return; }
     }
-    const tileHit = this.raycaster.intersectObjects(this.tileMeshes)[0];
     if (tileHit) {
       const { x, y } = tileHit.object.userData as { x: number; y: number };
       this.handlers.onPickTile?.(x, y);
@@ -305,8 +333,11 @@ export class Table {
     this.setPointer(e);
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const hit = this.raycaster.intersectObjects([...this.standees.values()], true)[0];
+    const tileHit = this.raycaster.intersectObjects(this.tileMeshes)[0];
     let iid: string | null = null;
-    if (hit) { let o: THREE.Object3D | null = hit.object; while (o && !o.userData?.iid) o = o.parent; iid = o?.userData?.iid ?? null; }
+    if (hit && (!tileHit || hit.distance <= tileHit.distance)) {
+      let o: THREE.Object3D | null = hit.object; while (o && !o.userData?.iid) o = o.parent; iid = o?.userData?.iid ?? null;
+    }
     if (iid !== this.hovered) { this.hovered = iid; this.handlers.onHoverUnit?.(iid); }
   };
 

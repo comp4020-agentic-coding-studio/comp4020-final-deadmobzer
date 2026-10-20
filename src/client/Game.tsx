@@ -11,9 +11,11 @@ interface Unit {
   acts: Ability[]; alive: boolean; isNecromancer: boolean; upgrade?: string;
   activatedThisRound: boolean;
 }
+interface PlayerSummary { colour: string; deployed: boolean }
 interface State extends TableState {
   phase: string; round: number; activeSide: 0 | 1; winner: 0 | 1 | null;
   units: Unit[];
+  players: PlayerSummary[];
   log: { round: number; actor: string; text: string; dice?: number[] }[];
 }
 interface ChatMsg { id: number; displayName: string; body: string }
@@ -38,7 +40,17 @@ export function Game({ gameId }: { gameId: string }) {
   const [pendingAbility, setPendingAbility] = useState<Ability | null>(null);
   const [targetable, setTargetable] = useState<string[]>([]);
   const [showHelp, setShowHelp] = useState(false);
+  // deployFromEdgeSpaces (data/rules.json via /api/factions) — how many rows from
+  // its own board edge a side may deploy into. Fetched once; same source the
+  // Lobby builder already reads for slot-cost numbers, so this can't drift from
+  // the engine's "deploy" action check (src/game/engine.ts).
+  const [deployEdge, setDeployEdge] = useState<number | null>(null);
   const hoverClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    getJSON<{ deployFromEdgeSpaces: number }>("/api/factions")
+      .then((d) => setDeployEdge(d.deployFromEdgeSpaces)).catch(() => {});
+  }, []);
 
   const refetch = useCallback(async () => {
     try { setView(await getJSON<GameView>(`/api/game/${gameId}`)); }
@@ -49,6 +61,33 @@ export function Game({ gameId }: { gameId: string }) {
   const myTurn = myseat !== null && view?.state.activeSide === myseat && view?.state.phase === "playing";
   const selectedUnit = view?.state.units.find((u) => u.iid === selected) ?? null;
   const hoverUnit = view?.state.units.find((u) => u.iid === hover) ?? null;
+
+  // Deploy phase: this side still has units sitting on the unplaced sentinel
+  // {x:-1,y:-1} (createGame, src/game/engine.ts) and hasn't flipped `deployed`.
+  const deployPhase = view?.state.phase === "deploy";
+  const myDeployed = myseat !== null ? view?.state.players[myseat]?.deployed ?? false : false;
+  const canDeploy = deployPhase && myseat !== null && !myDeployed;
+  const myUnplaced = myseat !== null
+    ? (view?.state.units.filter((u) => u.owner === myseat && u.pos.x < 0) ?? [])
+    : [];
+
+  // The legal empty tiles within my own edge band — client-side guidance only;
+  // the server (applyAction's "deploy" branch) is still the one that validates
+  // and applies a placement.
+  function legalDeployTiles(): { x: number; y: number }[] {
+    if (deployEdge === null || myseat === null || !view) return [];
+    const s2 = view.state;
+    const occupied = new Set(s2.units.filter((u) => u.pos.x >= 0).map((u) => `${u.pos.x},${u.pos.y}`));
+    const yMin = myseat === 0 ? 0 : s2.mapSize - deployEdge;
+    const yMax = myseat === 0 ? deployEdge - 1 : s2.mapSize - 1;
+    const tiles: { x: number; y: number }[] = [];
+    for (let y = yMin; y <= yMax; y++) {
+      for (let x = 0; x < s2.mapSize; x++) {
+        if (!occupied.has(`${x},${y}`)) tiles.push({ x, y });
+      }
+    }
+    return tiles;
+  }
 
   // initial load + live socket
   useEffect(() => {
@@ -90,9 +129,15 @@ export function Game({ gameId }: { gameId: string }) {
   }, [view]);
 
   // Highlight the board for the current intent: an armed ability shows its valid
-  // targets (amber); otherwise a selected own unit shows where it can move (red).
+  // targets (amber); a selected own unit shows where it can move (red); a
+  // selected not-yet-placed unit during deploy shows its legal edge-band tiles
+  // (green, client-guidance only — the server still validates the actual placement).
   useEffect(() => {
     if (!tableRef.current) return;
+    if (canDeploy && selected && myUnplaced.some((u) => u.iid === selected)) {
+      tableRef.current.highlightTiles(legalDeployTiles(), "deploy");
+      return;
+    }
     const su = view?.state.units.find((u) => u.iid === selected);
     if (!myTurn || !su || su.owner !== myseat) {
       setTargetable([]); tableRef.current.highlightTiles([]); return;
@@ -110,7 +155,7 @@ export function Game({ gameId }: { gameId: string }) {
         .then((r) => tableRef.current?.highlightTiles(r.tiles, "move")).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected, pendingAbility, view?.state.activeSide, view?.state.round]);
+  }, [selected, pendingAbility, view?.state.activeSide, view?.state.round, canDeploy, deployEdge]);
 
   // A 409 means the game moved under us (see src/games.ts act() /
   // docs/adr-005-concurrent-actions.md) — our view of the board is stale, so
@@ -127,6 +172,16 @@ export function Game({ gameId }: { gameId: string }) {
   async function tryMove(x: number, y: number) {
     if (!myTurn || !selectedUnit || selectedUnit.owner !== myseat) return;
     await runAction({ kind: "move", iid: selectedUnit.iid, to: { x, y } });
+  }
+  // One unit per POST, for responsiveness (the placed unit disappears from the
+  // bench immediately rather than waiting on a staged batch). The engine
+  // (applyAction's "deploy" branch) is happy with either, since it validates and
+  // applies the whole placements array atomically regardless of batch size.
+  async function tryDeploy(x: number, y: number) {
+    if (!canDeploy || !selected) return;
+    const unplaced = myUnplaced.find((u) => u.iid === selected);
+    if (!unplaced) return;
+    await runAction({ kind: "deploy", placements: [{ iid: unplaced.iid, pos: { x, y } }] });
   }
   async function useAbility(ability: Ability, targetIid?: string) {
     if (!myTurn || !selectedUnit) return;
@@ -153,6 +208,12 @@ export function Game({ gameId }: { gameId: string }) {
 
   // Refresh the handlers the 3D table calls, so clicks always use current state.
   handlersRef.current.pickUnit = (iid) => {
+    // Deploy phase: only your own not-yet-placed units are selectable (one at a
+    // time), and selecting one just arms it for a tile click — no ability panel.
+    if (canDeploy) {
+      if (myUnplaced.some((u) => u.iid === iid)) setSelected((cur) => (cur === iid ? null : iid));
+      return;
+    }
     // If an ability is armed and this unit is a valid target, fire it.
     if (pendingAbility && targetable.includes(iid)) {
       useAbility(pendingAbility, iid); setPendingAbility(null); return;
@@ -160,7 +221,15 @@ export function Game({ gameId }: { gameId: string }) {
     setPendingAbility(null);
     setSelected((cur) => (cur === iid ? null : iid));
   };
-  handlersRef.current.pickTile = (x, y) => { if (!pendingAbility) tryMove(x, y); };
+  handlersRef.current.pickTile = (x, y) => {
+    if (canDeploy) {
+      // Guard client-side against obviously-illegal tiles for UX; the server
+      // (applyAction's "deploy" branch) remains the real authority and re-checks.
+      if (legalDeployTiles().some((t) => t.x === x && t.y === y)) tryDeploy(x, y);
+      return;
+    }
+    if (!pendingAbility) tryMove(x, y);
+  };
   // Debounce hover-out only: a cursor sweeping from one standee to the next
   // reports a brief `null` in between, which without buffering flickers the
   // hover panel off and back on every frame. Clearing waits a beat in case a
@@ -179,10 +248,13 @@ export function Game({ gameId }: { gameId: string }) {
       <div className="board" ref={mountRef} />
       <aside className="hud">
         <div className="statusline" ref={statusRef}>
-          <strong>Round {s.round}</strong> ·{" "}
-          {s.phase === "over"
-            ? (s.winner === null ? "Draw" : `Side ${s.winner + 1} wins`)
-            : myTurn ? "Your turn" : `Side ${s.activeSide + 1}'s turn`}
+          {s.phase === "deploy" ? <strong>Deployment</strong> : <strong>Round {s.round}</strong>}
+          {" · "}
+          {s.phase === "deploy"
+            ? (canDeploy ? "Place your units" : myseat !== null ? "Waiting for opponent" : "In progress")
+            : s.phase === "over"
+              ? (s.winner === null ? "Draw" : `Side ${s.winner + 1} wins`)
+              : myTurn ? "Your turn" : `Side ${s.activeSide + 1}'s turn`}
           {" · "}<span>{view.role}</span> · 👁 {view.audience}
           <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
             <button onClick={() => setShowHelp(true)} title="How to play">?</button>
@@ -208,8 +280,38 @@ export function Game({ gameId }: { gameId: string }) {
           </div>
         )}
 
+        {s.phase === "deploy" && (
+          <div className="panel deploy">
+            <h3>Deployment</h3>
+            {view.role === "spectator" ? (
+              <p className="blurb">Both sides are still placing their units.</p>
+            ) : canDeploy ? (
+              <>
+                <p className="blurb">
+                  Select one of your units below, then click a glowing (green) tile
+                  in your edge zone to place it. {myUnplaced.length} unit{myUnplaced.length === 1 ? "" : "s"} left to deploy.
+                </p>
+                <div className="bench">
+                  {myUnplaced.map((u) => (
+                    <button key={u.iid} className={selected === u.iid ? "on" : ""}
+                      onClick={() => setSelected((cur) => (cur === u.iid ? null : u.iid))}>
+                      {u.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="blurb">You've deployed all your units — waiting for your opponent to finish deploying.</p>
+            )}
+          </div>
+        )}
+
         <div className="hint">
-          {s.phase === "over" ? "The battle is over."
+          {s.phase === "deploy"
+            ? (view.role === "spectator" ? "Deployment in progress. Drag to orbit the board."
+              : canDeploy ? "Click a unit (board or list), then a glowing (green) tile in your edge zone to place it."
+              : "Waiting for your opponent to finish deploying. Drag to orbit the board.")
+            : s.phase === "over" ? "The battle is over."
             : view.role === "spectator" ? "You're watching. Drag to orbit the board; chat in Audience."
             : !myTurn ? "Waiting for your opponent. Drag to orbit the board."
             : pendingAbility ? `Click a glowing (amber) target for ${pendingAbility.name}.`
@@ -218,7 +320,7 @@ export function Game({ gameId }: { gameId: string }) {
               : "Your turn — click one of your units to select it (drag to orbit), then move or act. Or End turn."}
         </div>
 
-        {selectedUnit && (
+        {s.phase !== "deploy" && selectedUnit && (
           <div className="panel">
             <h3>{selectedUnit.name}</h3>
             <Stat u={selectedUnit} />

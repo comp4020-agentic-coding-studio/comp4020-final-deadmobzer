@@ -171,6 +171,11 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
         // builder can replicate validateLoadout()'s math without hardcoding numbers.
         unitTypes: RULES.unitTypes,
         unitSlots: UNIT_SLOTS,
+        // How many rows from a side's own board edge the "deploy" action's
+        // edge-band check (src/game/engine.ts) allows placement into — the client
+        // reads this to highlight legal deploy tiles rather than hardcoding the
+        // number, so the UI guidance can't drift from the rule it mirrors.
+        deployFromEdgeSpaces: RULES.mode.deployFromEdgeSpaces,
         factions: Object.values(FACTIONS).map((f) => ({
           id: f.id, name: f.name, blurb: f.blurb, playstyle: f.playstyle, accent: f.accent,
           necromancer: f.necromancer, units: f.units,
