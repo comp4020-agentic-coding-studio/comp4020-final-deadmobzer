@@ -59,6 +59,7 @@ export interface Unit {
   pos: Pos;
   tokens: Tokens;
   acts: Ability[];
+  souls?: Ability[];     // necromancer-only SOUL abilities (see UnitDef.souls)
   reloaded: Record<string, boolean>;  // ability name -> ready to fire (reload tag)
   activatedThisRound: boolean;
   alive: boolean;
@@ -111,7 +112,10 @@ export interface GameState {
   rng: Rng;
   log: LogEntry[];
   winner: 0 | 1 | null;
-  soulUsedThisTurn: boolean;
+  // SOUL abilities don't consume a unit's activation and can be cast on either
+  // side's turn (data/raw/page-13/14.txt), so "one SOUL ability per unit turn"
+  // is tracked per side rather than as one shared flag.
+  soulUsedThisTurn: [boolean, boolean];
 }
 
 // A player action, validated + applied server-side.

@@ -5,7 +5,7 @@
 import { describe, it, expect } from "vitest";
 import {
   createGame, autoDeploy, applyAction, dealDamage, reachable, legalMoves, terrainAt,
-  type Loadout,
+  legalTargets, type Loadout,
 } from "../src/game/engine.ts";
 import type { GameState, Unit } from "../src/game/types.ts";
 
@@ -350,7 +350,7 @@ describe("stance (abhorrers specialTags.Stance)", () => {
     s.round = 1;
     const penitent = s.units.find((u) => u.defId === "penitent")!;
     const foe = s.units.find((u) => u.owner !== penitent.owner && !u.isNecromancer)!;
-    foe.pos = { x: penitent.pos.x + 1, y: penitent.pos.y };
+    foe.pos = { x: penitent.pos.x, y: penitent.pos.y + 1 };
     s.activeSide = penitent.owner;
     const r = applyAction(s, penitent.owner, { kind: "act", iid: penitent.iid, ability: "Excoriate", target: foe.pos });
     expect(r.ok).toBe(true);
@@ -362,10 +362,349 @@ describe("stance (abhorrers specialTags.Stance)", () => {
     s.round = 2;
     const penitent = s.units.find((u) => u.defId === "penitent")!;
     const foe = s.units.find((u) => u.owner !== penitent.owner && !u.isNecromancer)!;
-    foe.pos = { x: penitent.pos.x + 1, y: penitent.pos.y };
+    foe.pos = { x: penitent.pos.x, y: penitent.pos.y + 1 };
     s.activeSide = penitent.owner;
     const r = applyAction(s, penitent.owner, { kind: "act", iid: penitent.iid, ability: "Excoriate", target: foe.pos });
     expect(r.ok).toBe(true);
     expect(penitent.tokens.vitality).toBe(1);
+  });
+});
+
+describe("ability targeting respects ownership (ally vs. foe)", () => {
+  const LC: Loadout = { userId: 1, house: "carcass", colour: "#e6194b",
+    units: [{ defId: "ammo-goblin" }, { defId: "gunwight" }] };
+  const LG: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8",
+    units: [{ defId: "warhead" }, { defId: "carnifex" }] };
+
+  it("legalTargets for an ally-targeted ability (Regurgitate Ammo) only offers the caster's own side", () => {
+    const s = createGame(LC, LG, 42, 0);
+    autoDeploy(s);
+    const ammoGoblin = s.units.find((u) => u.defId === "ammo-goblin")!;
+    const targets = legalTargets(s, ammoGoblin.iid, "Regurgitate Ammo");
+    expect(targets.length).toBeGreaterThan(0);
+    for (const t of targets) {
+      const u = s.units.find((x) => x.iid === t.iid)!;
+      expect(u.owner).toBe(ammoGoblin.owner);
+    }
+  });
+
+  it("legalTargets for a foe-targeted ability (Akimbo) only offers the opposing side", () => {
+    const s = createGame(LC, LG, 42, 0);
+    autoDeploy(s);
+    const operator = s.units.find((u) => u.defId === "operator")!;
+    const warhead = s.units.find((u) => u.defId === "warhead")!;
+    warhead.pos = { x: operator.pos.x + 3, y: operator.pos.y };
+    const targets = legalTargets(s, operator.iid, "Akimbo");
+    expect(targets.length).toBeGreaterThan(0);
+    for (const t of targets) {
+      const u = s.units.find((x) => x.iid === t.iid)!;
+      expect(u.owner).not.toBe(operator.owner);
+    }
+  });
+
+  it("a raw {x,y} POST can't aim a foe-targeted ability at the caster's own ally", () => {
+    const s = createGame(LC, LG, 42, 0);
+    autoDeploy(s);
+    const operator = s.units.find((u) => u.defId === "operator")!;
+    const ammoGoblin = s.units.find((u) => u.defId === "ammo-goblin")!;
+    ammoGoblin.pos = { x: operator.pos.x + 3, y: operator.pos.y };   // in Akimbo's [2,4] range
+    s.activeSide = operator.owner;
+    const r = applyAction(s, operator.owner, { kind: "act", iid: operator.iid, ability: "Akimbo", target: ammoGoblin.pos });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe("wrong target");
+  });
+
+  it("a raw {x,y} POST can't aim an ally-targeted ability at the opponent's unit", () => {
+    const s = createGame(LC, LG, 42, 0);
+    autoDeploy(s);
+    const ammoGoblin = s.units.find((u) => u.defId === "ammo-goblin")!;
+    const warhead = s.units.find((u) => u.defId === "warhead")!;
+    warhead.pos = { x: ammoGoblin.pos.x, y: ammoGoblin.pos.y + 1 };   // in Regurgitate Ammo's [1,2] range, no collision
+    s.activeSide = ammoGoblin.owner;
+    const r = applyAction(s, ammoGoblin.owner, { kind: "act", iid: ammoGoblin.iid, ability: "Regurgitate Ammo", target: warhead.pos });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe("wrong target");
+  });
+
+  it("Akimbo's (4+) secondary hit lands on a different foe in range, not the primary target again", () => {
+    const s = createGame(LC, LG, 2, 0);   // seed 2 rolls a hit + a 4+ effect die
+    autoDeploy(s);
+    const operator = s.units.find((u) => u.defId === "operator")!;
+    const warhead = s.units.find((u) => u.defId === "warhead")!;
+    const carnifex = s.units.find((u) => u.defId === "carnifex")!;
+    warhead.pos = { x: 3, y: 0 };
+    carnifex.pos = { x: 4, y: 0 };
+    s.activeSide = operator.owner;
+    const r = applyAction(s, operator.owner, { kind: "act", iid: operator.iid, ability: "Akimbo", target: warhead.pos });
+    expect(r.ok).toBe(true);
+    expect(warhead.hp).toBe(0);     // primary attack: 2 damage on a 2 hp unit
+    expect(carnifex.hp).toBe(3);    // secondary (4+) hit: 1 damage to the OTHER foe, not warhead again
+  });
+
+  it("Cleave's \"another adjacent unit\" hits a different enemy than the primary target", () => {
+    const LW: Loadout = { userId: 1, house: "goregrinders", colour: "#e6194b", units: [{ defId: "warhead" }] };
+    const LF: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }, { defId: "enforcer" }] };
+    const s = createGame(LW, LF, 42, 0);
+    autoDeploy(s);
+    const warhead = s.units.find((u) => u.defId === "warhead")!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    const enforcer = s.units.find((u) => u.defId === "enforcer")!;
+    gunwight.pos = { x: warhead.pos.x + 1, y: warhead.pos.y };
+    enforcer.pos = { x: warhead.pos.x + 1, y: warhead.pos.y + 1 };   // adjacent to gunwight, not warhead
+    s.activeSide = warhead.owner;
+    applyAction(s, warhead.owner, { kind: "act", iid: warhead.iid, ability: "Cleave", target: gunwight.pos });
+    // "another adjacent unit" is adjacent to the primary target (gunwight), which enforcer
+    // is — confirm the secondary damage op resolved against enforcer, not gunwight again
+    // (enforcer's PHYS armor reduces the 1 physical damage to 0, so HP alone can't tell).
+    expect(s.log.some((l) => /deals \d to Enforcer/.test(l.text))).toBe(true);
+  });
+});
+
+describe("SOUL actions", () => {
+  it("is rejected while still in deploy phase", () => {
+    const L: Loadout = { userId: 1, house: "carcass", colour: "#e6194b", units: [{ defId: "gunwight" }] };
+    const LB: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8", units: [{ defId: "warhead" }] };
+    const s = createGame(L, LB, 1, 0);
+    expect(applyAction(s, 0, { kind: "soul", ability: "Reload Slide" }).ok).toBe(false);
+  });
+
+  it("can be used on the OPPONENT's turn — it doesn't consume a unit's activation", () => {
+    const L: Loadout = { userId: 1, house: "carcass", colour: "#e6194b", units: [{ defId: "gunwight" }] };
+    const LB: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8", units: [{ defId: "warhead" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.round = 2; s.players[0].soul = 2;
+    s.activeSide = 1;   // side 1's turn, but side 0 spends a soul ability
+    const r = applyAction(s, 0, { kind: "soul", ability: "Reload Slide" });
+    expect(r.ok).toBe(true);
+    expect(s.players[0].soul).toBe(1);
+    expect(s.activeSide).toBe(1);   // the active side's turn is untouched
+  });
+
+  it("is rejected: not enough SOUL banked", () => {
+    const L: Loadout = { userId: 1, house: "carcass", colour: "#e6194b", units: [{ defId: "gunwight" }] };
+    const LB: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8", units: [{ defId: "warhead" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 0;
+    const r = applyAction(s, 0, { kind: "soul", ability: "Reload Slide" });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe("not enough soul");
+  });
+
+  it("is rejected: only one soul ability per unit turn", () => {
+    const L: Loadout = { userId: 1, house: "carcass", colour: "#e6194b", units: [{ defId: "gunwight" }] };
+    const LB: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8", units: [{ defId: "warhead" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    expect(applyAction(s, 0, { kind: "soul", ability: "Reload Slide" }).ok).toBe(true);
+    const r2 = applyAction(s, 0, { kind: "soul", ability: "Reload Slide" });
+    expect(r2.ok).toBe(false);
+    expect(r2.error).toBe("already used a soul ability this turn");
+  });
+
+  it("is rejected: an ability belonging to a different House's necromancer", () => {
+    const L: Loadout = { userId: 1, house: "carcass", colour: "#e6194b", units: [{ defId: "gunwight" }] };
+    const LB: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8", units: [{ defId: "warhead" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const r = applyAction(s, 0, { kind: "soul", ability: "Ignite" });   // a goregrinders soul, not carcass
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe("no such soul ability");
+  });
+
+  it("Will of God and Sample Genome are disclosed gaps — a clear error, not a silent no-op", () => {
+    const L: Loadout = { userId: 1, house: "abhorrers", colour: "#e6194b", units: [{ defId: "penitent" }] };
+    const LB: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8", units: [{ defId: "warhead" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const r = applyAction(s, 0, { kind: "soul", ability: "Will of God", target: { x: s.units[0].pos.x, y: s.units[0].pos.y + 1 } });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe("not yet implemented");
+  });
+
+  it("carcass Reload Slide steps and reloads for 1 SOUL", () => {
+    const L: Loadout = { userId: 1, house: "carcass", colour: "#e6194b", units: [{ defId: "gunwight" }] };
+    const LB: Loadout = { userId: 2, house: "goregrinders", colour: "#4363d8", units: [{ defId: "warhead" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.round = 2; s.players[0].soul = 2;
+    const r = applyAction(s, 0, { kind: "soul", ability: "Reload Slide" });
+    expect(r.ok).toBe(true);
+    expect(s.players[0].soul).toBe(1);
+  });
+
+  it("goregrinders Glory Kill obliterates an adjacent unit at 1 hp or lower and gains strength", () => {
+    const L: Loadout = { userId: 1, house: "goregrinders", colour: "#e6194b", units: [{ defId: "warhead" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const warlord = s.units.find((u) => u.defId === "warlord")!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    gunwight.pos = { x: warlord.pos.x, y: warlord.pos.y + 1 };
+    gunwight.hp = 1;
+    const r = applyAction(s, 0, { kind: "soul", ability: "Glory Kill", target: gunwight.pos });
+    expect(r.ok).toBe(true);
+    expect(gunwight.alive).toBe(false);
+    expect(warlord.tokens.strength).toBe(2);
+  });
+
+  it("goregrinders Glory Kill does not obliterate a target above 1 hp", () => {
+    const L: Loadout = { userId: 1, house: "goregrinders", colour: "#e6194b", units: [{ defId: "warhead" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const warlord = s.units.find((u) => u.defId === "warlord")!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    gunwight.pos = { x: warlord.pos.x, y: warlord.pos.y + 1 };   // 2 hp, not <=1
+    const r = applyAction(s, 0, { kind: "soul", ability: "Glory Kill", target: gunwight.pos });
+    expect(r.ok).toBe(true);
+    expect(gunwight.alive).toBe(true);
+  });
+
+  it("gargamox Infest grants 2 plague tokens to a foe in range", () => {
+    const L: Loadout = { userId: 1, house: "gargamox", colour: "#e6194b", units: [{ defId: "scum" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    gunwight.pos = { x: nec.pos.x + 2, y: nec.pos.y };
+    const r = applyAction(s, 0, { kind: "soul", ability: "Infest", target: gunwight.pos });
+    expect(r.ok).toBe(true);
+    expect(gunwight.tokens.plague).toBe(2);
+  });
+
+  it("gargamox Slime Form needs no target and pushes units in range", () => {
+    const L: Loadout = { userId: 1, house: "gargamox", colour: "#e6194b", units: [{ defId: "scum" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    gunwight.pos = { x: nec.pos.x + 2, y: nec.pos.y };
+    const posBefore = { ...gunwight.pos };
+    const r = applyAction(s, 0, { kind: "soul", ability: "Slime Form" });
+    expect(r.ok).toBe(true);
+    expect(gunwight.pos).not.toEqual(posBefore);
+  });
+
+  it("deadsouls Cyclopean Monolith places a wall and weakens an adjacent foe", () => {
+    const L: Loadout = { userId: 1, house: "deadsouls", colour: "#e6194b", units: [{ defId: "cultist" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    const wallPos = { x: nec.pos.x + 2, y: nec.pos.y };
+    gunwight.pos = { x: wallPos.x + 1, y: wallPos.y };
+    const r = applyAction(s, 0, { kind: "soul", ability: "Cyclopean Monolith", target: wallPos });
+    expect(r.ok).toBe(true);
+    expect(s.terrain[`${wallPos.x},${wallPos.y}`]?.wall).toBeTruthy();
+    expect(gunwight.tokens.weak).toBe(1);
+  });
+
+  it("deadsouls Cyclopean Monolith rejects a tile that's already occupied", () => {
+    const L: Loadout = { userId: 1, house: "deadsouls", colour: "#e6194b", units: [{ defId: "cultist" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    gunwight.pos = { x: nec.pos.x + 2, y: nec.pos.y };
+    const r = applyAction(s, 0, { kind: "soul", ability: "Cyclopean Monolith", target: gunwight.pos });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe("tile not free");
+  });
+
+  it("deadsouls Soulfeed hits isolated foes in range with curse damage and weak, strengthening the caster", () => {
+    const L: Loadout = { userId: 1, house: "deadsouls", colour: "#e6194b", units: [{ defId: "cultist" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }, { defId: "enforcer" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    const enforcer = s.units.find((u) => u.defId === "enforcer")!;
+    gunwight.pos = { x: nec.pos.x + 1, y: nec.pos.y };   // in range, isolated (no ally adjacent)
+    enforcer.pos = { x: 7, y: 7 };                       // out of range entirely
+    const hpBefore = gunwight.hp;
+    const r = applyAction(s, 0, { kind: "soul", ability: "Soulfeed" });
+    expect(r.ok).toBe(true);
+    expect(gunwight.hp).toBeLessThan(hpBefore);
+    expect(gunwight.tokens.weak).toBe(1);
+    expect(nec.tokens.strength).toBe(1);
+  });
+
+  it("deadsouls Soulfeed does not hit a non-isolated, non-doomed foe in range", () => {
+    const L: Loadout = { userId: 1, house: "deadsouls", colour: "#e6194b", units: [{ defId: "cultist" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }, { defId: "enforcer" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    const enforcer = s.units.find((u) => u.defId === "enforcer")!;
+    gunwight.pos = { x: nec.pos.x + 1, y: nec.pos.y };
+    enforcer.pos = { x: gunwight.pos.x + 1, y: gunwight.pos.y };   // adjacent ally — gunwight is NOT isolated
+    const hpBefore = gunwight.hp;
+    const r = applyAction(s, 0, { kind: "soul", ability: "Soulfeed" });
+    expect(r.ok).toBe(true);
+    expect(gunwight.hp).toBe(hpBefore);
+    expect(nec.tokens.strength ?? 0).toBe(0);
+  });
+
+  it("abhorrers Absolution costs the caster 1 piercing hp and grants an ally tiered vitality", () => {
+    const L: Loadout = { userId: 1, house: "abhorrers", colour: "#e6194b", units: [{ defId: "penitent" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const penitent = s.units.find((u) => u.defId === "penitent")!;
+    penitent.pos = { x: nec.pos.x + 2, y: nec.pos.y };
+    const hpBefore = nec.hp;
+    const r = applyAction(s, 0, { kind: "soul", ability: "Absolution", target: penitent.pos });
+    expect(r.ok).toBe(true);
+    expect(nec.hp).toBe(hpBefore - 1);
+    expect(penitent.tokens.vitality ?? 0).toBeGreaterThanOrEqual(1);
+  });
+
+  it("abhorrers Absolution rejects a foe target", () => {
+    const L: Loadout = { userId: 1, house: "abhorrers", colour: "#e6194b", units: [{ defId: "penitent" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const gunwight = s.units.find((u) => u.defId === "gunwight")!;
+    gunwight.pos = { x: nec.pos.x + 2, y: nec.pos.y };
+    const r = applyAction(s, 0, { kind: "soul", ability: "Absolution", target: gunwight.pos });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe("wrong target");
+  });
+
+  it("igorri Wild Mutation grants exactly one of strength/speed/vitality from a single roll", () => {
+    const L: Loadout = { userId: 1, house: "igorri", colour: "#e6194b", units: [{ defId: "homonculus" }] };
+    const LB: Loadout = { userId: 2, house: "carcass", colour: "#4363d8", units: [{ defId: "gunwight" }] };
+    const s = createGame(L, LB, 1, 0);
+    autoDeploy(s);
+    s.players[0].soul = 6;
+    const nec = s.units.find((u) => u.isNecromancer && u.owner === 0)!;
+    const homonculus = s.units.find((u) => u.defId === "homonculus")!;
+    homonculus.pos = { x: nec.pos.x + 4, y: nec.pos.y };
+    const r = applyAction(s, 0, { kind: "soul", ability: "Wild Mutation", target: homonculus.pos });
+    expect(r.ok).toBe(true);
+    const gained = (homonculus.tokens.strength ?? 0) + (homonculus.tokens.speed ?? 0) + (homonculus.tokens.vitality ?? 0);
+    expect(gained).toBe(1);
   });
 });

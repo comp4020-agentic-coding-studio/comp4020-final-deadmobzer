@@ -15,13 +15,13 @@ import {
   clearSessionCookie, escapeHtml, html, json, readCookie, readFormBody, readJsonBody,
   redirect, setSessionCookie,
 } from "./http.ts";
-import { landing, page, aboutPage, appShell, howToPlay } from "./serverview.ts";
+import { landing, aboutPage, appShell, howToPlay } from "./serverview.ts";
 import { audit, withRequestId } from "./audit.ts";
 import { today, TZ } from "./time.ts";
-import { FACTIONS, PLAYER_PALETTE, UNIT_SLOTS, RULES, allUnitDefs } from "./game/data.ts";
+import { FACTIONS, PLAYER_PALETTE, UNIT_SLOTS, RULES } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, maliceLevels, LoadoutError, type Mode } from "./loadouts.ts";
 import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
-import { gameView, act, movesFor, targetsFor, leaveGame, recentOpponents, activeGames, GameError } from "./games.ts";
+import { gameView, act, movesFor, targetsFor, soulTargetsFor, leaveGame, recentOpponents, activeGames, GameError } from "./games.ts";
 import { postMessage, messagesFor, ChatError, type Channel } from "./chat.ts";
 import { getProfile, setAvatar, ProfileError } from "./profile.ts";
 import type { Action } from "./game/types.ts";
@@ -190,31 +190,26 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
       return void redirect(res, "/");
     }
 
-    // ---- HTML pages (minimal shell; the 3D client comes later) ----
-    if (path === "/" && method === "GET") {
-      const p = getProfile(user.id)!;
-      return void html(res, page("Home", `
-        <h1>Welcome, ${escapeHtml(user.display_name)}</h1>
-        <div class="card"><p>Rating (ELO): <strong>${p.elo}</strong></p>
-          <p><a href="/play">Find a match</a> · <a href="/profile">Profile</a> ·
-             <a href="/friends">Friends</a></p>
-          <form method="post" action="/logout"><button>Sign out</button></form></div>`));
-    }
-    // The interactive app (React + Three.js): lobby + the 3D table.
-    if (path === "/play" && method === "GET") return void html(res, appShell("Play", { header: true }));
+    // ---- The SPA (React + Three.js): every authenticated page past this point
+    // is the same shell — App.tsx (wouter) renders the matching page client-side
+    // from here, with its own persistent nav, so none of these are a second
+    // network round-trip once the bundle is loaded. Each keeps its own server
+    // route so a bookmark, shared link, or hard refresh still resolves. The
+    // server-rendered profilePage()/friendsPage() + their /profile/avatar and
+    // /friends/* form-POST routes stay in place below, unused by the SPA but
+    // still a protected contract (spec/profile.test.ts's "server-rendered
+    // form" describe block) — don't remove them.
+    if (path === "/" && method === "GET") return void html(res, appShell("Home"));
+    if (path === "/play" && method === "GET") return void html(res, appShell("Play"));
     if (path.startsWith("/g/") && method === "GET") return void html(res, appShell("Table"));
-    if (path === "/profile" && method === "GET") {
-      return void html(res, profilePage(user));
-    }
+    if (path === "/profile" && method === "GET") return void html(res, appShell("Profile"));
     if (path === "/profile/avatar" && method === "POST") {
       const f = await readFormBody(req);
       const [house, unit] = (f.get("avatar") ?? ":").split(":");
       try { setAvatar(user.id, house, unit, f.get("colour") ?? ""); } catch { /* ignore invalid */ }
       return void redirect(res, "/profile");
     }
-    if (path === "/friends" && method === "GET") {
-      return void html(res, friendsPage(user, url.searchParams.get("msg") ?? undefined));
-    }
+    if (path === "/friends" && method === "GET") return void html(res, appShell("Friends"));
     if (path === "/friends/request" && method === "POST") {
       const f = await readFormBody(req);
       try {
@@ -294,6 +289,13 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
     }
 
     // friends (JSON)
+    if (path === "/api/friends" && method === "GET") {
+      return void json(res, {
+        friends: friendsOf(user.id).map((f) => ({ ...f, online: isOnline(f.id) })),
+        incoming: incomingRequests(user.id),
+        recent: recentOpponents(user.id),
+      });
+    }
     if (path === "/api/friends/request" && method === "POST") {
       const b = await readJsonBody(req);
       try {
@@ -325,8 +327,8 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
       return void json(res, { games: activeGames().filter((g) => audienceCount(g.id) > 0) });
     }
 
-    // games: /api/game/<id>, /action, /chat, /moves, /targets, /leave
-    const gameMatch = /^\/api\/game\/([A-Za-z0-9_-]+)(\/action|\/chat|\/moves|\/targets|\/leave)?$/.exec(path);
+    // games: /api/game/<id>, /action, /chat, /moves, /targets, /soul-targets, /leave
+    const gameMatch = /^\/api\/game\/([A-Za-z0-9_-]+)(\/action|\/chat|\/moves|\/targets|\/soul-targets|\/leave)?$/.exec(path);
     if (gameMatch) {
       const id = gameMatch[1];
       const sub = gameMatch[2];
@@ -338,6 +340,10 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
         const iid = url.searchParams.get("iid") ?? "";
         const ability = url.searchParams.get("ability") ?? "";
         return void json(res, { targets: targetsFor(id, user.id, iid, ability) });
+      }
+      if (sub === "/soul-targets" && method === "GET") {
+        const ability = url.searchParams.get("ability") ?? "";
+        return void json(res, { targets: soulTargetsFor(id, user.id, ability) });
       }
       if (sub === "/leave" && method === "POST") {
         const ended = leaveGame(id, user.id);
@@ -381,69 +387,6 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
     res.end("something went wrong");
   }
 }));
-
-// ---- server-rendered social pages (CSP-safe: plain form POSTs, no inline JS) ----
-
-function profilePage(user: User): string {
-  const p = getProfile(user.id)!;
-  const avatarOptions = Object.values(FACTIONS).flatMap((f) =>
-    allUnitDefs(f.id).map((u) => {
-      const val = `${f.id}:${u.id}`;
-      const sel = p.avatarHouse === f.id && p.avatarUnit === u.id ? " selected" : "";
-      return `<option value="${val}"${sel}>${escapeHtml(f.name)} — ${escapeHtml(u.name)}</option>`;
-    })).join("");
-  const swatches = PLAYER_PALETTE.map((c, i) => {
-    const checked = p.colour === c || (!p.colour && i === 0) ? " checked" : "";
-    return `<label class="sw"><input type="radio" name="colour" value="${c}"${checked}>` +
-      `<span style="background:${escapeHtml(c)}"></span></label>`;
-  }).join("");
-  const current = p.avatarHouse && p.avatarUnit
-    ? `<img class="avatar" src="/art/portraits/${escapeHtml(p.avatarHouse)}/${escapeHtml(p.avatarUnit)}.png" alt="avatar"` +
-      (p.colour ? ` style="box-shadow:0 0 0 4px ${escapeHtml(p.colour)}"` : "") + ">"
-    : "<p>No avatar set yet.</p>";
-  return page("Profile", `
-    <h1>${escapeHtml(p.display_name)}</h1>
-    <div class="card">
-      <p>Username: <code>${escapeHtml(p.username)}</code> · Rating (ELO): <strong>${p.elo}</strong></p>
-      ${current}
-    </div>
-    <div class="card">
-      <h2>Choose your avatar</h2>
-      <form method="post" action="/profile/avatar">
-        <label>Portrait</label>
-        <select name="avatar">${avatarOptions}</select>
-        <label>Colour (also tints your pawns)</label>
-        <div class="swatches">${swatches}</div>
-        <p><button type="submit">Save</button></p>
-      </form>
-    </div>`);
-}
-
-function friendsPage(user: User, msg?: string): string {
-  const friends = friendsOf(user.id)
-    .map((f) => `<li>${escapeHtml(f.display_name)} ${isOnline(f.id) ? "· <em>online</em>" : ""}</li>`).join("");
-  const incoming = incomingRequests(user.id).map((r) =>
-    `<li>${escapeHtml(r.display_name)}
-      <form method="post" action="/friends/accept" style="display:inline">
-        <input type="hidden" name="friendship_id" value="${r.friendship_id}"><button>Accept</button></form>
-      <form method="post" action="/friends/decline" style="display:inline">
-        <input type="hidden" name="friendship_id" value="${r.friendship_id}"><button>Decline</button></form>
-    </li>`).join("");
-  const recent = recentOpponents(user.id).map((o) =>
-    `<li>${escapeHtml(o.display_name)} <code>${escapeHtml(o.username)}</code>
-      <form method="post" action="/friends/request" style="display:inline">
-        <input type="hidden" name="username" value="${escapeHtml(o.username)}"><button>Add friend</button></form>
-    </li>`).join("");
-  return page("Friends", `
-    <h1>Friends</h1>
-    ${msg ? `<p class="err">${escapeHtml(msg)}</p>` : ""}
-    <div class="card"><h2>Add a friend</h2>
-      <form method="post" action="/friends/request">
-        <input name="username" placeholder="their username"><button>Send request</button></form></div>
-    <div class="card"><h2>Your friends</h2><ul>${friends || "<li>None yet.</li>"}</ul></div>
-    <div class="card"><h2>Incoming requests</h2><ul>${incoming || "<li>None.</li>"}</ul></div>
-    <div class="card"><h2>Recent opponents</h2><ul>${recent || "<li>No games yet.</li>"}</ul></div>`);
-}
 
 server.on("upgrade", (req, socket, head) => {
   if (new URL(req.url ?? "/", "http://localhost").pathname === "/ws") {

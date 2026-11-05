@@ -1,22 +1,32 @@
-/* Client styles for the React + Three.js app (lobby + table), in the rulebook's
-   design language: bone paper, black ink, blood-red. Served at /static/app.css. */
+/* Client styles for the React + Three.js SPA (every authenticated page past
+   login), in the rulebook's design language: bone paper, black ink, blood-red.
+   Served at /static/app.css. Tokens match data/style.json (the extracted
+   source of truth) — ink_soft #181818 for the dark theme the rulebook's own
+   inverted pages suggest (style.json's notes), #303030 as the sampled
+   neutral used for borders/lines, not an invented pure black. This is now the
+   ONE stylesheet that matters: nearly every page (Home, Play, a game room,
+   Friends, Profile) is this bundle, not a server-rendered page with its own
+   copy of these tokens (src/serverview.ts's STYLE, used only by the three
+   remaining static pages: landing/how-to-play/readme). */
 :root {
-  --paper: #f0f0f0; --ink: #111; --blood: #f00000; --line: #000; --panel: #15151a;
+  --paper: #f0f0f0; --ink: #181818; --blood: #f00000; --line: #303030; --panel: #15151a;
   --display: "Pirata One", "UnifrakturMaguntia", serif;
   --label: "Oswald", "Arial Narrow", sans-serif;
   --body: Georgia, "Times New Roman", serif;
 }
 * { box-sizing: border-box; }
-.app-body { margin: 0; background: #0b0b0d; color: var(--paper); font-family: var(--body); min-height: 100vh; }
-/* shared navbar (mirrors the server pages) */
+.app-body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(--body); min-height: 100vh; }
+/* the persistent nav (src/client/App.tsx's <Nav>) */
 .app-body > header { background: #000; color: var(--paper); padding: 14px 20px; display: flex;
   align-items: center; gap: 16px; flex-wrap: wrap; border-bottom: 2px solid var(--blood); }
 .app-body > header .brand { font-family: var(--display); font-size: 1.4rem; color: var(--blood); letter-spacing: .04em; }
 .app-body > header a { color: var(--paper); text-decoration: none; margin-right: 12px;
-  font-family: var(--label); text-transform: uppercase; font-size: .9rem; letter-spacing: .05em; }
+  font-family: var(--label); text-transform: uppercase; font-size: .9rem; letter-spacing: .05em;
+  padding-bottom: 2px; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
 .app-body > header a:hover { color: var(--blood); }
+.app-body > header a.on { color: var(--blood); border-bottom-color: var(--blood); }
 .pad { padding: 28px; max-width: 760px; margin: 0 auto; }
-.topnav { display: flex; gap: 16px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #2a2a30; }
+.topnav { display: flex; gap: 16px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .topnav a { color: var(--paper); text-decoration: none; font-family: var(--label);
   text-transform: uppercase; font-size: .85rem; letter-spacing: .05em; }
 .topnav a:hover { color: var(--blood); }
@@ -24,11 +34,30 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02e
 h1 { letter-spacing: .03em; border-bottom: 3px solid var(--blood); padding-bottom: .2em; }
 button, label, .tabs button { font-family: var(--label); text-transform: uppercase; letter-spacing: .04em; }
 .err { color: #ff6b6b; font-weight: bold; }
-button { font: inherit; background: var(--ink); color: var(--paper); border: 1px solid #333;
-  padding: .5em .9em; cursor: pointer; border-radius: 3px; }
+button { font: inherit; background: var(--ink); color: var(--paper); border: 1px solid var(--line);
+  padding: .5em .9em; cursor: pointer; border-radius: 3px; transition: background .15s, border-color .15s; }
 button:hover { background: var(--blood); border-color: var(--blood); }
 input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--paper);
-  border: 1px solid #333; border-radius: 3px; }
+  border: 1px solid var(--line); border-radius: 3px; }
+code { background: #000; padding: .1em .3em; border-radius: 2px; }
+
+/* Home / Friends / Profile — ported from the server-rendered pages they
+   replaced (src/server.ts), same .card/.avatar/.swatches shapes STYLE used,
+   so this one stylesheet now covers what two drifted ones used to. */
+.card { border: 1px solid var(--line); padding: 16px; margin: 14px 0; background: var(--panel);
+  border-radius: 4px; animation: panel-in .25s ease-out; }
+.avatar { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 2px solid var(--line); }
+/* Profile's radio-based colour picker — distinct from the lobby's .sw/.swatches
+   button-based one below (same idea, different DOM shape: <label><input radio>). */
+.avatar-swatches { display: flex; flex-wrap: wrap; gap: 6px; margin: .3em 0; }
+.avatar-sw { cursor: pointer; }
+.avatar-sw input { position: absolute; opacity: 0; }
+.avatar-sw span { display: inline-block; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #000; }
+.avatar-sw input:checked + span { outline: 3px solid var(--blood); }
+.homelinks { display: flex; gap: 14px; flex-wrap: wrap; margin: 14px 0; }
+.linkcard { display: block; text-decoration: none; color: var(--paper); flex: 1 1 160px;
+  min-width: 160px; text-align: center; transition: transform .15s, border-color .15s; }
+.linkcard:hover { border-color: var(--blood); transform: translateY(-2px); }
 
 /* lobby */
 .lobby .row { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
@@ -50,7 +79,7 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
 .board { position: relative; min-width: 0; }
 .hud { background: #101014; border-left: 1px solid #000; padding: 12px;
   display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
-.statusline { font-size: .95rem; border-bottom: 1px solid #2a2a30; padding-bottom: 8px;
+.statusline { font-size: .95rem; border-bottom: 1px solid var(--line); padding-bottom: 8px;
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .leave { margin-left: auto; background: #1c1c22; font-size: .8rem; padding: .3em .7em; }
 .leave:hover { background: var(--blood); }
@@ -59,7 +88,7 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
 .gameover { background: var(--panel); border: 2px solid var(--blood); border-radius: 4px;
   padding: 14px; text-align: center; }
 .gameover h2 { margin: 0 0 10px; color: var(--blood); }
-.panel { background: var(--panel); border: 1px solid #2a2a30; border-radius: 4px; padding: 10px;
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px;
   animation: panel-in .15s ease-out; }
 .panel.ghost { opacity: .8; }
 @keyframes panel-in { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
@@ -80,7 +109,7 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
 .tabs { display: flex; gap: 4px; }
 .tabs button { flex: 1; padding: .4em; background: #1c1c22; }
 .tabs button.on { background: var(--blood); border-color: var(--blood); }
-.feed { flex: 1; overflow-y: auto; background: #0c0c0f; border: 1px solid #2a2a30;
+.feed { flex: 1; overflow-y: auto; background: #0c0c0f; border: 1px solid var(--line);
   border-radius: 4px; padding: 8px; font-size: .85rem; display: flex; flex-direction: column; gap: 4px; }
 .logline .who { color: var(--blood); font-weight: bold; }
 .logline .dice { color: #f0c030; }
@@ -103,6 +132,6 @@ input, select { font: inherit; padding: .5em; background: #1c1c22; color: var(--
   max-height: 85vh; overflow-y: auto; position: relative; }
 .modal h1, .modal h2, .modal h3 { margin-top: 0; }
 .modal-close { position: absolute; top: 10px; right: 10px; background: var(--ink);
-  color: var(--paper); border: 1px solid #333; border-radius: 3px; width: 2em; height: 2em;
+  color: var(--paper); border: 1px solid var(--line); border-radius: 3px; width: 2em; height: 2em;
   line-height: 1; cursor: pointer; font-family: var(--label); }
 .modal-close:hover { background: var(--blood); border-color: var(--blood); }

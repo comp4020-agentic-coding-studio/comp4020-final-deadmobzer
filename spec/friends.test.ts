@@ -10,14 +10,13 @@ import { api, get, signup, startGame, uniqueName } from "./helpers.ts";
 
 const baseUrl = inject("baseUrl");
 
-// Parse the one-time-use friendship_id for a request out of the server-rendered
-// /friends page (there's no JSON "list requests" endpoint — the page itself is
-// the only way to discover the id a /friends/accept or /decline call needs).
+// The one-time-use friendship_id a /friends/accept or /decline call needs,
+// read from GET /api/friends's "incoming" list (src/server.ts).
 async function firstFriendshipId(sid: string): Promise<number> {
-  const html = await (await get(baseUrl, "/friends", sid)).text();
-  const m = /name="friendship_id" value="(\d+)"/.exec(html);
-  if (!m) throw new Error("no pending friendship_id found on /friends");
-  return Number(m[1]);
+  const body = await (await api(baseUrl, sid, "/api/friends", undefined, "GET")).json();
+  const first = body.incoming?.[0];
+  if (!first) throw new Error("no pending friendship_id found in GET /api/friends");
+  return Number(first.friendship_id);
 }
 
 describe("friend requests", () => {
@@ -33,10 +32,10 @@ describe("friend requests", () => {
     const accept = await api(baseUrl, b.sid, "/api/friends/accept", { friendship_id: fid });
     expect(accept.status).toBe(200);
 
-    const pageA = await (await get(baseUrl, "/friends", a.sid)).text();
-    const pageB = await (await get(baseUrl, "/friends", b.sid)).text();
-    expect(pageA).toContain(b.display_name);
-    expect(pageB).toContain(a.display_name);
+    const friendsA = await (await api(baseUrl, a.sid, "/api/friends", undefined, "GET")).json();
+    const friendsB = await (await api(baseUrl, b.sid, "/api/friends", undefined, "GET")).json();
+    expect(friendsA.friends.some((f: { display_name: string }) => f.display_name === b.display_name)).toBe(true);
+    expect(friendsB.friends.some((f: { display_name: string }) => f.display_name === a.display_name)).toBe(true);
   });
 
   it("sending, then declining, leaves both sides unfriended", async () => {
@@ -48,10 +47,10 @@ describe("friend requests", () => {
     const decline = await api(baseUrl, b.sid, "/api/friends/decline", { friendship_id: fid });
     expect(decline.status).toBe(200);
 
-    const pageB = await (await get(baseUrl, "/friends", b.sid)).text();
+    const friendsB = await (await api(baseUrl, b.sid, "/api/friends", undefined, "GET")).json();
     // The request is gone from the incoming list and no friendship was made.
-    expect(pageB).not.toContain(`value="${fid}"`);
-    expect(pageB).toContain("None yet."); // no friends section
+    expect(friendsB.incoming.some((r: { friendship_id: number }) => r.friendship_id === fid)).toBe(false);
+    expect(friendsB.friends).toEqual([]);
   });
 
   it("rejects a self-request", async () => {
@@ -84,8 +83,8 @@ describe("friend requests", () => {
     await api(baseUrl, a.sid, "/api/friends/request", { username: b.username });
     const reverse = await api(baseUrl, b.sid, "/api/friends/request", { username: a.username });
     expect(reverse.status).toBe(200);
-    const pageA = await (await get(baseUrl, "/friends", a.sid)).text();
-    expect(pageA).toContain(b.display_name);
+    const friendsA = await (await api(baseUrl, a.sid, "/api/friends", undefined, "GET")).json();
+    expect(friendsA.friends.some((f: { display_name: string }) => f.display_name === b.display_name)).toBe(true);
   });
 
   it("rejects accepting a request that isn't yours, and declining it is a silent no-op", async () => {
@@ -136,8 +135,8 @@ describe("recent opponents", () => {
     const body = await res.json();
     expect(body.opponents.some((o: { username: string }) => o.username === b.username)).toBe(true);
 
-    const page = await (await get(baseUrl, "/friends", a.sid)).text();
-    expect(page).toContain(b.display_name);
+    const friendsA = await (await api(baseUrl, a.sid, "/api/friends", undefined, "GET")).json();
+    expect(friendsA.recent.some((o: { display_name: string }) => o.display_name === b.display_name)).toBe(true);
   });
 
   it("is empty for a user who has never played", async () => {

@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocation } from "wouter";
 import anime from "animejs";
 import { Table, type TableState } from "../three/table.ts";
 import { getJSON, postJSON, openGameSocket } from "./api.ts";
 
-interface Ability { name: string; tags: string[]; range?: [number, number] | "melee" | "self"; text: string }
+interface Ability { name: string; tags: string[]; range?: [number, number] | "melee" | "self"; text: string; soul?: number }
 interface Unit {
   iid: string; owner: 0 | 1; name: string; type: string; art: string;
   mv: number; hp: number; maxHp: number; df: number; arm: string | null;
   pos: { x: number; y: number }; tokens: Record<string, number>;
-  acts: Ability[]; alive: boolean; isNecromancer: boolean; upgrade?: string;
+  acts: Ability[]; souls?: Ability[]; alive: boolean; isNecromancer: boolean; upgrade?: string;
   activatedThisRound: boolean;
 }
-interface PlayerSummary { colour: string; deployed: boolean }
+interface PlayerSummary { colour: string; deployed: boolean; soul: number }
 interface State extends TableState {
   phase: string; round: number; activeSide: 0 | 1; winner: 0 | 1 | null;
   units: Unit[];
   players: PlayerSummary[];
+  soulUsedThisTurn: [boolean, boolean];
   log: { round: number; actor: string; text: string; dice?: number[] }[];
 }
 interface ChatMsg { id: number; displayName: string; body: string }
@@ -57,6 +59,7 @@ function testHooksRequested(): boolean {
 }
 
 export function Game({ gameId }: { gameId: string }) {
+  const [, setLocation] = useLocation();
   const mountRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<Table | null>(null);
   const handlersRef = useRef({
@@ -71,6 +74,11 @@ export function Game({ gameId }: { gameId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [pendingAbility, setPendingAbility] = useState<Ability | null>(null);
   const [targetable, setTargetable] = useState<string[]>([]);
+  // A SOUL ability isn't tied to a selected unit's turn (see CLAUDE.md / the
+  // "soul" Action kind) — it has its own pending/targetable state, mutually
+  // exclusive with an ACT ability's.
+  const [pendingSoul, setPendingSoul] = useState<Ability | null>(null);
+  const [soulTargetable, setSoulTargetable] = useState<{ iid?: string; pos: { x: number; y: number } }[]>([]);
   const [showHelp, setShowHelp] = useState(false);
   // deployFromEdgeSpaces (data/rules.json via /api/factions) — how many rows from
   // its own board edge a side may deploy into. Fetched once; same source the
@@ -204,6 +212,20 @@ export function Game({ gameId }: { gameId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, pendingAbility, view?.state.activeSide, view?.state.round, canDeploy, deployEdge]);
 
+  // SOUL targeting is independent of whose turn it is or what's selected —
+  // it highlights (amber) as soon as a soul ability is armed, from
+  // /api/game/:id/soul-targets (src/game/engine.ts's legalSoulTargets).
+  useEffect(() => {
+    if (!tableRef.current) return;
+    if (!pendingSoul) { setSoulTargetable([]); return; }
+    getJSON<{ targets: { iid?: string; pos: { x: number; y: number } }[] }>(
+      `/api/game/${gameId}/soul-targets?ability=${encodeURIComponent(pendingSoul.name)}`)
+      .then((r) => {
+        setSoulTargetable(r.targets);
+        tableRef.current?.highlightTiles(r.targets.map((t) => t.pos), "target");
+      }).catch(() => {});
+  }, [pendingSoul, gameId, view?.state.round]);
+
   // A 409 means the game moved under us (see src/games.ts act() /
   // docs/adr-005-concurrent-actions.md) — our view of the board is stale, so
   // the fix is to refetch the real state, not retry blindly against it.
@@ -237,6 +259,13 @@ export function Game({ gameId }: { gameId: string }) {
       : undefined;
     await runAction({ kind: "act", iid: selectedUnit.iid, ability: ability.name, target });
   }
+  // SOUL abilities aren't gated on myTurn/selectedUnit — they can be cast any
+  // time, including the opponent's turn (src/game/engine.ts's "soul" branch).
+  // A tile target (Cyclopean Monolith) passes {x,y} directly rather than
+  // resolving through a unit's position.
+  async function useSoul(ability: Ability, target?: { x: number; y: number }) {
+    await runAction({ kind: "soul", ability: ability.name, target });
+  }
   async function endTurn() {
     await runAction({ kind: "endTurn" });
   }
@@ -245,7 +274,7 @@ export function Game({ gameId }: { gameId: string }) {
     if (view && view.role !== "spectator" && view.state.phase !== "over") {
       try { await postJSON(`/api/game/${gameId}/leave`, {}); } catch { /* leave anyway */ }
     }
-    location.assign("/play");
+    setLocation("/play");
   }
   async function postChat(channel: "player" | "audience", body: string) {
     if (!body.trim()) return;
@@ -255,6 +284,12 @@ export function Game({ gameId }: { gameId: string }) {
 
   // Refresh the handlers the 3D table calls, so clicks always use current state.
   handlersRef.current.pickUnit = (iid) => {
+    // A soul ability is armed: it takes priority over normal unit selection,
+    // and firing it doesn't select the clicked unit afterward.
+    if (pendingSoul) {
+      if (soulTargetable.some((t) => t.iid === iid)) { useSoul(pendingSoul, view!.state.units.find((u) => u.iid === iid)?.pos); setPendingSoul(null); }
+      return;
+    }
     // Deploy phase: only your own not-yet-placed units are selectable (one at a
     // time), and selecting one just arms it for a tile click — no ability panel.
     if (canDeploy) {
@@ -269,6 +304,10 @@ export function Game({ gameId }: { gameId: string }) {
     setSelected((cur) => (cur === iid ? null : iid));
   };
   handlersRef.current.pickTile = (x, y) => {
+    if (pendingSoul) {
+      if (soulTargetable.some((t) => t.pos.x === x && t.pos.y === y)) { useSoul(pendingSoul, { x, y }); setPendingSoul(null); }
+      return;
+    }
     if (canDeploy) {
       // Guard client-side against obviously-illegal tiles for UX; the server
       // (applyAction's "deploy" branch) remains the real authority and re-checks.
@@ -393,6 +432,41 @@ export function Game({ gameId }: { gameId: string }) {
             )}
           </div>
         )}
+
+        {s.phase === "playing" && myseat !== null && (() => {
+          const nec = s.units.find((u) => u.owner === myseat && u.isNecromancer);
+          // Will of God / Sample Genome are a disclosed gap (see engine.ts's
+          // UNIMPLEMENTED_SOULS) — not shown rather than offered and rejected.
+          const souls = nec?.souls?.filter((a) => a.name !== "Will of God" && a.name !== "Sample Genome") ?? [];
+          if (!nec?.alive || !souls.length) return null;
+          const soul = s.players[myseat].soul;
+          const usedThisTurn = s.soulUsedThisTurn[myseat];
+          return (
+            <div className="panel souls">
+              <h3>SOUL — {soul}</h3>
+              <div className="acts">
+                {souls.map((a) => {
+                  const selfCast = a.tags.includes("self") && !Array.isArray(a.range) && a.range !== "melee";
+                  const armed = pendingSoul?.name === a.name;
+                  const disabled = usedThisTurn || soul < (a.soul ?? 0);
+                  return (
+                    <button key={a.name} title={a.text} disabled={disabled}
+                      className={armed ? "on" : ""}
+                      onClick={() => selfCast ? useSoul(a) : setPendingSoul(armed ? null : a)}>
+                      {a.name} ({a.soul})
+                    </button>
+                  );
+                })}
+              </div>
+              {pendingSoul && (
+                <p className="targeting">
+                  Targeting with <strong>{pendingSoul.name}</strong> — click a glowing
+                  target on the board, or <button className="link" onClick={() => setPendingSoul(null)}>cancel</button>.
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         {hoverUnit && hoverUnit.iid !== selectedUnit?.iid && (
           <div className="panel ghost"><h3>{hoverUnit.name}</h3><Stat u={hoverUnit} /></div>

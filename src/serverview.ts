@@ -8,11 +8,14 @@ import { escapeHtml } from "./http.ts";
 //
 // No user content is ever interpolated without escapeHtml (no script injection).
 
-// One dark, gothic design language shared by every page (server-rendered and the
-// React SPA via app.css, which mirrors these tokens). Pirata One display, Oswald
-// labels, Georgia body; bone text on near-black, blood-red accent.
+// Dark, gothic design language for the three pages still server-rendered
+// (landing/login/signup, How to Play, the README/About page — everything
+// else, once signed in, is the React SPA and reads from public/app.css
+// instead; see that file's header comment). Tokens match data/style.json:
+// ink_soft #181818 for the dark theme, #303030 as the sampled neutral used
+// for borders/lines. Pirata One display, Oswald labels, Georgia body.
 const STYLE = `
-  :root{--paper:#f0f0f0;--ink:#0b0b0d;--panel:#15151a;--blood:#f00000;--line:#2a2a30;
+  :root{--paper:#f0f0f0;--ink:#181818;--panel:#15151a;--blood:#f00000;--line:#303030;
     --display:'Pirata One','UnifrakturMaguntia',serif;
     --label:'Oswald','Arial Narrow',sans-serif;
     --body:Georgia,'Times New Roman',serif;}
@@ -39,16 +42,13 @@ const STYLE = `
   button:hover{background:var(--blood);border-color:var(--blood)}
   .err{color:#ff6b6b;font-weight:bold}
   code{background:#000;padding:.1em .3em;border-radius:2px}
-  .avatar{width:120px;height:120px;object-fit:cover;border-radius:50%;border:2px solid var(--line)}
-  .swatches{display:flex;flex-wrap:wrap;gap:6px;margin:.3em 0}
-  .sw{cursor:pointer}
-  .sw input{position:absolute;opacity:0}
-  .sw span{display:inline-block;width:26px;height:26px;border-radius:50%;border:2px solid #000}
-  .sw input:checked + span{outline:3px solid var(--blood)}
   form{margin:.3em 0}
 `;
 
-// The one navbar, identical on every page.
+// Shown only on the one remaining fully server-rendered page (landing/login/
+// signup) and linked to from the SPA's own persistent nav (src/client/App.tsx)
+// on How to Play / About — a navbar inside a page those two land on from a
+// hard link would otherwise look like a dead end without one.
 const HEADER = `<header><span class="brand">Maleghast Online</span>
   <a href="/">Home</a><a href="/play">Play</a><a href="/how-to-play/">How to Play</a>
   <a href="/friends">Friends</a><a href="/profile">Profile</a><a href="/readme/">About</a></header>`;
@@ -182,18 +182,18 @@ export function howToPlay(): string {
   `);
 }
 
-// The app shell: a full-viewport mount for the client bundle (React + Three.js).
-// `header` adds the shared navbar (lobby); the full-screen game omits it. Same
-// dark theme as the server pages. CSP allows scripts only from 'self'.
-export function appShell(title: string, opts: { header?: boolean } = {}): string {
+// The SPA shell: a full-viewport mount for the client bundle (React + Three.js).
+// Every authenticated page serves this same shell now (src/client/App.tsx's
+// wouter router renders the right page and its own persistent nav
+// client-side) — the one exception is the 3D game room, which App.tsx itself
+// keeps full-bleed (no nav) by route, not by a server-side flag here anymore.
+export function appShell(title: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(title)} — Maleghast Online</title>
 <link rel="stylesheet" href="/fonts/fonts.css">
-<style>${STYLE}</style>
 <link rel="stylesheet" href="/static/app.css">
 </head><body class="app-body">
-${opts.header ? HEADER : ""}
 <div id="app">Loading…</div>
 <script type="module" src="/static/app.js"></script>
 </body></html>`;

@@ -26,6 +26,11 @@ wrong — fix it.
 - **It persists.** The full `GameState` is serialized to SQLite under `/data` on
   every action (`src/games.ts`), so a game survives a restart/redeploy. Nothing else
   survives; don't rely on in-memory state except live sockets. (`spec/persistence.test.ts`.)
+- **Concurrent actions on one game never silently stomp each other.** Every write
+  is conditioned on a `version` counter (`src/games.ts`'s `writeIfCurrent`); a
+  write that lost the race gets `{ conflict: true }` (409), not a clobbered board.
+  This is structural, not incidental — see `docs/adr-005-concurrent-actions.md`.
+  (`spec/concurrency.test.ts`.)
 - **Faithful to the rulebook.** Stats and abilities come from `data/factions/*.json`
   and the rules from `data/rules.json`, extracted from the rulebook corpus in
   `data/raw/`. Don't invent numbers; change the data, not the engine, to re-balance.

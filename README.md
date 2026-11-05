@@ -24,7 +24,10 @@ check at the table:
   app is only interesting because someone else is acting at the same time.
 - **Fair.** The server is the only authority. It rolls the dice, resolves combat,
   and decides what's legal. A client can ask to do something; it can never decide
-  the outcome, move a piece that isn't its own, or act out of turn.
+  the outcome, move a piece that isn't its own, or act out of turn. A versioned
+  write guard means two actions racing on the same game never silently stomp one
+  another — the loser gets a conflict, not a corrupted board
+  ([`docs/adr-005-concurrent-actions.md`](docs/adr-005-concurrent-actions.md)).
 - **Legible.** You can always tell *who did what and why.* The battle log shows
   every roll and its result, and the server logs name the two players so an
   observer can follow a whole match from the logs alone.
@@ -41,7 +44,8 @@ some can only be felt over a match.
   on their own units, only on their turn; spectators are read-only); no script
   injection (user text is escaped, a strict CSP is set); the combat rules
   (`spec/rules.test.ts`); real-time delivery (`spec/realtime.test.ts`); persistence
-  across restarts; and fair ratings (`spec/elo.test.ts`).
+  across restarts; a versioned write guard against concurrent actions on the same
+  game (`spec/concurrency.test.ts`); and fair ratings (`spec/elo.test.ts`).
 - **Judged:** whether a match *feels* tense and readable, whether the faithfulness
   lands for someone who knows the tabletop game, and whether the table reads as the
   rulebook's world rather than a generic grid.

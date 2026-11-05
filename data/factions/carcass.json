@@ -27,8 +27,15 @@
         ] }
     ],
     "souls": [
-      { "name": "Reload Slide", "soul": 1, "tags": ["self"], "text": "Own or allied turn. Step 1, then you or an adjacent ally reload." },
-      { "name": "Bullet Time", "soul": 3, "tags": ["self"], "text": "Own turn. Clear one (5+) or two negative tokens. Ranged attacks automatically miss you until the end of your next turn, and you are immune to splash and line damage for the duration." }
+      { "name": "Reload Slide", "soul": 1, "tags": ["self"], "text": "Own or allied turn. Step 1, then you or an adjacent ally reload.",
+        "effect": [
+          { "op": "step", "n": 1 },
+          { "op": "reload" }
+        ] },
+      { "name": "Bullet Time", "soul": 3, "tags": ["self"], "text": "Own turn. Clear one (5+) or two negative tokens. Ranged attacks automatically miss you until the end of your next turn, and you are immune to splash and line damage for the duration.",
+        "effect": [
+          { "op": "clearNegativeTokens", "target": "self" }
+        ] }
     ],
     "bonusTraits": ["Bone Wall", "Gun Kata", "Clutch Reload"],
     "actPool": ["Grenade Jump", "Armor Lock", "Devil Bullet", "Superkick", "LV4 Living Cannon", "SG88 Two Barrel Shotgun", "Unholy Sixgun"],

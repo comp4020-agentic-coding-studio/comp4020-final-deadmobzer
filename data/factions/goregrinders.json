@@ -27,8 +27,18 @@
         ] }
     ],
     "souls": [
-      { "name": "Ignite", "soul": 1, "tags": ["ranged"], "range": [1, 3], "text": "Own or allied turn. Deal 1 piercing fire damage to self or a unit in range (cannot slay). Unit gains 1 berserk and 1 speed." },
-      { "name": "Glory Kill", "soul": 3, "tags": ["self"], "text": "Own or allied turn. Obliterate an adjacent unit at 1 HP or lower. Gain 2 strength, then step 2." }
+      { "name": "Ignite", "soul": 1, "tags": ["ranged"], "range": [1, 3], "text": "Own or allied turn. Deal 1 piercing fire damage to self or a unit in range (cannot slay). Unit gains 1 berserk and 1 speed.",
+        "effect": [
+          { "op": "damage", "damage": 1, "damageType": "fire", "pierce": true, "cannotSlay": true, "target": "ally" },
+          { "op": "token", "token": "berserk", "n": 1, "target": "ally" },
+          { "op": "token", "token": "speed", "n": 1, "target": "ally" }
+        ] },
+      { "name": "Glory Kill", "soul": 3, "tags": ["self", "curse"], "range": "melee", "text": "Own or allied turn. Obliterate an adjacent unit at 1 HP or lower. Gain 2 strength, then step 2.",
+        "effect": [
+          { "op": "obliterateAdjacentLowHp" },
+          { "op": "token", "token": "strength", "n": 2, "target": "self" },
+          { "op": "step", "n": 2 }
+        ] }
     ],
     "bonusTraits": ["Nerve Twitch", "Blood Drinker", "Blood Rush"],
     "actPool": ["Quench", "Frenzy Chain", "Furious Roar", "Apoplexy", "Pilebunker", "Saw-Toothed Slayer Axe", "Spine Devil Blade"],

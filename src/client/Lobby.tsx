@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { getJSON, postJSON } from "./api.ts";
 
 interface Upgrade { name: string; text: string }
@@ -14,6 +15,7 @@ interface Factions {
 type Mode = "fixed" | "faithful";
 
 export function Lobby() {
+  const [, setLocation] = useLocation();
   const [data, setData] = useState<Factions | null>(null);
   const [mode, setMode] = useState<Mode>("fixed");
   const [house, setHouse] = useState("carcass");
@@ -68,14 +70,14 @@ export function Lobby() {
     try {
       if (kind === "quickjoin") {
         const r = await postJSON<{ gameId?: string; code?: string }>("/api/quickjoin", loadoutBody());
-        if (r.gameId) location.assign(`/g/${r.gameId}`);
+        if (r.gameId) setLocation(`/g/${r.gameId}`);
         else { setCreated(r.code!); pollLobby(r.code!); }
       } else if (kind === "create") {
         const r = await postJSON<{ code: string }>("/api/lobby/create", { ...loadoutBody(), visibility: "private" });
         setCreated(r.code); pollLobby(r.code);
       } else {
         const r = await postJSON<{ gameId: string }>("/api/lobby/join", { ...loadoutBody(), code });
-        location.assign(`/g/${r.gameId}`);
+        setLocation(`/g/${r.gameId}`);
       }
     } catch (e) { setError(String(e)); }
   }
@@ -86,7 +88,7 @@ export function Lobby() {
     const timer = setInterval(async () => {
       try {
         const r = await getJSON<{ gameId: string | null }>(`/api/lobby/${c}`);
-        if (r.gameId) { clearInterval(timer); location.assign(`/g/${r.gameId}`); }
+        if (r.gameId) { clearInterval(timer); setLocation(`/g/${r.gameId}`); }
       } catch { /* keep waiting */ }
     }, 1500);
   }
@@ -187,7 +189,7 @@ export function Lobby() {
         {live.map((g) => (
           <div key={g.id} className="unitpick">
             <span>{g.players.join(" vs ")} <em>{g.mode}</em></span>
-            <button onClick={() => location.assign(`/g/${g.id}`)}>Watch</button>
+            <button onClick={() => setLocation(`/g/${g.id}`)}>Watch</button>
           </div>
         ))}
       </div>

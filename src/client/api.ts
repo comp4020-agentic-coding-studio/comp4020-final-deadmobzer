@@ -27,3 +27,15 @@ export function openGameSocket(gameId: string, onEvent: (ev: { type: string }) =
   };
   return ws;
 }
+
+// The per-user socket (no `?game=`, see src/realtime.ts) — friend requests,
+// acceptances, and presence. Opened once per app session (App.tsx), not
+// per-page, since it carries events relevant across the whole SPA.
+export function openUserSocket(onEvent: (ev: { type: string }) => void): WebSocket {
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onmessage = (e) => {
+    try { onEvent(JSON.parse(e.data)); } catch { /* ignore */ }
+  };
+  return ws;
+}

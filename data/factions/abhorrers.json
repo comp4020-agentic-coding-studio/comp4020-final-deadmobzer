@@ -19,7 +19,13 @@
         "effect": [ { "op": "attack", "damage": 1, "damageType": "physical" } ] }
     ],
     "souls": [
-      { "name": "Absolution", "soul": 1, "tags": ["ranged"], "range": [2, 6], "text": "Turn start: self takes 1 piercing (can't slay); one ally in range gains one, (3+) two, (5+) three vitality." },
+      { "name": "Absolution", "soul": 1, "tags": ["ranged"], "range": [2, 6], "text": "Turn start: self takes 1 piercing (can't slay); one ally in range gains one, (3+) two, (5+) three vitality.",
+        "effect": [
+          { "op": "damage", "damage": 1, "pierce": true, "cannotSlay": true, "target": "self" },
+          { "op": "token", "token": "vitality", "n": 1, "target": "ally" },
+          { "op": "effectDie", "threshold": 3, "then": [ { "op": "token", "token": "vitality", "n": 1, "target": "ally" } ] },
+          { "op": "effectDie", "threshold": 5, "then": [ { "op": "token", "token": "vitality", "n": 1, "target": "ally" } ] }
+        ] },
       { "name": "Will of God", "soul": 3, "tags": ["ranged"], "range": [1, 3], "text": "Turn start: self or ally may treat the current round as either 2 or 5 this turn." }
     ],
     "bonusTraits": ["Winter Rose Stance", "Corpse Violet Stance", "Royal Chrysanthemum Stance"],

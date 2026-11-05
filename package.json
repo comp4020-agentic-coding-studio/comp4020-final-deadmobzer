@@ -21,6 +21,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "three": "^0.169.0",
+    "wouter": "^3.13.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

@@ -19,8 +19,17 @@
         "effect": [ { "op": "attack", "damage": 1, "damageType": "curse" } ] }
     ],
     "souls": [
-      { "name": "Cyclopean Monolith", "soul": 1, "tags": ["ranged"], "range": [2, 3], "text": "Turn start: create a wall in range and inflict 1 weak on an adjacent foe to the wall." },
-      { "name": "Soulfeed", "soul": 3, "tags": ["ranged"], "range": [1, 2], "text": "All isolated or doomed foes in range take 1 curse damage, gain 1 weak, and this unit gains 1 strength for each." }
+      { "name": "Cyclopean Monolith", "soul": 1, "tags": ["ranged", "tile"], "range": [2, 3], "text": "Turn start: create a wall in range and inflict 1 weak on an adjacent foe to the wall.",
+        "effect": [
+          { "op": "wall", "then": [ { "op": "token", "token": "weak", "n": 1 } ] }
+        ] },
+      { "name": "Soulfeed", "soul": 3, "tags": ["ranged", "area"], "range": [1, 2], "text": "All isolated or doomed foes in range take 1 curse damage, gain 1 weak, and this unit gains 1 strength for each.",
+        "effect": [
+          { "op": "isolatedOrDoomedInRange", "then": [
+            { "op": "damage", "damage": 1, "damageType": "curse", "target": "choose" },
+            { "op": "token", "token": "weak", "n": 1, "target": "choose" }
+          ] }
+        ] }
     ],
     "bonusTraits": ["Teleport", "Puppet Master", "Maggot Destroyer"],
     "actPool": ["Unholy Summoning", "Vapor Form", "Tear Soul", "Frozen Hell", "Great Urgal Blade", "Bloody Flail", "Lathean Devil Whip"],

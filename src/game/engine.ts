@@ -278,11 +278,49 @@ export function legalTargets(s: GameState, iid: string, abilityName: string): { 
   const band = Array.isArray(ab.range) ? ab.range : null;
   const needsTarget = melee || band || ab.tags.includes("attack") || ab.tags.includes("curse") || ab.tags.includes("pull");
   if (!needsTarget) return [];                        // self / no-target ability
+  const ally = wantsAlly(ab);
   const out: { iid: string; pos: Pos }[] = [];
   for (const o of s.units) {
     if (!o.alive || o.iid === u.iid) continue;
+    if (ally ? o.owner !== u.owner : o.owner === u.owner) continue;
     const d = chebyshev(u.pos, o.pos);
     if (melee ? d === 1 : band ? d >= band[0] && d <= band[1] : true) out.push({ iid: o.iid, pos: o.pos });
+  }
+  return out;
+}
+
+// The tiles/units a SOUL ability could legally target right now, for the
+// client to highlight. SOUL has no acting unit (it's cast by whichever side
+// owns the necromancer, not tied to one unit's activation like legalTargets),
+// so this takes `side` instead of an `iid`. "area" abilities (Soulfeed, Slime
+// Form) and tile-targeted ones (Cyclopean Monolith) are handled distinctly
+// from the ordinary unit-target case ACT abilities use.
+export function legalSoulTargets(s: GameState, side: 0 | 1, abilityName: string): { iid?: string; pos: Pos }[] {
+  if (s.phase !== "playing") return [];
+  const nec = s.units.find((u) => u.owner === side && u.isNecromancer && u.alive);
+  if (!nec) return [];
+  const ab = (faction(nec.house).necromancer.souls ?? []).find((a) => a.name === abilityName);
+  if (!ab || UNIMPLEMENTED_SOULS.has(ab.name) || ab.tags.includes("area")) return [];
+  const band = Array.isArray(ab.range) ? ab.range : null;
+  if (!band && ab.range !== "melee") return [];   // self / no-target ability
+  if (ab.tags.includes("tile")) {
+    const out: { pos: Pos }[] = [];
+    for (let x = 0; x < s.mapSize; x++) for (let y = 0; y < s.mapSize; y++) {
+      const p = { x, y };
+      const d = chebyshev(nec.pos, p);
+      if (band && (d < band[0] || d > band[1])) continue;
+      if (unitAt(s, p) || isWall(s, p)) continue;
+      out.push({ pos: p });
+    }
+    return out;
+  }
+  const ally = wantsAlly(ab);
+  const out: { iid: string; pos: Pos }[] = [];
+  for (const o of s.units) {
+    if (!o.alive) continue;
+    if (ally ? o.owner !== nec.owner : o.owner === nec.owner) continue;
+    const d = chebyshev(nec.pos, o.pos);
+    if (ab.range === "melee" ? d === 1 : band ? d >= band[0] && d <= band[1] : true) out.push({ iid: o.iid, pos: o.pos });
   }
   return out;
 }
@@ -320,6 +358,8 @@ interface Ctx {
   target?: Unit;       // primary target (attack/choose)
   lastRoll?: number;   // final attack roll (for headshot)
   hit?: boolean;
+  range?: [number, number] | "melee" | "self";   // the ability's declared range, for otherFoeInRange
+  pos?: Pos;           // a raw tile target (e.g. wall placement), distinct from a unit target
 }
 
 function resolveEffects(ctx: Ctx, ops: EffectOp[] | undefined) {
@@ -386,6 +426,18 @@ function resolveOp(ctx: Ctx, op: EffectOp) {
       if (roll >= (op.threshold as number)) resolveEffects(ctx, op.then as EffectOp[]);
       break;
     }
+    // Wild Mutation (igorri SOUL, 1): "gains 1 strength, (3-4) or 1 speed,
+    // (5-6) or 1 vitality" — a single roll into exactly one of several
+    // mutually-exclusive buckets (effectDie's cascading thresholds can't
+    // express "roll once, pick ONE branch").
+    case "tieredRoll": {
+      const roll = rollD6(s.rng);
+      log(s, { side: actor.owner, actor: actor.name, dice: [roll], text: `Roll: ${roll}.` });
+      const tiers = op.tiers as { max: number; then: EffectOp[] }[];
+      const tier = tiers.find((t) => roll <= t.max);
+      if (tier) resolveEffects(ctx, tier.then);
+      break;
+    }
     case "onHit": if (ctx.hit) resolveEffects(ctx, op.then as EffectOp[]); break;
     case "onHeadshot": if (ctx.lastRoll === 6) resolveEffects(ctx, op.then as EffectOp[]); break;
     // Stance (abhorrers.json specialTags.Stance): "an ability with stance gains
@@ -427,16 +479,102 @@ function resolveOp(ctx: Ctx, op: EffectOp) {
       }
       break;
     }
+    // Cyclopean Monolith (deadsouls SOUL, 1): "Create a wall in range and
+    // inflict 1 weak on an adjacent foe to the wall."
+    case "wall": {
+      if (!ctx.pos) break;
+      s.terrain[key(ctx.pos)] = { ...s.terrain[key(ctx.pos)], wall: { hp: 2 } };
+      log(s, { side: actor.owner, actor: actor.name, text: `${actor.name} raises a wall at (${ctx.pos.x},${ctx.pos.y}).` });
+      const foe = s.units.find((o) => o.alive && o.owner !== actor.owner && adjacent(o.pos, ctx.pos!));
+      if (foe) resolveEffects({ ...ctx, target: foe }, op.then as EffectOp[]);
+      break;
+    }
+    // Glory Kill (goregrinders SOUL, 3): "Obliterate an adjacent unit at 1 hp
+    // or lower."
+    case "obliterateAdjacentLowHp": {
+      const tgt = ctx.target;
+      if (!tgt || tgt.hp > 1) break;
+      obliterate(s, tgt);
+      break;
+    }
+    // Soulfeed (deadsouls SOUL, 3): "All isolated or doomed foes in range take
+    // 1 curse damage, gain 1 weak, and this unit gains 1 strength for each."
+    case "isolatedOrDoomedInRange": {
+      const band = Array.isArray(ctx.range) ? ctx.range : null;
+      let count = 0;
+      for (const o of s.units) {
+        if (!o.alive || o.owner === actor.owner) continue;
+        const d = chebyshev(actor.pos, o.pos);
+        if (band && (d < band[0] || d > band[1])) continue;
+        if (!isIsolated(s, o) && tok(o, "doom") <= 0) continue;
+        count++;
+        resolveEffects({ ...ctx, target: o }, op.then as EffectOp[]);
+      }
+      if (count > 0) addToken(actor, "strength", count);
+      break;
+    }
+    // Slime Form (gargamox SOUL, 3): "push or pull all units in range 2 one
+    // (5+) two spaces." (the free "MOVE through walls/units" half is logged
+    // only, like the "step" op above — partial fidelity, not a new
+    // sub-engine for ignoring collision during a single free move. Pushed,
+    // not pulled, as the simpler faithful reading of "push or pull" with no
+    // per-unit choice modeled.)
+    case "pushPullAllInRange": {
+      const n = (op.n as number) ?? 1;
+      const range = (op.range as number) ?? 2;
+      for (const o of s.units) {
+        if (!o.alive || o.iid === actor.iid || chebyshev(actor.pos, o.pos) > range) continue;
+        applyShove({ ...ctx, target: o }, { op: "push", n }, +1);
+      }
+      break;
+    }
     default:
       // Unknown op: carry it in the log so the faithful intent is visible.
       log(s, { side: actor.owner, actor: actor.name, text: `${actor.name}: ${op.op} (not simulated yet).` });
   }
 }
 
+// Does this ability's effect graph ever target "ally"? Everything else in the
+// data (hit/choose/adjacentFoe/otherAdjacent/otherFoeInRange) always means an
+// opponent's unit in this ruleset — there's no "any unit regardless of side"
+// label, so this one check is enough to tell a support ability from an attack.
+function wantsAlly(ability: Ability): boolean {
+  const scan = (ops: EffectOp[] | undefined): boolean =>
+    !!ops?.some((op) => {
+      if (op.target === "ally") return true;
+      if (scan(op.then as EffectOp[] | undefined)) return true;
+      const tiers = op.tiers as { then: EffectOp[] }[] | undefined;
+      return !!tiers?.some((t) => scan(t.then));
+    });
+  return scan(ability.effect);
+}
+
+// Isolation (data/raw/page-25.txt specialTag): a unit with no allies adjacent.
+function isIsolated(s: GameState, u: Unit): boolean {
+  return !s.units.some((o) => o.alive && o.iid !== u.iid && o.owner === u.owner && adjacent(o.pos, u.pos));
+}
+
 function pickTarget(ctx: Ctx, which: string | undefined): Unit | undefined {
+  const { s, actor } = ctx;
   switch (which) {
     case "self": return ctx.actor;
-    case "hit": case "choose": case undefined: return ctx.target;
+    case "ally": case "hit": case "choose": case undefined: return ctx.target;
+    case "adjacentFoe":
+      return s.units.find((o) => o.alive && o.owner !== actor.owner && adjacent(o.pos, actor.pos));
+    case "otherAdjacent": {
+      const primary = ctx.target;
+      if (!primary) return undefined;
+      return s.units.find((o) => o.alive && o.iid !== primary.iid && o.owner !== actor.owner && adjacent(o.pos, primary.pos));
+    }
+    case "otherFoeInRange": {
+      const primary = ctx.target;
+      const band = Array.isArray(ctx.range) ? ctx.range : null;
+      return s.units.find((o) => {
+        if (!o.alive || o.owner === actor.owner || o.iid === primary?.iid) return false;
+        const d = chebyshev(actor.pos, o.pos);
+        return band ? d >= band[0] && d <= band[1] : true;
+      });
+    }
     default: return ctx.target;
   }
 }
@@ -489,6 +627,7 @@ function makeUnit(owner: 0 | 1, house: string, defId: string, upgrade?: string):
     tokens: {},
     // deep-copy abilities so an upgrade patch on one unit can't leak to the shared def
     acts: def.acts.map((a) => ({ ...a, effect: a.effect ? JSON.parse(JSON.stringify(a.effect)) : undefined })),
+    souls: def.souls ? def.souls.map((a) => ({ ...a })) : undefined,
     reloaded: Object.fromEntries(def.acts.filter((a) => a.tags.includes("reload")).map((a) => [a.name, true])),
     activatedThisRound: false,
     alive: true,
@@ -554,7 +693,7 @@ export function createGame(a: Loadout, b: Loadout, seed: number, firstSide: 0 | 
     corpses: [],
     rng: makeRng(seed),
     log: [{ round: 1, side: null, actor: "system", text: "The battle begins. Deploy your Black Mass." }],
-    winner: null, soulUsedThisTurn: false,
+    winner: null, soulUsedThisTurn: [false, false],
   };
   generateTerrain(s);
   return s;
@@ -596,7 +735,11 @@ function applyDoomAtEndOfRound(s: GameState) {
 }
 
 function endTurn(s: GameState) {
-  s.soulUsedThisTurn = false;
+  // "one SOUL ability per unit turn" resets at every unit activation boundary —
+  // this runs once per move/act/endTurn, i.e. once per "unit turn" — for BOTH
+  // sides, since either side may use a SOUL ability triggered by any single
+  // unit's activation (data/raw/page-13/14.txt).
+  s.soulUsedThisTurn = [false, false];
   // round advances once everyone has activated
   const allDone = s.units.filter((u) => u.alive).every((u) => u.activatedThisRound);
   if (allDone) {
@@ -670,6 +813,26 @@ export function applyAction(s: GameState, side: 0 | 1, action: Action): ApplyRes
   }
 
   if (s.phase !== "playing") return { ok: false, error: "not playing", state: s };
+
+  // SOUL abilities don't consume a unit's activation and can be used on
+  // either side's turn, even the opponent's (data/raw/page-13/14.txt), so
+  // this runs before the turn gate below rather than inside the switch.
+  if (action.kind === "soul") {
+    const p = s.players[side];
+    const nec = s.units.find((u) => u.owner === side && u.isNecromancer && u.alive);
+    if (!nec) return { ok: false, error: "necromancer down", state: s };
+    const ability = (faction(nec.house).necromancer.souls ?? []).find((a) => a.name === action.ability);
+    if (!ability) return { ok: false, error: "no such soul ability", state: s };
+    if (UNIMPLEMENTED_SOULS.has(ability.name)) return { ok: false, error: "not yet implemented", state: s };
+    if (s.soulUsedThisTurn[side]) return { ok: false, error: "already used a soul ability this turn", state: s };
+    if (p.soul < (ability.soul ?? 0)) return { ok: false, error: "not enough soul", state: s };
+    const err = validateAndResolveSoul(s, nec, ability, action.target);
+    if (err) return { ok: false, error: err, state: s };
+    p.soul -= ability.soul ?? 0;
+    s.soulUsedThisTurn[side] = true;
+    return { ok: true, state: s };
+  }
+
   if (side !== s.activeSide) return { ok: false, error: "not your turn", state: s };
 
   switch (action.kind) {
@@ -741,10 +904,70 @@ function validateAndResolveAct(s: GameState, u: Unit, ability: Ability, target?:
       const dist = chebyshev(u.pos, tgtUnit.pos);
       if (dist < min || dist > max) return "target out of range";
     }
+    // ownership check — a raw {x,y} POST must respect the same ally/foe
+    // restriction legalTargets already filters on, not just range/adjacency.
+    const ally = wantsAlly(ability);
+    if (ally ? tgtUnit.owner !== u.owner : tgtUnit.owner === u.owner) return "wrong target";
   }
-  resolveEffects({ s, actor: u, target: tgtUnit }, ability.effect);
+  resolveEffects({ s, actor: u, target: tgtUnit, range: ability.range }, ability.effect);
   if (!ability.effect || ability.effect.length === 0) {
     log(s, { side: u.owner, actor: u.name, text: `${u.name} uses ${ability.name}.` });
+  }
+  return undefined;
+}
+
+// SOUL abilities (data/raw/page-13/14.txt): necromancer-only, cost SOUL instead
+// of an ACT slot, and can be cast any time on either side's turn (handled by
+// applyAction's early "soul" branch, before the turn gate). Ten of the twelve
+// abilities (two per House) are implemented below with real effect[] data
+// (data/factions/*.json) running through the same resolveEffects/resolveOp
+// interpreter ACT abilities use. Two are an honest remainder, not silently
+// dropped:
+//   - Will of God (abhorrers): "treat the current round as either 2 or 5"
+//     needs a per-unit effective-round override threaded through every
+//     round-dependent check (Stance's odd/even branch, Doom's round-4 timer)
+//     without mutating shared state — the engine has no such hook.
+//   - Sample Genome (igorri): "copy all positive tokens from one unit, then
+//     grant them to another" needs a two-target selection flow; `Action`'s
+//     `target` is a single `Pos | string`, not a pair.
+// Submitting either returns a clear "not yet implemented" error rather than
+// silently no-opping.
+const UNIMPLEMENTED_SOULS = new Set(["Will of God", "Sample Genome"]);
+
+function validateAndResolveSoul(s: GameState, nec: Unit, ability: Ability, target?: Pos | string): string | undefined {
+  let tgtUnit: Unit | undefined;
+  let tgtPos: Pos | undefined;
+  // "area" abilities (Soulfeed, Slime Form) act on everything in range of the
+  // necromancer itself — no single target to pick, so they skip this block
+  // entirely even though they carry a range (used by isolatedOrDoomedInRange/
+  // pushPullAllInRange to size the AoE from the actor's own position).
+  const isArea = ability.tags.includes("area");
+  const needsTarget = !isArea && (Array.isArray(ability.range) || ability.range === "melee");
+  // Cyclopean Monolith targets an empty battlefield tile (to place a wall),
+  // not a unit — the one soul ability whose target is a position, not a unit.
+  const targetsTile = ability.tags.includes("tile");
+  if (needsTarget) {
+    if (!target || typeof target === "string") return "target required";
+    if (ability.range === "melee") {
+      if (!adjacent(nec.pos, target)) return "target not adjacent";
+    } else {
+      const [min, max] = ability.range as [number, number];
+      const dist = chebyshev(nec.pos, target);
+      if (dist < min || dist > max) return "target out of range";
+    }
+    if (targetsTile) {
+      if (!inBounds(target) || unitAt(s, target) || isWall(s, target)) return "tile not free";
+      tgtPos = target;
+    } else {
+      tgtUnit = unitAt(s, target);
+      if (!tgtUnit) return "no unit there";
+      const ally = wantsAlly(ability);
+      if (ally ? tgtUnit.owner !== nec.owner : tgtUnit.owner === nec.owner) return "wrong target";
+    }
+  }
+  resolveEffects({ s, actor: nec, target: tgtUnit, range: ability.range, pos: tgtPos }, ability.effect);
+  if (!ability.effect || ability.effect.length === 0) {
+    log(s, { side: nec.owner, actor: nec.name, text: `${nec.name} uses ${ability.name}.` });
   }
   return undefined;
 }

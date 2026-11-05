@@ -1,7 +1,7 @@
 import { db } from "./db.ts";
 import { nowISO } from "./time.ts";
 import { randomBytes } from "node:crypto";
-import { applyAction, createGame, viewFor, legalMoves, legalTargets, type Loadout } from "./game/engine.ts";
+import { applyAction, createGame, viewFor, legalMoves, legalTargets, legalSoulTargets, type Loadout } from "./game/engine.ts";
 import type { Action, GameState, Pos } from "./game/types.ts";
 import { applyRankedResult } from "./elo.ts";
 import { audit } from "./audit.ts";
@@ -115,6 +115,20 @@ export function targetsFor(id: string, userId: number, iid: string, ability: str
   const u = state.units.find((x) => x.iid === iid);
   if (!u || u.owner !== side) return [];
   return legalTargets(state, iid, ability);
+}
+
+// The valid targets of a SOUL ability for one of a player's sides. SOUL isn't
+// tied to a unit's activation or to whose turn it is, so this (unlike
+// targetsFor) doesn't gate on activeSide — it only checks the caller is a
+// participant, not a spectator.
+export function soulTargetsFor(id: string, userId: number, ability: string): { iid?: string; pos: Pos }[] {
+  const row = rowFor(id);
+  if (!row) return [];
+  const role = roleOf(id, userId);
+  if (role === "spectator") return [];
+  const state = JSON.parse(row.state_json) as GameState;
+  const side: 0 | 1 = role === "p0" ? 0 : 1;
+  return legalSoulTargets(state, side, ability);
 }
 
 // Apply a player's action. Rejects spectators and anyone acting for the other

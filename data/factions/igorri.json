@@ -19,7 +19,14 @@
         "effect": [ { "op": "line", "len": 4, "then": [ { "op": "damage", "damage": 1, "damageType": "physical" } ] } ] }
     ],
     "souls": [
-      { "name": "Wild Mutation", "soul": 1, "tags": ["ranged"], "range": [4, 4], "text": "Turn start: unit gains 1 strength, (3-4) or 1 speed, (5-6) or 1 vitality. Spare Parts: choose one per corpse instead of rolling." },
+      { "name": "Wild Mutation", "soul": 1, "tags": ["ranged"], "range": [4, 4], "text": "Turn start: unit gains 1 strength, (3-4) or 1 speed, (5-6) or 1 vitality. Spare Parts: choose one per corpse instead of rolling.",
+        "effect": [
+          { "op": "tieredRoll", "tiers": [
+            { "max": 2, "then": [ { "op": "token", "token": "strength", "n": 1, "target": "ally" } ] },
+            { "max": 4, "then": [ { "op": "token", "token": "speed", "n": 1, "target": "ally" } ] },
+            { "max": 6, "then": [ { "op": "token", "token": "vitality", "n": 1, "target": "ally" } ] }
+          ] }
+        ] },
       { "name": "Sample Genome", "soul": 3, "tags": ["ranged"], "range": [4, 4], "text": "Copy all positive tokens on a target, then grant them to another unit in range." }
     ],
     "bonusTraits": ["Rapid Move", "Ancillary Limbs", "Accelerate Evolution"],
