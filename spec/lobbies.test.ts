@@ -163,3 +163,137 @@ describe("POST /api/quickjoin", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("Malice matching on join", () => {
+  // Malice is a property of the battle, decided by whoever created the
+  // lobby — joining re-derives the guest's loadout against the HOST's level
+  // rather than letting each side bring a different dark-power budget.
+  it("a guest's Malice is matched to the host's, and over-budget upgrades are dropped rather than rejected", async () => {
+    const host = await signup(baseUrl);
+    const guest = await signup(baseUrl);
+    const pal = await palette();
+    // host's lobby is Spite (0 dark power, no upgrades possible)
+    const create = await (await api(baseUrl, host.sid, "/api/lobby/create",
+      { mode: "faithful", visibility: "private", house: "carcass", colour: pal[0],
+        units: [{ defId: "enforcer" }], malice: "Spite" })).json();
+    // guest submits a Hatred-level loadout (7 dark power) with an upgrade
+    const join = await (await api(baseUrl, guest.sid, "/api/lobby/join",
+      { code: create.code, mode: "faithful", house: "goregrinders", colour: pal[3],
+        units: [{ defId: "carnifex" }], malice: "Hatred", upgrades: { carnifex: "Heavy Swing" } })).json();
+    expect(join.gameId).toBeTruthy();
+
+    const view = await (await api(baseUrl, guest.sid, `/api/game/${join.gameId}`, undefined, "GET")).json();
+    const guestUnit = view.state.units.find((u: { owner: number; defId: string }) => u.owner === 1 && u.defId === "carnifex");
+    // Spite (0 dark power) can't afford any upgrade, so it was dropped, not
+    // smuggled through at the guest's own (now-irrelevant) Hatred budget.
+    expect(guestUnit.upgrade).toBeUndefined();
+  });
+
+  it("a guest's upgrade survives when the host's level affords it", async () => {
+    const host = await signup(baseUrl);
+    const guest = await signup(baseUrl);
+    const pal = await palette();
+    // host's lobby is Ultrahell (12 dark power) — plenty of room
+    const create = await (await api(baseUrl, host.sid, "/api/lobby/create",
+      { mode: "faithful", visibility: "private", house: "carcass", colour: pal[0],
+        units: [{ defId: "enforcer" }], malice: "Ultrahell" })).json();
+    const join = await (await api(baseUrl, guest.sid, "/api/lobby/join",
+      { code: create.code, mode: "faithful", house: "goregrinders", colour: pal[3],
+        units: [{ defId: "carnifex" }], malice: "Hatred", upgrades: { carnifex: "Heavy Swing" } })).json();
+    expect(join.gameId).toBeTruthy();
+
+    const view = await (await api(baseUrl, guest.sid, `/api/game/${join.gameId}`, undefined, "GET")).json();
+    const guestUnit = view.state.units.find((u: { owner: number; defId: string }) => u.owner === 1 && u.defId === "carnifex");
+    expect(guestUnit.upgrade).toBe("Heavy Swing");
+  });
+
+  it("fixed mode is unaffected by Malice matching (no Malice to reconcile)", async () => {
+    const host = await signup(baseUrl);
+    const guest = await signup(baseUrl);
+    const pal = await palette();
+    const create = await (await api(baseUrl, host.sid, "/api/lobby/create",
+      { mode: "fixed", visibility: "private", house: "carcass", colour: pal[0], units: [] })).json();
+    const join = await api(baseUrl, guest.sid, "/api/lobby/join",
+      { code: create.code, mode: "fixed", house: "goregrinders", colour: pal[3], units: [] });
+    expect(join.status).toBe(200);
+  });
+});
+
+describe("GET /api/lobby/<code>/preview", () => {
+  it("returns the host's name, mode, and Malice level (faithful mode) for an open lobby", async () => {
+    const host = await signup(baseUrl);
+    const pal = await palette();
+    const create = await (await api(baseUrl, host.sid, "/api/lobby/create",
+      { mode: "faithful", visibility: "public", house: "carcass", colour: pal[0],
+        units: [{ defId: "enforcer" }], malice: "Hell" })).json();
+
+    try {
+      const res = await api(baseUrl, host.sid, `/api/lobby/${create.code}/preview`, undefined, "GET");
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.mode).toBe("faithful");
+      expect(body.malice).toBe("Hell");
+      expect(body.host).toBe(host.display_name);
+    } finally {
+      const guest = await signup(baseUrl);
+      await api(baseUrl, guest.sid, "/api/lobby/join",
+        { code: create.code, mode: "faithful", house: "goregrinders", colour: pal[3], units: [{ defId: "gunwight" }] });
+    }
+  });
+
+  it("omits Malice for a fixed-mode lobby", async () => {
+    const host = await signup(baseUrl);
+    const pal = await palette();
+    const create = await (await api(baseUrl, host.sid, "/api/lobby/create",
+      { mode: "fixed", visibility: "public", house: "carcass", colour: pal[0], units: [] })).json();
+
+    try {
+      const res = await api(baseUrl, host.sid, `/api/lobby/${create.code}/preview`, undefined, "GET");
+      const body = await res.json();
+      expect(body.mode).toBe("fixed");
+      expect(body.malice).toBeUndefined();
+    } finally {
+      const guest = await signup(baseUrl);
+      await api(baseUrl, guest.sid, "/api/lobby/join",
+        { code: create.code, mode: "fixed", house: "goregrinders", colour: pal[3], units: [] });
+    }
+  });
+
+  it("404s for a code with no open lobby", async () => {
+    const u = await signup(baseUrl);
+    const res = await api(baseUrl, u.sid, "/api/lobby/ZZZZZ/preview", undefined, "GET");
+    expect(res.status).toBe(404);
+  });
+
+  it("is turned away unauthenticated", async () => {
+    const res = await get(baseUrl, "/api/lobby/ZZZZZ/preview");
+    expect(res.status).toBe(401);
+  });
+});
+
+describe("GET /api/lobbies includes Malice for faithful-mode entries", () => {
+  it("shows the Malice level for a faithful lobby and omits it for a fixed one", async () => {
+    const host = await signup(baseUrl);
+    const pal = await palette();
+    const faithfulCreate = await (await api(baseUrl, host.sid, "/api/lobby/create",
+      { mode: "faithful", visibility: "public", house: "carcass", colour: pal[0],
+        units: [{ defId: "enforcer" }], malice: "Loathing" })).json();
+    const fixedCreate = await (await api(baseUrl, host.sid, "/api/lobby/create",
+      { mode: "fixed", visibility: "public", house: "carcass", colour: pal[0], units: [] })).json();
+
+    try {
+      const list = await (await api(baseUrl, host.sid, "/api/lobbies", undefined, "GET")).json();
+      const faithfulEntry = list.lobbies.find((l: { code: string }) => l.code === faithfulCreate.code);
+      const fixedEntry = list.lobbies.find((l: { code: string }) => l.code === fixedCreate.code);
+      expect(faithfulEntry.malice).toBe("Loathing");
+      expect(fixedEntry.malice).toBeUndefined();
+    } finally {
+      const guestA = await signup(baseUrl);
+      const guestB = await signup(baseUrl);
+      await api(baseUrl, guestA.sid, "/api/lobby/join",
+        { code: faithfulCreate.code, mode: "faithful", house: "goregrinders", colour: pal[3], units: [{ defId: "gunwight" }] });
+      await api(baseUrl, guestB.sid, "/api/lobby/join",
+        { code: fixedCreate.code, mode: "fixed", house: "goregrinders", colour: pal[3], units: [] });
+    }
+  });
+});

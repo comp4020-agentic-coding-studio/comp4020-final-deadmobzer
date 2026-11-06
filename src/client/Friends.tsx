@@ -27,11 +27,28 @@ function PersonTag({ person, factions }: { person: AvatarFields & { display_name
   );
 }
 
+// "Remove" arms a confirm/cancel pair instead of firing immediately or using
+// the browser's native confirm() (unused anywhere else in this SPA) — a
+// second deliberate click, in the page's own voice, rather than an OS dialog.
+function RemoveButton({ id, confirmingId, setConfirmingId, onConfirm, label }:
+  { id: number; confirmingId: number | null; setConfirmingId: (id: number | null) => void; onConfirm: () => void; label: string }) {
+  if (confirmingId === id) {
+    return (
+      <>
+        <button onClick={onConfirm}>Confirm</button>
+        <button onClick={() => setConfirmingId(null)}>Cancel</button>
+      </>
+    );
+  }
+  return <button onClick={() => setConfirmingId(id)}>{label}</button>;
+}
+
 export function Friends() {
   const [data, setData] = useState<FriendsData | null>(null);
   const [factions, setFactions] = useState<FactionDef[]>([]);
   const [username, setUsername] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<number | null>(null);
 
   const refetch = useCallback(() => {
     getJSON<FriendsData>("/api/friends").then(setData).catch(() => {});
@@ -66,6 +83,10 @@ export function Friends() {
   async function addFriend(uname: string) {
     try { await postJSON("/api/friends/request", { username: uname }); refetch(); } catch { /* ignore */ }
   }
+  async function removeFriend(userId: number) {
+    setConfirmingId(null);
+    try { await postJSON("/api/friends/remove", { user_id: userId }); refetch(); } catch { /* ignore */ }
+  }
 
   if (!data) return <div className="pad">Loading…</div>;
 
@@ -86,6 +107,8 @@ export function Friends() {
             <li key={f.id}>
               <PersonTag person={f} factions={factions} />
               {f.online && <em>· online</em>}
+              <RemoveButton id={f.id} confirmingId={confirmingId} setConfirmingId={setConfirmingId}
+                onConfirm={() => removeFriend(f.id)} label="Remove" />
             </li>
           ))}</ul>
         )}
@@ -105,12 +128,20 @@ export function Friends() {
       <div className="card">
         <h2>Recent opponents</h2>
         {data.recent.length === 0 ? <p>No games yet.</p> : (
-          <ul className="person-list">{data.recent.map((o) => (
-            <li key={o.id}>
-              <PersonTag person={o} factions={factions} /> <code>{o.username}</code>
-              <button onClick={() => addFriend(o.username)}>Add friend</button>
-            </li>
-          ))}</ul>
+          <ul className="person-list">{data.recent.map((o) => {
+            const isFriend = data.friends.some((f) => f.id === o.id);
+            return (
+              <li key={o.id}>
+                <PersonTag person={o} factions={factions} /> <code>{o.username}</code>
+                {isFriend ? (
+                  <RemoveButton id={o.id} confirmingId={confirmingId} setConfirmingId={setConfirmingId}
+                    onConfirm={() => removeFriend(o.id)} label="Remove friend" />
+                ) : (
+                  <button onClick={() => addFriend(o.username)}>Add friend</button>
+                )}
+              </li>
+            );
+          })}</ul>
         )}
       </div>
     </div>

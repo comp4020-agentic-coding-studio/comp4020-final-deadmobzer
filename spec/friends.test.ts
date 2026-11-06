@@ -127,6 +127,58 @@ describe("friend requests", () => {
   });
 });
 
+describe("friend removal", () => {
+  // signup() doesn't return a numeric id (the session cookie is all a test
+  // normally needs) — once two accounts are friends, each side's own
+  // GET /api/friends entry for the other carries the id /remove wants.
+  async function becomeFriends(): Promise<{ a: Awaited<ReturnType<typeof signup>>; b: Awaited<ReturnType<typeof signup>>; aId: number; bId: number }> {
+    const a = await signup(baseUrl);
+    const b = await signup(baseUrl);
+    await api(baseUrl, a.sid, "/api/friends/request", { username: b.username });
+    const fid = await firstFriendshipId(b.sid);
+    await api(baseUrl, b.sid, "/api/friends/accept", { friendship_id: fid });
+    const friendsA = await (await api(baseUrl, a.sid, "/api/friends", undefined, "GET")).json();
+    const friendsB = await (await api(baseUrl, b.sid, "/api/friends", undefined, "GET")).json();
+    const bId = friendsA.friends.find((f: { display_name: string }) => f.display_name === b.display_name).id;
+    const aId = friendsB.friends.find((f: { display_name: string }) => f.display_name === a.display_name).id;
+    return { a, b, aId, bId };
+  }
+
+  it("either side can end an accepted friendship, and it disappears from both lists", async () => {
+    const { a, b, aId } = await becomeFriends();
+
+    const remove = await api(baseUrl, b.sid, "/api/friends/remove", { user_id: aId });
+    expect(remove.status).toBe(200);
+    expect((await remove.json()).ok).toBe(true);
+
+    const friendsA = await (await api(baseUrl, a.sid, "/api/friends", undefined, "GET")).json();
+    const friendsB = await (await api(baseUrl, b.sid, "/api/friends", undefined, "GET")).json();
+    expect(friendsA.friends.some((f: { display_name: string }) => f.display_name === b.display_name)).toBe(false);
+    expect(friendsB.friends.some((f: { display_name: string }) => f.display_name === a.display_name)).toBe(false);
+  });
+
+  it("rejects removing someone you're not friends with", async () => {
+    const a = await signup(baseUrl);
+    const b = await signup(baseUrl);
+    // b's request to a is only pending, never accepted — a's own GET /api/friends
+    // response surfaces b's id in "incoming" without needing an admin/lookup endpoint.
+    await api(baseUrl, b.sid, "/api/friends/request", { username: a.username });
+    const incoming = await (await api(baseUrl, a.sid, "/api/friends", undefined, "GET")).json();
+    const bId = incoming.incoming[0].id as number;
+    const res = await api(baseUrl, a.sid, "/api/friends/remove", { user_id: bId });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/not friends/i);
+  });
+
+  it("is turned away unauthenticated", async () => {
+    const res = await fetch(new URL("/api/friends/remove", baseUrl), {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ user_id: 1 }),
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
 describe("recent opponents", () => {
   it("lists a past opponent by name after a game, and offers 'add friend'", async () => {
     const { a, b } = await startGame(baseUrl);

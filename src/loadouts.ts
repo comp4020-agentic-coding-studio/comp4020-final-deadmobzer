@@ -79,6 +79,28 @@ export function validateLoadout(
   return { mode, house, colour, units, malice: level.name, upgrades: cleanUpgrades };
 }
 
+// Malice is a property of the battle, decided by whoever created the lobby,
+// not something each side picks independently (data/raw/page-08.txt: "you
+// must decide on the Malice strength of the battle"). A guest's loadout was
+// validated against their OWN submitted Malice level before the lobby's
+// level is known (src/server.ts's resolveLoadout runs before the lobby code
+// is looked up), so joining re-validates it against the host's actual level
+// here — re-running the same dark-power budget check validateLoadout already
+// does, rather than silently keeping upgrades the guest was never entitled
+// to under the host's level, or rejecting the join outright over a mismatch
+// the guest didn't control.
+export function reconcileMalice(l: SavedLoadout, hostMalice: string | undefined): SavedLoadout {
+  if (l.mode !== "faithful" || l.malice === hostMalice) return l;
+  try {
+    return validateLoadout(l.mode, l.house, l.colour, l.units, hostMalice, l.upgrades);
+  } catch {
+    // The guest's upgrades don't fit the host's level (most often: the host's
+    // level has less dark power than the guest assumed) — drop upgrades
+    // rather than block the match from starting.
+    return validateLoadout(l.mode, l.house, l.colour, l.units, hostMalice, undefined);
+  }
+}
+
 export function saveLoadout(userId: number, l: SavedLoadout): void {
   // units_json holds the whole Black Mass (units + malice + upgrades).
   const blob = JSON.stringify({ units: l.units, malice: l.malice, upgrades: l.upgrades });

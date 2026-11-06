@@ -7,7 +7,7 @@ import {
   AuthError, createSession, destroySession, login, signup, userForToken, type User,
 } from "./auth.ts";
 import {
-  acceptRequest, declineRequest, FriendError, friendsOf, incomingRequests, sendRequest,
+  acceptRequest, declineRequest, removeFriend, FriendError, friendsOf, incomingRequests, sendRequest,
 } from "./friends.ts";
 import { readmeBodyHtml } from "./readme.ts";
 import { handleUpgrade, isOnline, sendTo, broadcastGame, audienceCount } from "./realtime.ts";
@@ -20,7 +20,7 @@ import { audit, withRequestId } from "./audit.ts";
 import { today, TZ } from "./time.ts";
 import { FACTIONS, PLAYER_PALETTE, UNIT_SLOTS, RULES } from "./game/data.ts";
 import { validateLoadout, saveLoadout, getLoadout, maliceLevels, LoadoutError, type Mode } from "./loadouts.ts";
-import { createLobby, joinLobby, quickJoin, openLobbies, lobbyGameId, LobbyError } from "./lobbies.ts";
+import { createLobby, joinLobby, quickJoin, openLobbies, previewLobby, lobbyGameId, LobbyError } from "./lobbies.ts";
 import { gameView, act, movesFor, targetsFor, soulTargetsFor, leaveGame, recentOpponents, activeGames, GameError } from "./games.ts";
 import { postMessage, messagesFor, ChatError, type Channel } from "./chat.ts";
 import { getProfile, setAvatar, ProfileError } from "./profile.ts";
@@ -283,6 +283,12 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
       const m = url.searchParams.get("mode");
       return void json(res, { lobbies: openLobbies(m === "faithful" || m === "fixed" ? m : undefined) });
     }
+    const lobbyPreviewMatch = /^\/api\/lobby\/([A-Za-z0-9]+)\/preview$/.exec(path);
+    if (lobbyPreviewMatch && method === "GET") {
+      const preview = previewLobby(lobbyPreviewMatch[1]);
+      if (!preview) return void json(res, { error: "no open lobby with that code" }, 404);
+      return void json(res, preview);
+    }
     const lobbyMatch = /^\/api\/lobby\/([A-Za-z0-9]+)$/.exec(path);
     if (lobbyMatch && method === "GET") {
       return void json(res, { gameId: lobbyGameId(lobbyMatch[1]) });
@@ -318,6 +324,14 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
       const b = await readJsonBody(req);
       try { declineRequest(user.id, Number(b.friendship_id)); } catch { /* already gone */ }
       return void json(res, { ok: true });
+    }
+    if (path === "/api/friends/remove" && method === "POST") {
+      const b = await readJsonBody(req);
+      try {
+        removeFriend(user.id, Number(b.user_id));
+        audit(user.username, "friend.remove", { with: String(b.user_id) });
+        return void json(res, { ok: true });
+      } catch (e) { return void json(res, { error: e instanceof FriendError ? e.message : "failed" }, 400); }
     }
     if (path === "/api/recent-opponents" && method === "GET") {
       return void json(res, { opponents: recentOpponents(user.id) });

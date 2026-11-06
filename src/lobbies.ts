@@ -2,7 +2,7 @@ import { db } from "./db.ts";
 import { nowISO } from "./time.ts";
 import { audit } from "./audit.ts";
 import { createGameRecord, usernameOf } from "./games.ts";
-import { toEngineLoadout, type Mode, type SavedLoadout } from "./loadouts.ts";
+import { toEngineLoadout, reconcileMalice, type Mode, type SavedLoadout } from "./loadouts.ts";
 
 export class LobbyError extends Error {}
 
@@ -73,28 +73,54 @@ export function quickJoin(userId: number, mode: Mode, loadout: SavedLoadout): { 
 
 function startGame(l: LobbyRow, guestId: number, guestLoadout: SavedLoadout): { gameId: string } {
   const hostLoadout = JSON.parse(l.host_loadout_json) as SavedLoadout;
+  const guest = reconcileMalice(guestLoadout, hostLoadout.malice);
   const gameId = createGameRecord(
     toEngineLoadout(l.host_id, hostLoadout),
-    toEngineLoadout(guestId, guestLoadout),
+    toEngineLoadout(guestId, guest),
     l.mode,
     l.visibility === "public", // public matches are ranked; private are casual
   );
   db.prepare(
     `UPDATE lobbies SET status = 'started', guest_id = ?, guest_loadout_json = ?, game_id = ? WHERE id = ?`,
-  ).run(guestId, JSON.stringify(guestLoadout), gameId, l.id);
+  ).run(guestId, JSON.stringify(guest), gameId, l.id);
   audit(usernameOf(guestId), "lobby.join", { code: l.id, game: gameId });
   return { gameId };
 }
 
-// Open public lobbies for a simple browser (newest first).
-export function openLobbies(mode?: Mode): { code: string; mode: Mode; host: string }[] {
+interface OpenLobbyRow { code: string; mode: Mode; host: string; host_loadout_json: string }
+// Open public lobbies for a simple browser (newest first). Includes the
+// Malice level (faithful mode only — it's meaningless in fixed mode) so a
+// browsing player can see the battle's strength before joining, same
+// information `previewLobby` gives for a typed-in code.
+export function openLobbies(mode?: Mode): { code: string; mode: Mode; host: string; malice?: string }[] {
   const rows = db.prepare(
-    `SELECT l.id AS code, l.mode AS mode, u.display_name AS host
+    `SELECT l.id AS code, l.mode AS mode, u.display_name AS host, l.host_loadout_json
        FROM lobbies l JOIN users u ON u.id = l.host_id
       WHERE l.status = 'open' AND l.visibility = 'public' ${mode ? "AND l.mode = ?" : ""}
       ORDER BY l.created_at DESC LIMIT 50`,
   );
-  return (mode ? rows.all(mode) : rows.all()) as { code: string; mode: Mode; host: string }[];
+  const all = (mode ? rows.all(mode) : rows.all()) as OpenLobbyRow[];
+  return all.map(({ code, mode: m, host, host_loadout_json }) => ({
+    code, mode: m, host,
+    malice: m === "faithful" ? (JSON.parse(host_loadout_json) as SavedLoadout).malice : undefined,
+  }));
+}
+
+// The same preview info as openLobbies' rows, but for one lobby by code —
+// covers "someone gave me a code" the same way the public browse list covers
+// "I'm picking from what's open." Read-only; doesn't require the caller to
+// be anyone in particular, since a code alone doesn't leak anything a public
+// listing wouldn't.
+export function previewLobby(code: string): { mode: Mode; host: string; malice?: string; visibility: string } | null {
+  const l = db.prepare(
+    `SELECT l.mode AS mode, l.visibility AS visibility, l.status AS status,
+            u.display_name AS host, l.host_loadout_json
+       FROM lobbies l JOIN users u ON u.id = l.host_id
+      WHERE l.id = ?`,
+  ).get(code.toUpperCase()) as { mode: Mode; visibility: string; status: string; host: string; host_loadout_json: string } | undefined;
+  if (!l || l.status !== "open") return null;
+  const hostLoadout = JSON.parse(l.host_loadout_json) as SavedLoadout;
+  return { mode: l.mode, host: l.host, visibility: l.visibility, malice: l.mode === "faithful" ? hostLoadout.malice : undefined };
 }
 
 export function lobbyGameId(code: string): string | null {

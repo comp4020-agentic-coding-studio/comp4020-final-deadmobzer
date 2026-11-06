@@ -28,12 +28,35 @@ export function Lobby() {
   const [error, setError] = useState<string | null>(null);
   const [waiting, setWaiting] = useState(false);
   const [live, setLive] = useState<{ id: string; mode: string; players: string[] }[]>([]);
+  const [openLobbies, setOpenLobbies] = useState<{ code: string; mode: Mode; host: string; malice?: string }[]>([]);
+  const [codePreview, setCodePreview] = useState<{ mode: Mode; host: string; malice?: string } | null>(null);
+  const [codePreviewError, setCodePreviewError] = useState<string | null>(null);
 
   useEffect(() => { getJSON<Factions>("/api/factions").then((d) => { setData(d); setColour(d.palette[0]); }); }, []);
   useEffect(() => {
     const load = () => getJSON<{ games: typeof live }>("/api/games/active").then((r) => setLive(r.games)).catch(() => {});
     load(); const t = setInterval(load, 5000); return () => clearInterval(t);
   }, []);
+  useEffect(() => {
+    const load = () => getJSON<{ lobbies: typeof openLobbies }>("/api/lobbies").then((r) => setOpenLobbies(r.lobbies)).catch(() => {});
+    load(); const t = setInterval(load, 5000); return () => clearInterval(t);
+  }, []);
+
+  // Preview a typed-in code before committing to join — same info the open-
+  // lobbies list shows, so either path (browse vs. "someone gave me a code")
+  // can see the battle's Malice level first. Debounced since it fires on
+  // every keystroke; a 5-char code only ever resolves once it's complete,
+  // but partial codes shouldn't spam the endpoint.
+  useEffect(() => {
+    setCodePreview(null); setCodePreviewError(null);
+    if (code.length !== 5) return;
+    const t = setTimeout(() => {
+      getJSON<{ mode: Mode; host: string; malice?: string }>(`/api/lobby/${code}/preview`)
+        .then((p) => { setCodePreview(p); if (p.mode === "faithful" && p.malice) setMalice(p.malice); })
+        .catch(() => setCodePreviewError("No open lobby with that code."));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [code]);
 
   const faction = data?.factions.find((f) => f.id === house);
 
@@ -191,7 +214,28 @@ export function Lobby() {
           <button onClick={() => go("join")} disabled={code.length < 5}>Join</button>
         </span>
       </div>
+      {code.length === 5 && codePreview && (
+        <p className="blurb">
+          {codePreview.host}'s {codePreview.mode === "faithful" ? "Faithful" : "Fixed roster"} lobby
+          {codePreview.mode === "faithful" && codePreview.malice && <> — <strong>{codePreview.malice}</strong> Malice</>}
+        </p>
+      )}
+      {code.length === 5 && codePreviewError && <p className="err">{codePreviewError}</p>}
       {error && <p className="err">{error}</p>}
+
+      <h2 style={{ marginTop: 28 }}>Open lobbies</h2>
+      {openLobbies.length === 0 && <p className="blurb">No open lobbies right now.</p>}
+      <div className="units">
+        {openLobbies.map((l) => (
+          <div key={l.code} className="unitpick">
+            <span>
+              {l.host} <em>{l.mode === "faithful" ? "faithful" : "fixed"}</em>
+              {l.mode === "faithful" && l.malice && <> · {l.malice}</>}
+            </span>
+            <button onClick={() => setCode(l.code)}>Preview</button>
+          </div>
+        ))}
+      </div>
 
       <h2 style={{ marginTop: 28 }}>Watch a live game</h2>
       {live.length === 0 && <p className="blurb">No games in progress right now.</p>}

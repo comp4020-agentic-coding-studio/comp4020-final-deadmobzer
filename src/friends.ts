@@ -118,3 +118,16 @@ export function declineRequest(userId: number, friendshipId: number): void {
     .run(friendshipId, userId);
   if (info.changes === 0) throw new FriendError("That request isn't yours to decline.");
 }
+
+// Symmetric, like friendsOf/areFriends: either side can end an accepted
+// friendship, regardless of who originally sent the request.
+export function removeFriend(userId: number, otherUserId: number): void {
+  const info = db
+    .prepare(
+      `DELETE FROM friendships
+        WHERE status = 'accepted'
+          AND ((requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?))`,
+    )
+    .run(userId, otherUserId, otherUserId, userId);
+  if (info.changes === 0) throw new FriendError("You're not friends with that person.");
+}
