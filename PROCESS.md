@@ -1,120 +1,230 @@
 # Process overview
 
-> Rewritten (not appended) at the final submission; the brief wants ~900–1100
-> words. Describes the project **as it stands now**.
+> First full draft in my own voice; the brief wants ~900–1100 words at submission.
+> It describes the project **as it stands now**, after the pivot.
+>
+> This is a running log, not a final draft — everything I do and why, kept in
+> order. I'll cut it down to the word budget and decide the narrative shape
+> once there's nothing left to add, not before.
 
 ## From the brief to the idea
 
 The brief asks for a deployed, multi-user, real-time app that is *good* by a
-definition I make and defend, and warns against the median answer — a chat
-room with the nouns swapped. My first project, a daily reflection diary,
-drifted toward that failure from the other side: the multi-user, real-time
-requirement was bolted on, not load-bearing — two people almost never
-touched the same state at once.
+definition I make and defend, and it warns against the median answer — a chat room
+with the nouns swapped. My first project, a daily reflection diary, drifted toward
+exactly that failure from the other side: it was calm and personal, but it barely
+used the thing the brief is really testing. Two people almost never touched the same
+state at the same time; the only live event was a friend request. When I was honest
+about it, the multi-user, real-time requirement was bolted on, not load-bearing.
 
-So I made a complete shift: **read the ruleset of a tabletop wargame and
-recreate it online.** The game is *MAGNAGOTHICA Maleghast*, a 1v1 skirmish
-where two necromancers fight on an 8×8 grid until one falls — multi-user by
-construction, since the whole point is a live opponent across a shared
-board.
+So I made a complete shift. I handed the agent a harder, less familiar problem than
+another CRUD app: **read the ruleset of a tabletop wargame and recreate it online.**
+The game is *MAGNAGOTHICA Maleghast*, a 1v1 skirmish where two necromancers raise a
+warband on an 8×8 grid and fight until a necromancer falls. This is multi-user by
+construction — the whole point is a live opponent across a shared board — and it let
+me push on what the agent could do with an unusual, rules-dense task.
 
-The pivot changed how I briefed the agent, too. I handed it a large, messy
-asset corpus up front — the rulebook PDF, the unit-art archive, the
-designer's balance notes — betting that a faithful recreation needed the
-real source material in the loop, not my paraphrase. Extraction became its
-own first phase ([`a716ace`](../../commit/a716ace)) rather than something
-reached for mid-build. I also worked in **Plan Mode** for the first time:
-the agent proposed a phased build order before writing any code, and I
-pushed back on the ordering twice before letting it start — the
-phase-numbered commits are that plan, executed one step at a time.
+The pivot changed how I briefed the agent, not just what I asked it to build. For
+the diary I'd kept context thin and written most of the structure myself; here I
+went the other way and handed the agent a **large, messy asset corpus up front** —
+the 58 MB rulebook PDF, the full unit-art archive, and the designer's own balance
+and patch-note text files — on the bet that a faithful recreation needed the real
+source material in the loop, not my paraphrase of it. That bet is also why
+extraction became its own first phase ([`a716ace`](../../commit/a716ace)) rather
+than something the agent reached for mid-build: dumping that much raw material into
+context on every turn would have been slow and imprecise, so the assets existed to
+be swept once into `data/`, then set aside.
+
+Rebuilding this much of an app from scratch in one week is also not something I
+wanted to direct turn-by-turn, so for the first time this project I worked in
+**Plan Mode**: I had the agent read the extracted rules and propose the phased
+build order (engine → backend → UI → 3D → docs) before it wrote any application
+code, pushed back on the ordering twice, and only let it start once the plan held
+together end to end. The phase-numbered commits in the log are that plan, executed
+one approved step at a time.
 
 ## What good means, and how it shaped the build
 
-I define good here as **a fair, legible, live duel against a real person,
-faithful to the game it recreates.** Each word pushed a concrete decision:
-*fair* → the server is the only authority, a client can ask but never decide;
-*live* → a move reaches the other player within about a second, no reload;
-*legible* → a visible battle log, and server logs that name both players;
-*faithful* → stats, dice math and the six Houses come from the rulebook, not
-from me. README states this and which claims `spec/` enforces; CLAUDE.md
-turns the enforced ones into invariants.
+I define good here as **a fair, legible, live duel against a real person, faithful
+to the game it recreates.** Each word is something I can check at the table, and
+each pushed a concrete decision:
+
+- *Fair* → the server is the only authority. It rolls the dice, resolves combat, and
+  validates every move. A client can ask; it can never decide.
+- *Live* → one player's move reaches the other (and spectators) within about a
+  second over WebSockets, no reload.
+- *Legible* → a visible battle log of every roll, and server logs that name the two
+  players so a whole match is followable from the logs alone.
+- *Faithful* → stats, dice math, damage types, tokens and the six Houses come from
+  the rulebook, not from me.
+
+The README states this and says which claims are enforced by `spec/` and which are
+left to judgement; CLAUDE.md turns the enforced ones into invariants; `spec/` is the
+checks. The three agree on purpose.
 
 ## The stack, and why
 
-One 256 MB Fly machine, one SQLite volume, a hand-rolled Node server with no
-framework — the logic is small and I wanted no magic between a request and
-the database. The game is a **pure engine over one serializable
-`GameState`**: the server rolls from a seeded PRNG stored in the state, so
-dice are deterministic and replayable, and the same code the server runs is
-what the unit tests check. I dropped Material UI and derived the look from
-the rulebook's own fonts and palette — a generic kit fought the source
-material's identity.
+I kept the course platform — one 256 MB Fly machine, one SQLite volume, HTTP on
+`$PORT` — and a hand-rolled Node server with no web framework, because the app's
+logic is small and I wanted no magic between a request and the database. The game
+itself is a **pure engine over one serializable `GameState`** (`src/game/`): the
+server rolls from a seeded PRNG stored in the state, so dice are deterministic,
+persistable and replayable, and the exact same code the server runs is what the
+unit tests check. State serializes straight to SQLite, so persistence and authority
+fall out of one design rather than two.
 
-The work landed in committed phases, each read before the next:
-**extraction** ([`a716ace`](../../commit/a716ace), the rulebook swept to
-text once, never re-read), **data as the source of truth**
-([`1ad41a1`](../../commit/1ad41a1), [`1b1d77e`](../../commit/1b1d77e), all
-six Houses and 36 units in JSON, each ability carrying an engine-readable
-`effect[]` *and* the rulebook text), **a tested engine**
-([`d4ff663`](../../commit/d4ff663), pure-function tests for rules the UI
-can't see), and **the whole backend playable via API**
-([`9d48317`](../../commit/9d48317): lobbies, games, chat, ELO, real-time
-rooms, a strict CSP).
+The biggest stack decision was to **drop Material UI** and derive the look from the
+rulebook — its fonts and palette, extracted once into `data/style.json`. A generic
+component kit fought the source material's gothic, blood-and-bone identity, and
+removing it also shrank the dependency surface.
+
+## How I worked with the agent
+
+I front-loaded the thinking into a plan and had the agent build in committed phases,
+reading each result before starting the next. The work grew in legible steps:
+
+- **Extract before build** ([`a716ace`](../../commit/a716ace)): the stats live only
+  in a 58 MB, art-heavy PDF, so I had the agent sweep the whole rulebook to text
+  once and work from `data/raw/` afterward — never re-reading the PDF. The same step
+  pulled the fonts and palette into a reusable style file.
+- **Data as the source of truth** ([`1ad41a1`](../../commit/1ad41a1),
+  [`1b1d77e`](../../commit/1b1d77e)): all six Houses — 36 units — are encoded as JSON
+  with real MV/HP/DF/ARM, abilities and upgrades. Abilities carry an engine-readable
+  `effect[]` *and* the faithful rulebook text, so re-balancing is a data edit and the
+  exact wording is always available to the inspector.
+- **A tested engine** ([`d4ff663`](../../commit/d4ff663)): the combat core with
+  pure-function tests for the rules the UI can't see — armour by type, pierce,
+  devil/obliterate, token math, legal moves, acting out of turn, victory.
+- **The whole backend, playable via API** ([`9d48317`](../../commit/9d48317)):
+  lobbies (codes, quick-join, per-mode queues), games (validated actions,
+  persistence, roles), two-channel chat, ELO, profiles, real-time game rooms, and a
+  strict CSP.
 
 ## Corrections that landed in the harness
 
-A fix with no trace in the harness didn't really happen. Three moments
-shaped the build that way: the **256 MB limit** (an earlier app had already
-crash-looped from a heavy server-rendered UI, so a **build-time purity
-assertion** now fails the build if Three.js or React leak into the server
-bundle); **access control** (the brief wants it checked on the server, not
-hidden in the UI — `spec/access.test.ts` talks to the server directly, so a
-spectator acting or a player moving the opponent's unit fails with 403
-regardless of what the UI allows); and **ownership-respecting targeting** (a
-review pass found every ability's target picker ignored ally/foe entirely —
-a curse could land on your own unit. Fixing it exposed a second, quieter
-bug: an existing Stance test had been silently passing against the wrong
-unit because two units happened to occupy adjacent tiles. Both are fixed;
-`spec/rules.test.ts` grew six new ownership cases, not just the feature).
-
-## From multi-page to single-page
-
-Once Friends, Profile and Home existed as separate server-rendered pages
-alongside the React lobby/table, the app had two navigation models at once:
-a full-page reload for most links, client-side state for two. That split is
-exactly the kind of inconsistency that lands someone somewhere they didn't
-mean to go — a stale reload mid-navigation, a form bounce through a page no
-one asked for. I converted Home, Play, the game room, Friends and Profile
-into one client-routed app with a persistent nav, so a click always goes
-exactly where it says. How to Play and the README stay plain server pages —
-pure static content gains nothing from client routing, and `/readme/`'s
-rendering is a fixed part of the spec contract I didn't want to touch.
-
-## Spending the identity work already paid for
-
-A late design pass compared the live app against the actual rulebook (a loud
-red zine cover, halftone horror-comic art, six vivid per-House colours) and
-found the UI looked like a generic dark dashboard instead — the accent
-colours in `data/style.json` were computed during extraction but never
-rendered. I wired them into one `--house` CSS variable used across the House
-picker, the avatar picker and Home, and gave the landing page a featured
-necromancer portrait instead of two identical login boxes. The pass also
-caught two real bugs behind the first-draft look: the nav's CSS selector
-could never match React's actual DOM nesting (unstyled since the SPA
-conversion), and every necromancer avatar 404'd because the art pipeline
-always names that file `necromancer.png` regardless of the unit's data id.
+The course's rule is that a fix with no trace in the harness didn't really happen,
+and two moments shaped the build that way. First, the **256 MB limit**: the earlier
+app had already crash-looped once from a heavy server-rendered UI, and the new app
+adds a 3D table that is heavier still. Rather than trust myself to remember, I had
+the agent add a **build-time purity assertion** that fails if Three.js, React or
+friends ever leak into the server bundle. Second, **access control**: the easy
+version hides buttons in the UI; the brief wants it checked on the server. I wrote
+`spec/access.test.ts` first, so a spectator acting, the wrong side acting, or a
+player moving the opponent's unit all fail with 403, and the server — not the UI —
+is what the test talks to.
 
 ## What's next
 
-The game is playable end to end and deployed: a Three.js table, both lobby
-modes with a faithful Black Mass builder, spectating, friends, avatars, ELO,
-terrain the engine honours, and upgrades via a flag/patch system — over a
-server-authoritative core, green across 145 tests. SOUL abilities (10 of 12;
-Will of God and Sample Genome are disclosed gaps, not silently dropped — see
-`engine.ts`'s header) now spend the resource they accrue, instead of being
-dead code. Doom only clears via the round-4 check, not early by slaying
-another unit; Mutation's token-substitution needs a player-choice prompt the
-engine has no hook for yet. A permanent two-browser Playwright suite
-(`e2e/`) covers sign-up through combat against a real browser. The
-avatar/House-colour treatment now reaches Friends too, the last surface the
-design pass hadn't touched. Next: terrain *models*.
+The game is playable end to end and deployed: a Three.js table (faction art as
+standees, orbit camera, lighting and reflections, dice that roll on the board, a
+battle log + player/audience chat, a hover stat inspector), both lobby modes with a
+faithful Black Mass builder (Malice + dark-power upgrades), spectating, friends,
+avatars and ELO, terrain the engine honours (walls, an elevated plateau with
+stairs, hazards, adverse ground — cost-aware movement, cover, high-ground dice),
+and upgrades that apply mechanically via a flag/patch system — over the
+server-authoritative core, green across 40+ tests. The client is pure
+presentation, exactly as planned.
+
+Corpses, berserk, Doom's end-of-round-4 devil damage, and now Plague, Miracle,
+Mutation and Stance have all landed mechanically (`spec/rules.test.ts`), and
+games no longer auto-deploy — each side places its own units via a validated
+server-side "deploy" action, with a client "deploy" phase (a bench of
+unplaced units, click-to-select then click a highlighted edge-band tile) so a
+fresh game is playable start to finish from the browser. Doom itself is still
+partial: a unit can only clear it today by the round-4 check firing, since
+clearing it early by slaying another unit needs attacker-tracking the engine
+doesn't have yet. Mutation's token-substitution rule (discard in place of, or
+stand in as a copy of, another token) needs a player-choice prompt the engine
+has no hook for, so mutation tokens accumulate but aren't auto-substituted.
+Stance's per-ability "special numbered round" overrides apply unconditionally
+rather than gated to their stated round. None of this is silently dropped —
+see `upgrades.ts`'s header. A permanent two-browser Playwright suite now
+covers the full sign-up → lobby → deploy → combat loop against a real
+browser (`e2e/`, kept outside `pnpm check` on purpose — see CLAUDE.md). The
+next push is terrain *models* (the engine already honours terrain
+mechanically) and a voice pass on these documents.
+
+## Making SOUL real, and the targeting bug it surfaced
+
+A pass through the data layer found SOUL was dead code: `Action` had always
+defined `{ kind: "soul" }`, every necromancer accrued the resource, but
+`applyAction`'s switch never handled it, so any soul action fell through to
+"unknown action." I implemented 10 of the 12 SOUL abilities with real
+engine-readable `effect[]` entries, wired a new `case "soul"` into
+`applyAction` (bypassing the normal turn gate, since the rulebook says a
+necromancer can use SOUL on either side's turn), and tracked "one SOUL
+ability per unit-turn" per side rather than as one shared flag. Will of God
+and Sample Genome are disclosed as structural gaps rather than silently
+dropped — see the header comment at the top of `engine.ts`'s SOUL section,
+same pattern as the existing Doom/Mutation/Stance disclosures.
+
+While building this I checked `legalTargets`/`pickTarget` for how ability
+targeting worked and found every faction's abilities ignored ownership
+entirely — a curse could land on your own unit, a support buff on the
+opponent's, because `pickTarget` only ever excluded the caster, not the
+wrong side. I fixed this with a `wantsAlly()` helper that reads an ability's
+own effect data to decide ally-vs-foe, used consistently in
+`legalTargets`, `pickTarget` and the raw-POST re-validation path so a client
+can't bypass the UI's filtering by posting coordinates directly. Fixing it
+surfaced a second, quieter bug: an existing Stance test in
+`spec/rules.test.ts` had been passing by accident — the "foe" it hit was
+actually a friendly unit that happened to occupy the adjacent tile, and the
+old no-ownership-check code hit it anyway. Six new ownership tests went into
+`spec/rules.test.ts` alongside the fix for both.
+
+## Converting to a single-page app
+
+Once Friends, Profile and Home existed as separate server-rendered pages
+next to the React lobby/table, the app had two navigation models running at
+once: most links did a full page reload, two pages kept client state. I
+wanted this fixed specifically because a split model like that is how a
+user ends up somewhere they didn't mean to go — a stale reload losing
+in-progress state, a form submission bouncing through a page no one asked
+for, a "back" button behaving differently depending on which half of the
+app you were just in. I converted Home, Play, the game room, Friends and
+Profile into one client-routed app (`src/client/App.tsx`, a small router
+using `wouter`) with a persistent nav rendered once outside the router, so
+a click always goes exactly where it says, with no second network
+round-trip in between. How to Play and the README stay plain server
+pages on purpose: they're pure static content with no interactivity to
+gain from client routing, and `/readme/`'s exact rendering is part of the
+spec's fixed contract, so I left it alone rather than risk it for no
+benefit. This needed one new JSON endpoint (`GET /api/friends`, since the
+friends list previously only existed as server-rendered HTML) and reused
+the per-user WebSocket that was already pushing friend-request events
+server-side but had no client listener.
+
+## Spending the identity work the extraction pipeline already paid for
+
+I compared the live app against the actual rulebook — a loud red zine
+cover, halftone horror-comic art, six vivid per-House colours — and the UI
+looked like a generic dark dashboard by comparison. The accent colours in
+`data/style.json` were computed during the original extraction phase but
+never rendered anywhere in the 2D UI; only the 3D table's pawn tinting used
+colour at all, and that's a separate, intentional 16-colour palette, not
+these brand colours. I wired the House accents into one reusable `--house`
+CSS variable, consumed by a handful of shared classes (`.house-accent-rule`,
+`.house-glow`, `.house-portrait`) across the House picker, the avatar
+picker, and Home, and gave the landing page a featured necromancer portrait
+(rotating daily, deterministic) instead of two identical login boxes.
+
+This pass caught two real bugs hiding behind the generic first-draft look,
+not just missing decoration: the persistent nav's CSS selector
+(`.app-body > header`) could never match, because React mounts into a `#app`
+div nested inside `.app-body`, not as its direct child — so the nav had
+been unstyled (default blue links, no layout) since the SPA conversion,
+and I'd missed it because the dark background alone made the page look
+plausible at a glance. I fixed the selector to a descendant match. Second,
+every necromancer avatar/portrait reference 404'd, because
+`scripts/extract-art.py` always names that one file `necromancer.png`
+regardless of the necromancer's own data id (Carcass's is `operator`, for
+instance) — I added a shared `portraitPath()` helper in `src/client/api.ts`
+that special-cases this everywhere a portrait path gets built, instead of
+leaving each call site to construct the path by hand and get it wrong.
+
+Finally I extended the same avatar/House-colour treatment to the Friends
+page, the one surface the design pass hadn't reached — `friendsOf`,
+`incomingRequests` and `recentOpponents` now return each person's avatar
+fields, and the Friends list shows a small portrait + House-coloured name
+for every friend, incoming request and recent opponent, the same identity
+treatment already on Home/Play/Profile.
