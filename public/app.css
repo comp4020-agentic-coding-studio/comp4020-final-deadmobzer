@@ -67,6 +67,15 @@ code { background: #000; padding: .1em .3em; border-radius: 2px; }
 .house-portrait { width: 100%; max-width: 220px; aspect-ratio: 3 / 4; object-fit: cover;
   background: #000; border: 2px solid var(--house, var(--line)); border-radius: 2px; }
 
+/* Friends: a small inline avatar + House-coloured name, the per-person
+   identity treatment already used on Home/Profile, now on a list row. */
+.person-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.person-list li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.person-tag { display: inline-flex; align-items: center; gap: 8px; }
+.person-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+  background: #000; border: 2px solid var(--house, var(--line)); flex-shrink: 0; }
+.person-avatar-blank { background: var(--panel); }
+
 /* A tileable halftone dot-screen, echoing the rulebook art's own print
    texture (public/art/*.png) — used deliberately on two hero surfaces
    (landing, Home), not globally; a texture everywhere stops reading as

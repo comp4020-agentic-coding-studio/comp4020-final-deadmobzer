@@ -211,14 +211,18 @@ export function leaveGame(id: string, userId: number): boolean {
 }
 
 // Distinct recent opponents for a user, newest first — used by the Friends tab.
-export function recentOpponents(userId: number, limit = 10): { id: number; username: string; display_name: string }[] {
+export interface RecentOpponent {
+  id: number; username: string; display_name: string;
+  avatar_house: string | null; avatar_unit: string | null; colour: string | null;
+}
+export function recentOpponents(userId: number, limit = 10): RecentOpponent[] {
   return db.prepare(
-    `SELECT u.id, u.username, u.display_name
+    `SELECT u.id, u.username, u.display_name, u.avatar_house, u.avatar_unit, u.colour
        FROM games g
        JOIN users u ON u.id = CASE WHEN g.p0_id = ? THEN g.p1_id ELSE g.p0_id END
       WHERE g.p0_id = ? OR g.p1_id = ?
       GROUP BY u.id
       ORDER BY MAX(g.created_at) DESC
       LIMIT ?`,
-  ).all(userId, userId, userId, limit) as { id: number; username: string; display_name: string }[];
+  ).all(userId, userId, userId, limit) as RecentOpponent[];
 }

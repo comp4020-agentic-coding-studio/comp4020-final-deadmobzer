@@ -8,6 +8,9 @@ export interface Friend {
   id: number;
   username: string;
   display_name: string;
+  avatar_house: string | null;
+  avatar_unit: string | null;
+  colour: string | null;
   online?: boolean;
 }
 
@@ -16,6 +19,9 @@ export interface PendingRequest {
   id: number;
   username: string;
   display_name: string;
+  avatar_house: string | null;
+  avatar_unit: string | null;
+  colour: string | null;
 }
 
 // Accepted friendship is symmetric: a row with status 'accepted' makes the two
@@ -23,7 +29,7 @@ export interface PendingRequest {
 export function friendsOf(userId: number): Friend[] {
   return db
     .prepare(
-      `SELECT u.id, u.username, u.display_name
+      `SELECT u.id, u.username, u.display_name, u.avatar_house, u.avatar_unit, u.colour
          FROM friendships f
          JOIN users u ON u.id = CASE WHEN f.requester_id = ? THEN f.addressee_id ELSE f.requester_id END
         WHERE f.status = 'accepted' AND (f.requester_id = ? OR f.addressee_id = ?)
@@ -47,7 +53,8 @@ export function areFriends(a: number, b: number): boolean {
 export function incomingRequests(userId: number): PendingRequest[] {
   return db
     .prepare(
-      `SELECT f.id AS friendship_id, u.id, u.username, u.display_name
+      `SELECT f.id AS friendship_id, u.id, u.username, u.display_name,
+              u.avatar_house, u.avatar_unit, u.colour
          FROM friendships f JOIN users u ON u.id = f.requester_id
         WHERE f.addressee_id = ? AND f.status = 'pending'
         ORDER BY f.created_at`,
