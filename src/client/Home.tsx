@@ -1,16 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { getJSON } from "./api.ts";
+import { getJSON, houseStyle, portraitPath } from "./api.ts";
 
 interface Profile {
   username: string; display_name: string; elo: number;
   avatarHouse: string | null; avatarUnit: string | null; colour: string | null;
 }
+interface FactionDef { id: string; name: string; accent: string; necromancer: { id: string } }
+interface Factions { factions: FactionDef[] }
 
 export function Home() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [factions, setFactions] = useState<Factions | null>(null);
 
-  useEffect(() => { getJSON<Profile>("/api/profile").then(setProfile).catch(() => {}); }, []);
+  useEffect(() => {
+    getJSON<Profile>("/api/profile").then(setProfile).catch(() => {});
+    getJSON<Factions>("/api/factions").then(setFactions).catch(() => {});
+  }, []);
 
   async function signOut() {
     await fetch("/logout", { method: "POST" });
@@ -19,22 +25,42 @@ export function Home() {
 
   if (!profile) return <div className="pad">Loading…</div>;
 
+  const house = profile.avatarHouse
+    ? factions?.factions.find((f) => f.id === profile.avatarHouse)
+    : undefined;
+
   return (
-    <div className="pad">
+    <div className="pad" style={houseStyle(house?.accent)}>
       <h1>Welcome, {profile.display_name}</h1>
-      <div className="card">
-        {profile.avatarHouse && profile.avatarUnit && (
-          <img className="avatar" src={`/art/portraits/${profile.avatarHouse}/${profile.avatarUnit}.png`} alt="avatar"
-            style={profile.colour ? { boxShadow: `0 0 0 4px ${profile.colour}` } : undefined} />
+      <div className="dossier">
+        {profile.avatarHouse && profile.avatarUnit ? (
+          <img className="house-portrait house-glow"
+            src={portraitPath(profile.avatarHouse, profile.avatarUnit, house?.necromancer.id)}
+            alt={`${house?.name ?? profile.avatarHouse} portrait`} />
+        ) : (
+          <div className="house-portrait" style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "#777", fontSize: ".85rem", textAlign: "center", padding: 12 }}>
+            No avatar yet — <Link href="/profile">pick one</Link>
+          </div>
         )}
-        <p>Rating (ELO): <strong>{profile.elo}</strong></p>
+        <div className="dossier-id">
+          <p>Username: <code>{profile.username}</code></p>
+          <p>Rating (ELO): <strong>{profile.elo}</strong></p>
+          {house && <p>House: <strong style={{ color: house.accent }}>{house.name}</strong></p>}
+
+          <div className="roster-row primary">
+            <Link href="/play">Find a match</Link>
+          </div>
+          <div className="roster-row">
+            <span className="label">Profile</span>
+            <Link href="/profile">Edit</Link>
+          </div>
+          <div className="roster-row">
+            <span className="label">Friends</span>
+            <Link href="/friends">View</Link>
+          </div>
+        </div>
       </div>
-      <div className="homelinks">
-        <Link href="/play" className="card linkcard">Find a match</Link>
-        <Link href="/profile" className="card linkcard">Profile</Link>
-        <Link href="/friends" className="card linkcard">Friends</Link>
-      </div>
-      <button onClick={signOut}>Sign out</button>
+      <p style={{ marginTop: 24 }}><button onClick={signOut}>Sign out</button></p>
     </div>
   );
 }

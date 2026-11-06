@@ -1,5 +1,26 @@
 // Thin fetch helpers for the JSON API. The session cookie rides along
 // automatically; we only ever send/receive JSON.
+import type { CSSProperties } from "react";
+
+// --house is a CSS custom property (see public/app.css) that drives the
+// per-House accent colour (data/style.json's house_accents) across the SPA.
+// React's CSSProperties type doesn't know custom-property names, so this is
+// the one narrow cast point every page that sets --house shares, instead of
+// each page re-deriving its own.
+export function houseStyle(accent: string | undefined): (CSSProperties & { "--house"?: string }) | undefined {
+  return accent ? { "--house": accent } : undefined;
+}
+
+// Every unit's portrait lives at /art/portraits/<house>/<id>.png EXCEPT the
+// necromancer: scripts/extract-art.py always names that one file
+// "necromancer.png", regardless of the necromancer's own data id (e.g.
+// carcass's is "operator") — so building the path straight from the unit id
+// 404s for every House's necromancer. necromancerId is the faction's
+// necromancer.id (from /api/factions), used to detect that one case.
+export function portraitPath(house: string, unitId: string, necromancerId?: string): string {
+  const file = unitId === necromancerId ? "necromancer" : unitId;
+  return `/art/portraits/${house}/${file}.png`;
+}
 
 export async function getJSON<T>(path: string): Promise<T> {
   const res = await fetch(path, { headers: { accept: "application/json" } });

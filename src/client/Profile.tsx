@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { getJSON, postJSON } from "./api.ts";
+import { getJSON, postJSON, houseStyle, portraitPath } from "./api.ts";
 
 interface Profile {
   username: string; display_name: string; elo: number;
   avatarHouse: string | null; avatarUnit: string | null; colour: string | null;
 }
 interface UnitDef { id: string; name: string }
-interface FactionDef { id: string; name: string; necromancer: UnitDef; units: UnitDef[] }
+interface FactionDef { id: string; name: string; accent: string; necromancer: UnitDef; units: UnitDef[] }
 interface Factions { palette: string[]; factions: FactionDef[] }
 
 export function Profile() {
@@ -42,14 +42,18 @@ export function Profile() {
   const avatarOptions = factions.factions.flatMap((f) =>
     [f.necromancer, ...f.units].map((u) => ({ value: `${f.id}:${u.id}`, label: `${f.name} — ${u.name}` })));
 
+  const [pickedHouseId] = avatar.split(":");
+  const pickedHouse = factions.factions.find((f) => f.id === pickedHouseId);
+  const currentHouse = profile.avatarHouse ? factions.factions.find((f) => f.id === profile.avatarHouse) : undefined;
+
   return (
-    <div className="pad">
+    <div className="pad" style={houseStyle(pickedHouse?.accent ?? currentHouse?.accent)}>
       <h1>{profile.display_name}</h1>
-      <div className="card">
+      <div className="card house-accent-rule">
         <p>Username: <code>{profile.username}</code> · Rating (ELO): <strong>{profile.elo}</strong></p>
         {profile.avatarHouse && profile.avatarUnit ? (
-          <img className="avatar" src={`/art/portraits/${profile.avatarHouse}/${profile.avatarUnit}.png`} alt="avatar"
-            style={profile.colour ? { boxShadow: `0 0 0 4px ${profile.colour}` } : undefined} />
+          <img className="avatar house-glow"
+            src={portraitPath(profile.avatarHouse, profile.avatarUnit, currentHouse?.necromancer.id)} alt="avatar" />
         ) : <p>No avatar set yet.</p>}
       </div>
       <div className="card">
@@ -69,7 +73,7 @@ export function Profile() {
           ))}
         </div>
         {error && <p className="err">{error}</p>}
-        <p><button onClick={save}>Save</button></p>
+        <p><button className="house-accent-rule" onClick={save}>Save</button></p>
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { getJSON, postJSON } from "./api.ts";
+import { getJSON, postJSON, houseStyle, portraitPath } from "./api.ts";
 
 interface Upgrade { name: string; text: string }
 interface UnitDef { id: string; name: string; type: string; upgrades?: Upgrade[] }
-interface FactionDef { id: string; name: string; blurb: string; playstyle: string; accent: string; units: UnitDef[] }
+interface FactionDef { id: string; name: string; blurb: string; playstyle: string; accent: string; necromancer: UnitDef; units: UnitDef[] }
 interface MaliceLevel { name: string; darkPower: number }
 interface UnitTypeInfo { slotCost: number; limit: number | null }
 interface Factions {
@@ -118,14 +118,24 @@ export function Lobby() {
       </div>
       <div className="row">
         <label>House</label>
-        <select value={house} onChange={(e) => { setHouse(e.target.value); setPicked([]); }}>
+        <select className="house-accent-rule" style={houseStyle(faction?.accent)}
+          value={house} onChange={(e) => { setHouse(e.target.value); setPicked([]); }}>
           {data.factions.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
       </div>
-      {faction && <p className="blurb">{faction.blurb} <em>({faction.playstyle})</em></p>}
+      {faction && (
+        <div className="house-panel house-glow" style={houseStyle(faction.accent)}>
+          <img className="house-portrait" src={portraitPath(faction.id, faction.necromancer.id, faction.necromancer.id)}
+            alt={`${faction.name} necromancer`} />
+          <p className="blurb">
+            <strong style={{ color: faction.accent }}>{faction.name}</strong> — {faction.blurb}{" "}
+            <em>({faction.playstyle})</em>
+          </p>
+        </div>
+      )}
       <div className="row">
         <label>Colour</label>
-        <div className="swatches">
+        <div className="swatches" style={houseStyle(faction?.accent)}>
           {data.palette.map((c) => (
             <button key={c} className={"sw" + (c === colour ? " on" : "")}
               style={{ background: c }} onClick={() => setColour(c)} aria-label={c} />

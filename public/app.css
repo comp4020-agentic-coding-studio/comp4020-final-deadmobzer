@@ -16,15 +16,17 @@
 }
 * { box-sizing: border-box; }
 .app-body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(--body); min-height: 100vh; }
-/* the persistent nav (src/client/App.tsx's <Nav>) */
-.app-body > header { background: #000; color: var(--paper); padding: 14px 20px; display: flex;
+/* the persistent nav (src/client/App.tsx's <Nav>) — a descendant selector,
+   not a direct-child one: React mounts into #app, which sits inside
+   .app-body, so <header> is .app-body's grandchild, not its child. */
+.app-body header { background: #000; color: var(--paper); padding: 14px 20px; display: flex;
   align-items: center; gap: 16px; flex-wrap: wrap; border-bottom: 2px solid var(--blood); }
-.app-body > header .brand { font-family: var(--display); font-size: 1.4rem; color: var(--blood); letter-spacing: .04em; }
-.app-body > header a { color: var(--paper); text-decoration: none; margin-right: 12px;
+.app-body header .brand { font-family: var(--display); font-size: 1.4rem; color: var(--blood); letter-spacing: .04em; }
+.app-body header a { color: var(--paper); text-decoration: none; margin-right: 12px;
   font-family: var(--label); text-transform: uppercase; font-size: .9rem; letter-spacing: .05em;
   padding-bottom: 2px; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
-.app-body > header a:hover { color: var(--blood); }
-.app-body > header a.on { color: var(--blood); border-bottom-color: var(--blood); }
+.app-body header a:hover { color: var(--blood); }
+.app-body header a.on { color: var(--blood); border-bottom-color: var(--blood); }
 .pad { padding: 28px; max-width: 760px; margin: 0 auto; }
 .topnav { display: flex; gap: 16px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .topnav a { color: var(--paper); text-decoration: none; font-family: var(--label);
@@ -53,19 +55,61 @@ code { background: #000; padding: .1em .3em; border-radius: 2px; }
 .avatar-sw { cursor: pointer; }
 .avatar-sw input { position: absolute; opacity: 0; }
 .avatar-sw span { display: inline-block; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #000; }
-.avatar-sw input:checked + span { outline: 3px solid var(--blood); }
-.homelinks { display: flex; gap: 14px; flex-wrap: wrap; margin: 14px 0; }
-.linkcard { display: block; text-decoration: none; color: var(--paper); flex: 1 1 160px;
-  min-width: 160px; text-align: center; transition: transform .15s, border-color .15s; }
-.linkcard:hover { border-color: var(--blood); transform: translateY(-2px); }
+.avatar-sw input:checked + span { outline: 3px solid var(--house, var(--blood)); }
+/* House identity — a page that has a House in context sets --house inline
+   (style={{'--house': faction.accent}}); everything below reads it, with a
+   fallback to the generic blood-red for pages/elements with no House picked
+   yet. One mechanism, reused everywhere a House's six distinct colours
+   (data/style.json's house_accents) should actually show up, rather than
+   blood-red standing in for all of them. */
+.house-accent-rule { border-color: var(--house, var(--blood)) !important; }
+.house-glow { box-shadow: 0 0 0 1px var(--house, var(--blood)), 0 0 18px -4px var(--house, var(--blood)); }
+.house-portrait { width: 100%; max-width: 220px; aspect-ratio: 3 / 4; object-fit: cover;
+  background: #000; border: 2px solid var(--house, var(--line)); border-radius: 2px; }
+
+/* A tileable halftone dot-screen, echoing the rulebook art's own print
+   texture (public/art/*.png) — used deliberately on two hero surfaces
+   (landing, Home), not globally; a texture everywhere stops reading as
+   texture and starts reading as wallpaper. Two offset radial-gradients make
+   a staggered dot grid cheaply, no image asset. */
+.halftone { position: relative; }
+.halftone::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background-image:
+    radial-gradient(circle, rgba(240,240,240,.07) 1px, transparent 1px),
+    radial-gradient(circle, rgba(240,240,240,.07) 1px, transparent 1px);
+  background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+
+/* The landing page's wordmark: a pressed/printed metal-poster treatment
+   (layered text-shadow, slight skew) instead of leaning on Pirata One alone
+   to carry the whole identity — see docs/style-guide.md. */
+.poster-title { font-family: var(--display); font-weight: 400; letter-spacing: .03em;
+  transform: skewX(-3deg); text-shadow: 3px 3px 0 var(--blood), 6px 6px 0 #8a0000;
+  border-bottom: none !important; }
+
+/* Home's dossier layout: the player's own avatar as a real visual anchor
+   beside identity/ELO, with Play/Profile/Friends as a short, unequal list —
+   not three identical cards (see docs/style-guide.md for why). */
+.dossier { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.dossier-id { flex: 1; min-width: 220px; }
+.roster-row { display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.roster-row:last-child { border-bottom: none; }
+.roster-row .label { font-family: var(--label); text-transform: uppercase; font-size: .85rem;
+  letter-spacing: .04em; color: #bbb; }
+.roster-row.primary { padding: 14px 0; }
+.roster-row.primary a { font-family: var(--display); font-size: 1.2rem; letter-spacing: .02em; }
 
 /* lobby */
 .lobby .row { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
 .lobby label { width: 150px; font-weight: bold; }
 .lobby .blurb { color: #bbb; font-style: italic; }
+.house-panel { display: flex; gap: 16px; align-items: flex-start; margin: 12px 0; padding: 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
+  transition: border-color .2s, box-shadow .2s; }
+.house-panel .blurb { margin: 0; flex: 1; }
 .swatches { display: flex; flex-wrap: wrap; gap: 6px; }
 .sw { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #000; padding: 0; }
-.sw.on { outline: 2px solid var(--paper); }
+.sw.on { outline: 2px solid var(--house, var(--paper)); }
 .actions { display: flex; gap: 12px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
 .joinbox { display: inline-flex; gap: 6px; }
 .joinbox input { width: 90px; text-transform: uppercase; letter-spacing: .2em; }

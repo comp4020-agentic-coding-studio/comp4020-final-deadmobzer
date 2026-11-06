@@ -1,12 +1,12 @@
 import { escapeHtml } from "./http.ts";
+import { today } from "./time.ts";
+import { FACTIONS } from "./game/data.ts";
 
-// Minimal, server-rendered HTML shell in the rulebook's design language (bone
-// paper, blood-red, blackletter display). This backend-first build has no 3D
-// client yet — the game is driven by the JSON API (and these pages). The real
-// Three.js client replaces the app body in a later phase; this shell keeps the
-// spec contract (/, /readme) and lets a human drive the API.
-//
-// No user content is ever interpolated without escapeHtml (no script injection).
+// Server-rendered HTML for the three pages that stay outside the React SPA
+// (landing/login/signup, How to Play, the README/About page) and the SPA's
+// own mount shell. The real client (React + Three.js) is everything past
+// sign-in — see src/client/App.tsx. No user content is ever interpolated
+// without escapeHtml (no script injection).
 
 // Dark, gothic design language for the three pages still server-rendered
 // (landing/login/signup, How to Play, the README/About page — everything
@@ -43,6 +43,25 @@ const STYLE = `
   .err{color:#ff6b6b;font-weight:bold}
   code{background:#000;padding:.1em .3em;border-radius:2px}
   form{margin:.3em 0}
+
+  /* Landing's hero: a featured House portrait + a pressed-metal-poster
+     wordmark, instead of two identical boxed auth forms carrying the whole
+     page (see docs/style-guide.md). */
+  .hero{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;margin-bottom:8px;
+    position:relative;padding:20px;border:1px solid var(--line);border-radius:4px;
+    background:var(--panel);overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background-image:radial-gradient(circle,rgba(240,240,240,.06) 1px,transparent 1px),
+      radial-gradient(circle,rgba(240,240,240,.06) 1px,transparent 1px);
+    background-size:10px 10px;background-position:0 0,5px 5px}
+  .hero-portrait{width:200px;max-width:40vw;aspect-ratio:3/4;object-fit:cover;
+    border:2px solid var(--blood);border-radius:2px;position:relative}
+  .hero-copy{flex:1;min-width:240px;position:relative}
+  .poster-title{font-family:var(--display);font-weight:400;letter-spacing:.03em;
+    font-size:2.4rem;margin:0 0 .2em;transform:skewX(-3deg);
+    text-shadow:3px 3px 0 var(--blood),6px 6px 0 #8a0000;border-bottom:none}
+  .auth-forms{display:flex;gap:16px;flex-wrap:wrap}
+  .auth-forms .card{flex:1;min-width:260px}
 `;
 
 // Shown only on the one remaining fully server-rendered page (landing/login/
@@ -65,28 +84,48 @@ ${HEADER}
 </body></html>`;
 }
 
+// One House is featured on the hero each day — deterministic (keyed off
+// today()'s calendar date, not a random pick), so the page isn't static
+// forever but never needs client JS or a server-side RNG to rotate.
+function featuredHouse(): string {
+  const houses = Object.keys(FACTIONS);
+  const dayNumber = Number(today().replaceAll("-", ""));
+  return houses[dayNumber % houses.length];
+}
+
 export function landing(error?: string): string {
+  const house = FACTIONS[featuredHouse()];
   return page("Sign in", `
-    <h1>Maleghast Online</h1>
-    <p>A faithful, real-time 1v1 recreation of the tabletop skirmish wargame
-       <em>Magnagothica Maleghast</em>. Sign in to raise your Black Mass.</p>
-    ${error ? `<p class="err">${escapeHtml(error)}</p>` : ""}
-    <div class="card">
-      <h2>Sign in</h2>
-      <form method="post" action="/login">
-        <label>Username</label><input name="username" autocomplete="username">
-        <label>Password</label><input name="password" type="password" autocomplete="current-password">
-        <p><button type="submit">Sign in</button></p>
-      </form>
+    <div class="hero">
+      <img class="hero-portrait" src="/art/portraits/${escapeHtml(house.id)}/necromancer.png"
+        alt="${escapeHtml(house.name)} necromancer">
+      <div class="hero-copy">
+        <h1 class="poster-title">Maleghast Online</h1>
+        <p>A faithful, real-time 1v1 recreation of the tabletop skirmish wargame
+           <em>Magnagothica Maleghast</em>. Sign in to raise your Black Mass.</p>
+        <p>Today's featured House: <strong>${escapeHtml(house.name)}</strong> —
+           ${escapeHtml(house.playstyle)}</p>
+      </div>
     </div>
-    <div class="card">
-      <h2>Create an account</h2>
-      <form method="post" action="/signup">
-        <label>Username</label><input name="username">
-        <label>Display name</label><input name="display_name">
-        <label>Password</label><input name="password" type="password" autocomplete="new-password">
-        <p><button type="submit">Create account</button></p>
-      </form>
+    ${error ? `<p class="err">${escapeHtml(error)}</p>` : ""}
+    <div class="auth-forms">
+      <div class="card">
+        <h2>Sign in</h2>
+        <form method="post" action="/login">
+          <label>Username</label><input name="username" autocomplete="username">
+          <label>Password</label><input name="password" type="password" autocomplete="current-password">
+          <p><button type="submit">Sign in</button></p>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Create an account</h2>
+        <form method="post" action="/signup">
+          <label>Username</label><input name="username">
+          <label>Display name</label><input name="display_name">
+          <label>Password</label><input name="password" type="password" autocomplete="new-password">
+          <p><button type="submit">Create account</button></p>
+        </form>
+      </div>
     </div>`);
 }
 
