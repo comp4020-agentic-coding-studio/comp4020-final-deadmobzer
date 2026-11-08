@@ -99,6 +99,21 @@ export class Table {
     const rim = new THREE.DirectionalLight(0xf00000, 0.25);
     rim.position.set(-this.size, this.size, -this.size);
     this.scene.add(rim);
+    // dim cool fill opposite the key light, so the now-textured tiles don't go
+    // flat black in shadow.
+    const fill = new THREE.DirectionalLight(0x8090a0, 0.2);
+    fill.position.set(-this.size * 0.6, this.size * 0.8, this.size);
+    this.scene.add(fill);
+  }
+
+  // Tile surface textures, extracted from the rulebook's own art
+  // (scripts/extract-board-texture.py) rather than generic stock material.
+  private tileTexture(file: string): THREE.Texture {
+    const tex = this.loader.load(`/art/board/${file}`);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 2);
+    return tex;
   }
 
   private buildBoard(): void {
@@ -112,8 +127,12 @@ export class Table {
     plinth.receiveShadow = true;
     this.scene.add(plinth);
 
-    const light = new THREE.MeshStandardMaterial({ color: 0xe8e4da, roughness: 0.8 });
-    const dark = new THREE.MeshStandardMaterial({ color: 0x1b1b20, roughness: 0.8 });
+    const light = new THREE.MeshStandardMaterial({
+      color: 0xe8e4da, roughness: 0.85, map: this.tileTexture("light-tile.png"),
+    });
+    const dark = new THREE.MeshStandardMaterial({
+      color: 0x454550, roughness: 0.85, map: this.tileTexture("dark-tile.png"),
+    });
     for (let y = 0; y < n; y++) {
       for (let x = 0; x < n; x++) {
         const tile = new THREE.Mesh(

@@ -132,6 +132,13 @@ const server = createServer((req, res) => withRequestId(newRequestId(), async ()
       return void html(res, howToPlay());
     }
 
+    // --- House wiki: read-only build reference (SPA page), open to all —
+    // reference content with no personalization, same tier as /readme/ and
+    // /how-to-play/, so a hard refresh/shared link resolves pre-login too. ---
+    if (method === "GET" && (path === "/wiki" || path === "/wiki/")) {
+      return void html(res, appShell("Wiki"));
+    }
+
     // --- auth (open) ---
     if (path === "/login" && method === "POST") {
       const f = await readFormBody(req);

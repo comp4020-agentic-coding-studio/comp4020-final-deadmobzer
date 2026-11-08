@@ -332,7 +332,8 @@ export function Game({ gameId }: { gameId: string }) {
   return (
     <div className="game">
       <div className="board" ref={mountRef} />
-      <aside className="hud">
+
+      <div className="hud-top halftone">
         <div className="statusline" ref={statusRef}>
           {s.phase === "deploy" ? <strong>Deployment</strong> : <strong>Round {s.round}</strong>}
           {" · "}
@@ -350,48 +351,6 @@ export function Game({ gameId }: { gameId: string }) {
           </span>
         </div>
 
-        {showHelp && (
-          <div className="modal-overlay" onClick={() => setShowHelp(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowHelp(false)}>×</button>
-              <HelpContent />
-            </div>
-          </div>
-        )}
-
-        {s.phase === "over" && (
-          <div className="gameover">
-            <h2>{s.winner === null ? "Draw" : myseat === s.winner ? "Victory" : myseat === null ? `Side ${s.winner + 1} wins` : "Defeat"}</h2>
-            <button className="endturn" onClick={leave}>Back to lobby</button>
-          </div>
-        )}
-
-        {s.phase === "deploy" && (
-          <div className="panel deploy">
-            <h3>Deployment</h3>
-            {view.role === "spectator" ? (
-              <p className="blurb">Both sides are still placing their units.</p>
-            ) : canDeploy ? (
-              <>
-                <p className="blurb">
-                  Select one of your units below, then click a glowing (green) tile
-                  in your edge zone to place it. {myUnplaced.length} unit{myUnplaced.length === 1 ? "" : "s"} left to deploy.
-                </p>
-                <div className="bench">
-                  {myUnplaced.map((u) => (
-                    <button key={u.iid} className={selected === u.iid ? "on" : ""}
-                      onClick={() => setSelected((cur) => (cur === u.iid ? null : u.iid))}>
-                      {u.name}
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="blurb">You've deployed all your units — waiting for your opponent to finish deploying.</p>
-            )}
-          </div>
-        )}
-
         <div className="hint">
           {s.phase === "deploy"
             ? (view.role === "spectator" ? "Deployment in progress. Drag to orbit the board."
@@ -405,7 +364,27 @@ export function Game({ gameId }: { gameId: string }) {
               ? "Click a glowing (red) tile to move, or pick an ability. Click the unit again to deselect."
               : "Your turn — click one of your units to select it (drag to orbit), then move or act. Or End turn."}
         </div>
+      </div>
 
+      {showHelp && (
+        <div className="modal-overlay" onClick={() => setShowHelp(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowHelp(false)}>×</button>
+            <HelpContent />
+          </div>
+        </div>
+      )}
+
+      {s.phase === "over" && (
+        <div className="modal-overlay">
+          <div className="modal gameover">
+            <h2>{s.winner === null ? "Draw" : myseat === s.winner ? "Victory" : myseat === null ? `Side ${s.winner + 1} wins` : "Defeat"}</h2>
+            <button className="endturn" onClick={leave}>Back to lobby</button>
+          </div>
+        </div>
+      )}
+
+      <div className="hud-corner-bl">
         {s.phase !== "deploy" && selectedUnit && (
           <div className="panel">
             <h3>{selectedUnit.name}</h3>
@@ -467,14 +446,45 @@ export function Game({ gameId }: { gameId: string }) {
             </div>
           );
         })()}
+      </div>
 
-        {hoverUnit && hoverUnit.iid !== selectedUnit?.iid && (
-          <div className="panel ghost"><h3>{hoverUnit.name}</h3><Stat u={hoverUnit} /></div>
+      <div className="hud-bottom-center">
+        {s.phase === "deploy" && (
+          <div className="panel deploy">
+            <h3>Deployment</h3>
+            {view.role === "spectator" ? (
+              <p className="blurb">Both sides are still placing their units.</p>
+            ) : canDeploy ? (
+              <>
+                <p className="blurb">
+                  Select one of your units below, then click a glowing (green) tile
+                  in your edge zone to place it. {myUnplaced.length} unit{myUnplaced.length === 1 ? "" : "s"} left to deploy.
+                </p>
+                <div className="bench">
+                  {myUnplaced.map((u) => (
+                    <button key={u.iid} className={selected === u.iid ? "on" : ""}
+                      onClick={() => setSelected((cur) => (cur === u.iid ? null : u.iid))}>
+                      {u.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="blurb">You've deployed all your units — waiting for your opponent to finish deploying.</p>
+            )}
+          </div>
         )}
-
-        {myTurn && <button className="endturn" onClick={endTurn}>End turn</button>}
         {error && <p className="err">{error}</p>}
+        {myTurn && <button className="endturn" onClick={endTurn}>End turn</button>}
+      </div>
 
+      {hoverUnit && hoverUnit.iid !== selectedUnit?.iid && (
+        <div className="hud-corner-tr">
+          <div className="panel ghost"><h3>{hoverUnit.name}</h3><Stat u={hoverUnit} /></div>
+        </div>
+      )}
+
+      <div className="hud-corner-br">
         <div className="tabs">
           <button className={tab === "log" ? "on" : ""} onClick={() => setTab("log")}>Battle log</button>
           <button className={tab === "player" ? "on" : ""} onClick={() => setTab("player")}>Players</button>
@@ -497,7 +507,7 @@ export function Game({ gameId }: { gameId: string }) {
         {tab === "player" && view.role === "spectator" && (
           <p className="blurb">Player chat is read-only for spectators — use Audience.</p>
         )}
-      </aside>
+      </div>
     </div>
   );
 }

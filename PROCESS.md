@@ -228,3 +228,48 @@ page, the one surface the design pass hadn't reached — `friendsOf`,
 fields, and the Friends list shows a small portrait + House-coloured name
 for every friend, incoming request and recent opponent, the same identity
 treatment already on Home/Play/Profile.
+
+## Floating HUD, a textured board, and a houses wiki
+
+The game room still looked like the rest of the app's first draft: a fixed
+340px sidebar next to the 3D board, and flat untextured tile colours with no
+texture mapping anywhere except unit portraits. I replaced the sidebar with a
+floating HUD — the board now renders full-bleed, with the status strip,
+ability/SOUL panels, the deploy bench, End Turn, and the battle log/chat all
+anchored over it at fixed positions (`position: fixed`, not draggable) instead
+of boxed into a side column. None of the underlying content markup changed —
+`.statusline`, `.panel`, `.acts`, `.bench`, `.tabs`, `.feed` are all the exact
+same elements, just regrouped under new anchor wrappers — so the existing
+Playwright e2e suite's selectors and `window.__testHooks` kept working
+unmodified; I reran `pnpm test:e2e` after the change to confirm rather than
+assume it.
+
+For the board itself, I stayed consistent with this project's rule that
+visual design comes from the rulebook's own art, not stock textures or a
+generic UI kit. I wrote a one-off script (`scripts/extract-board-texture.py`,
+the same Pillow-based convention as the existing `extract-art.py`) that crops
+two small patches out of the rulebook's own MISC art dump: a halftone
+dot-screen from the "Six Lower Houses" splash page for the light tiles, and a
+scuffed dark background from the "Rot in Hell" banner for the dark tiles —
+both hand-picked to avoid any stray linework or text bleeding into the crop.
+`table.ts`'s `buildBoard()` now loads these as `map` textures (the same
+`THREE.TextureLoader` pattern already used for unit portraits) with a `color`
+tint layered on top so the light/dark checkerboard contrast survives, plus a
+small additive fill light since a textured surface read too flat in shadow
+under the single warm key light. The raycast-picking structure
+(`tileMeshes`/`userData`) didn't need to change at all — only the tile
+materials did.
+
+Finally, a new read-only `/wiki` page (`src/client/Wiki.tsx`) gives every
+House's full build info in one browsable place: necromancer stats, traits,
+and the complete SOUL ability list (otherwise only visible in-game, never
+browsable outside a live match), plus every unit's full upgrade text for
+planning a custom Black Mass loadout — something the in-lobby builder can't
+show at once since it only has room for the upgrade you're currently
+picking. It reuses `/api/factions` (no new backend data) and the existing
+`portraitPath()`/`houseStyle()` helpers rather than inventing new mechanisms.
+I registered `/wiki` as an open route, before the session-required gate —
+the same tier as `/readme/` and `/how-to-play/` — since it's pure reference
+content with no personalization, and without that a hard refresh or a shared
+link would 404 even though client-side routing handles it fine on a soft
+navigation.

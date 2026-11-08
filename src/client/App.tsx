@@ -4,6 +4,7 @@ import { Game } from "./Game.tsx";
 import { Home } from "./Home.tsx";
 import { Friends } from "./Friends.tsx";
 import { Profile } from "./Profile.tsx";
+import { Wiki } from "./Wiki.tsx";
 
 // The persistent nav, rendered once outside <Switch> — this is what makes
 // navigation between pages feel instant instead of a page-by-page reload.
@@ -22,6 +23,7 @@ function Nav() {
       <Link href="/" className={on("/")}>Home</Link>
       <Link href="/play" className={on("/play")}>Play</Link>
       <a href="/how-to-play/">How to Play</a>
+      <Link href="/wiki" className={on("/wiki")}>Wiki</Link>
       <Link href="/friends" className={on("/friends")}>Friends</Link>
       <Link href="/profile" className={on("/profile")}>Profile</Link>
       <a href="/readme/">About</a>
@@ -43,6 +45,7 @@ export function App() {
         <Route path="/g/:id">{(params) => <Game gameId={params.id} />}</Route>
         <Route path="/friends" component={Friends} />
         <Route path="/profile" component={Profile} />
+        <Route path="/wiki" component={Wiki} />
       </Switch>
     </>
   );
