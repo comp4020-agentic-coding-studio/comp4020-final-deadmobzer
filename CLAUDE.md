@@ -67,11 +67,14 @@ source of truth. See `docs/style-guide.md` and
 - When the agent gets it wrong, put the correction in the harness — a new `spec/`
   check, a rule here, or a thrown-away attempt recorded in `PROCESS.md`. A fix with
   no trace in the harness or the commits didn't really happen.
-- **`PROCESS.md` is append-only.** It's a running log of everything done and why,
-  in order — not a draft to keep polished. Never trim, restructure, or rewrite
-  existing sections, even if the doc runs over the course's ~900–1100 word
-  submission cap; the student decides later what gets cut for the final
-  narrative. New work gets a new section added at the end.
+- **The full running log lives in `PROCESS_LOG.md`, append-only.** It's a
+  running log of everything done and why, in order — not a draft to keep
+  polished. Never trim, restructure, or rewrite existing sections, regardless
+  of length. New work gets a new section added at the end.
+- **`PROCESS.md` is the condensed submission narrative**, within the course's
+  ~900–1100 word cap, written from (and linking to) `PROCESS_LOG.md`. It's
+  edited deliberately, not appended to mechanically — but only rewrite it when
+  the student asks for a narrative pass, not as a side effect of unrelated work.
 
 ## The e2e/ suite is separate from `pnpm check`, on purpose
 
